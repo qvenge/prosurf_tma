@@ -14,6 +14,7 @@ export default tseslint.config([
       tseslint.configs.recommended,
       reactHooks.configs['recommended-latest'],
       reactRefresh.configs.vite,
+      "@feature-sliced",
     ],
     languageOptions: {
       ecmaVersion: 2020,

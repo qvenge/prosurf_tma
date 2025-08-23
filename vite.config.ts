@@ -10,4 +10,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  build: {
+    // Disable inlining svg icon as Base64
+    assetsInlineLimit: 0,
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/shared/lib/style-utils" as utils;`,
+      },
+    },
+  },
 })
