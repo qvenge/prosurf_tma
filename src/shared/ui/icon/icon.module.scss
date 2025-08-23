@@ -1,0 +1,7 @@
+.icon {
+  @include utils.icon;
+}
+
+.button {
+  @include utils.button-reset;
+}

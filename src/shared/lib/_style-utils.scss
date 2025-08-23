@@ -1,0 +1,59 @@
+@mixin icon {
+  width: auto;
+  height: auto;
+  
+  mask-position: center center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+
+  background: currentColor;
+}
+
+@mixin button-reset {
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  background: none;
+  cursor: pointer;
+}
+
+@mixin ellipsis($lines: 1) {
+  @if $lines == 1 {
+    white-space: nowrap;
+
+  } @else {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: #{$lines};
+    line-clamp: #{$lines};
+  }
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin shimmer {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255,255,255,0.6) 50%,
+      transparent 100%
+    );
+    z-index: 1;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
