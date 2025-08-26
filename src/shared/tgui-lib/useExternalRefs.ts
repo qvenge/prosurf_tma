@@ -23,6 +23,6 @@ export function useExternRef<T>(
         });
       },
     }),
-    externRefs,
+    [externRefs],
   );
 }

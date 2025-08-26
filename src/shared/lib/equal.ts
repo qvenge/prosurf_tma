@@ -16,7 +16,6 @@ export const isEqual = (value: any, other: any): boolean => {
       return false;
     }
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const prop in value) {
       if (Object.prototype.hasOwnProperty.call(value, prop) && Object.prototype.hasOwnProperty.call(other, prop)) {
         if (!isEqual(value[prop], other[prop])) {

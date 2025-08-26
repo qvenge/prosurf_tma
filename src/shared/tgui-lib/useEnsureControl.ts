@@ -50,8 +50,12 @@ export function useCustomEnsuredControl<V = any>({
       return;
     }
 
-    onChangeProp && onChangeProp(nextValue);
-    !isControlled && setLocalValue(nextValue);
+    if (onChangeProp) {
+      onChangeProp(nextValue);
+    }
+    if (!isControlled) {
+      setLocalValue(nextValue);
+    }
   }, [disabled, isControlled, onChangeProp]);
 
   return [isControlled ? value : localValue, onChange];
@@ -78,7 +82,9 @@ export function useEnsuredControl<V, E extends ChangeEvent<any>>({
       }
 
       onChangeValue(e.target.value);
-      onChangeProp && onChangeProp(e);
+      if (onChangeProp) {
+        onChangeProp(e);
+      }
     },
     [onChangeValue, onChangeProp, disabled],
   );

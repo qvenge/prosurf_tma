@@ -34,7 +34,7 @@ export const useAppearance = (appearanceProp?: AppRootContextInterface['appearan
     }
 
     return getBrowserAppearanceSubscriber(setAppearance);
-  }, [appearanceProp]);
+  }, [appearanceProp, handleThemeChange]);
 
   return appearance;
 };

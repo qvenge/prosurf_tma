@@ -27,7 +27,9 @@ export const useGlobalClicks = <
         isElement(targetEl) &&
         refs.some((ref) => ref && ref.current && ref.current.contains(targetEl));
 
-      !isClickInsideGivenRefs && callback(event);
+      if (!isClickInsideGivenRefs) {
+        callback(event);
+      }
     };
 
     document.addEventListener('click', handleClick, {
