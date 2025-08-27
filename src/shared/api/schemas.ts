@@ -28,7 +28,7 @@ export const EventSessionSchema = z.object({
   capacity: z.number().int().positive(),
   start: z.string().datetime(),
   end: z.string().datetime().nullable(),
-  bookingPrice: PriceSchema.nullable(),
+  bookingPrice: PriceSchema.optional().nullable(),
   price: PriceSchema,
   remainingSeats: z.number().int().nonnegative(),
   description: z.array(DescriptionSectionSchema),

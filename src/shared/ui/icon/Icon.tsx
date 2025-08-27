@@ -19,8 +19,6 @@ export function Icon({ src, ...restProps }: IconProps) {
     restProps
   );
 
-  console.log(params);
-
   const style: CSSProperties = {
     WebkitMaskImage: `url(${params.src})`,
     maskImage: `url(${params.src})`,

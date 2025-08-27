@@ -16,6 +16,8 @@ export const createQueryClient = () =>
           return failureCount < 3;
         },
         refetchOnWindowFocus: false,
+        refetchOnMount: false, // Prevent refetch on component mount if data is fresh
+        networkMode: 'online', // Only fetch when online
       },
       mutations: {
         onError: (error) => {

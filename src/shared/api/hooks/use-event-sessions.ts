@@ -46,10 +46,9 @@ export const useUpcomingEventSessions = (
   options?: Omit<UseQueryOptions<EventSession[], Error>, 'queryKey' | 'queryFn'>
 ) => {
   const query: GetEventSessionsQuery = {
-    dateFrom: new Date().toISOString(),
     filters,
     offset: 0,
-    limit: 20,
+    limit: 1,
   };
 
   return useEventSessions(query, options);
