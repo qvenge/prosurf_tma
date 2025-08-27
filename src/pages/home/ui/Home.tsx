@@ -1,6 +1,7 @@
 import styles from './Home.module.scss';
 
-import coverImageSrc from './9d56337fd9fd9a92228bee24103722e0187c8172.jpg';
+// import coverImageSrc from 'images.jpg';
+const coverImageSrc = '/images/surfing1.jpg'
 
 export function Home() {
   return (
