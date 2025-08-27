@@ -1,0 +1,21 @@
+// Configuration and utilities
+export { apiClient, setAccessToken, getAccessToken } from './config';
+export { createQueryClient } from './query-client';
+export * from './error-handler';
+
+// API functions
+export { authApi } from './auth';
+export { eventSessionsApi } from './event-sessions';
+export { usersApi } from './users';
+
+// Types and schemas
+export * from './schemas';
+
+// Hooks
+export * from './hooks/use-auth';
+export * from './hooks/use-event-sessions';
+export * from './hooks/use-user';
+
+// Providers
+export { QueryProvider } from './providers/query-provider';
+export { ApiProvider } from './providers/api-provider';

@@ -1,0 +1,651 @@
+openapi: 3.0.3
+info:
+  title: ProSurf Server API
+  description: |
+    NestJS backend application for ProSurf - a surfing training and event management platform.
+    
+    This API provides endpoints for user authentication, event session management, and user profiles.
+    The application uses PostgreSQL with Prisma ORM and implements JWT-based authentication.
+    
+    ## Features
+    - JWT Authentication with access and refresh tokens
+    - Rate limiting and throttling
+    - Event session filtering and pagination
+    - Multi-currency support (RUB, USD)
+    - Comprehensive input validation
+    
+    ## Authentication
+    Most endpoints require Bearer token authentication. Use the `/auth/login` endpoint to obtain tokens.
+  version: 0.0.1
+  contact:
+    name: ProSurf API Support
+  license:
+    name: Unlicensed
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.prosurf.example.com
+    description: Production server (example)
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /auth/login
+
+  schemas:
+    # Auth Schemas
+    RegisterDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address (will be converted to lowercase and trimmed)
+          example: user@example.com
+        password:
+          type: string
+          minLength: 12
+          pattern: '^(?=.*[A-Za-z])(?=.*\d)'
+          description: Password (minimum 12 characters, must contain letters and digits)
+          example: MySecurePassword123
+        name:
+          type: string
+          minLength: 1
+          description: User full name (optional)
+          example: John Doe
+    
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        password:
+          type: string
+          description: User password
+          example: MySecurePassword123
+    
+    LogoutDto:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token to revoke
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    UserPublicResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+          example: uuid-string
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        name:
+          type: string
+          nullable: true
+          description: User full name
+          example: John Doe
+        createdAt:
+          type: string
+          format: date-time
+          description: User registration date
+          example: 2023-01-01T00:00:00.000Z
+
+    LoginResponseDto:
+      type: object
+      properties:
+        tokenType:
+          type: string
+          description: Token type
+          example: Bearer
+        accessToken:
+          type: string
+          description: JWT access token for authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: number
+          description: Token expiry time in seconds
+          example: 900
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: base64url-encoded-refresh-token
+
+    LogoutResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Logout success message
+          example: Logged out successfully
+
+    # Event Sessions Schemas
+    EventType:
+      type: string
+      enum:
+        - surfingTraining
+        - surfskateTraining
+        - tour
+        - other
+      description: Type of event session
+
+    Currency:
+      type: string
+      enum:
+        - RUB
+        - USD
+      description: Supported currencies
+
+    PriceDto:
+      type: object
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        amount:
+          type: string
+          pattern: '^\d+\.\d{2}$'
+          description: Price amount as decimal string to avoid floating-point issues
+          example: "2500.00"
+
+    DescriptionSectionDto:
+      type: object
+      properties:
+        heading:
+          type: string
+          description: Section heading
+          example: Level
+        body:
+          type: string
+          description: Section content
+          example: Beginners welcome
+
+    EventSessionResponseDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Event session title
+          example: Beginner Surf Training
+        type:
+          $ref: '#/components/schemas/EventType'
+        location:
+          type: string
+          description: Event location
+          example: Almaty Wave Pool
+        capacity:
+          type: integer
+          description: Total capacity of the session
+          example: 8
+        start:
+          type: string
+          format: date-time
+          description: Session start time in ISO 8601 format
+          example: 2025-09-01T09:00:00.000Z
+        end:
+          type: string
+          format: date-time
+          nullable: true
+          description: Session end time in ISO 8601 format (optional)
+          example: 2025-09-01T10:30:00.000Z
+        bookingPrice:
+          allOf:
+            - $ref: '#/components/schemas/PriceDto'
+          nullable: true
+          description: Optional booking price (may be absent for immediate payment sessions)
+        price:
+          $ref: '#/components/schemas/PriceDto'
+        remainingSeats:
+          type: integer
+          description: Number of available seats
+          example: 5
+        description:
+          type: array
+          items:
+            $ref: '#/components/schemas/DescriptionSectionDto'
+          description: Detailed description sections
+
+    EventSessionFiltersDto:
+      type: object
+      properties:
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType'
+          description: Filter by event types
+          example: ["tour", "surfingTraining"]
+        minRemainingSeats:
+          type: integer
+          minimum: 0
+          description: Minimum number of remaining seats
+          example: 2
+
+    GetEventSessionsQueryDto:
+      type: object
+      properties:
+        dateFrom:
+          type: string
+          format: date-time
+          description: Filter sessions from this date (defaults to current time if not provided)
+          example: 2025-08-20T12:00:00.000Z
+        dateTo:
+          type: string
+          format: date-time
+          description: Filter sessions until this date (must be after dateFrom)
+          example: 2025-08-25T12:00:00.000Z
+        filters:
+          type: string
+          description: URL-encoded JSON string containing EventSessionFiltersDto
+          example: '{"types":["tour"],"minRemainingSeats":2}'
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Number of items to skip for pagination
+          example: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          description: Maximum number of items to return
+          example: 20
+
+    # Error Response
+    ErrorResponseDto:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: Bad Request
+        message:
+          type: string
+          description: Error message
+          example: Invalid input data
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 400
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Create a new user account with email and password. Email must be unique.
+        
+        **Rate Limiting**: 5 requests per minute
+        
+        **Password Requirements**:
+        - Minimum 12 characters
+        - Must contain at least one letter and one digit
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+            example:
+              email: user@example.com
+              password: MySecurePassword123
+              name: John Doe
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublicResponseDto'
+        '400':
+          description: Invalid input data (weak password, invalid email, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Password must be at least 12 characters long
+                statusCode: 400
+        '409':
+          description: Email is already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: Email is already registered
+                statusCode: 409
+        '429':
+          description: Too many registration attempts (rate limited)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: |
+        Authenticate user and return JWT access token and refresh token for Bearer authentication.
+        
+        **Rate Limiting**: 10 requests per minute
+        
+        The access token should be used in the Authorization header as: `Bearer <token>`
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+            example:
+              email: user@example.com
+              password: MySecurePassword123
+      responses:
+        '200':
+          description: Login successful - returns access token and refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+              example:
+                tokenType: Bearer
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                expiresIn: 900
+                refreshToken: base64url-encoded-refresh-token
+        '400':
+          description: Invalid input data (malformed email, missing fields, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '401':
+          description: Invalid credentials (wrong email or password)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Invalid credentials
+                statusCode: 401
+        '429':
+          description: Too many login attempts (rate limited)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: |
+        Revoke the provided refresh token. Requires valid Bearer token in Authorization header.
+        
+        This endpoint invalidates the refresh token, preventing it from being used to generate new access tokens.
+      operationId: logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutDto'
+            example:
+              refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Logout successful - refresh token revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponseDto'
+        '400':
+          description: Invalid request body (missing refresh token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '401':
+          description: Unauthorized (invalid or missing Bearer token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /event-sessions:
+    get:
+      tags:
+        - Event Sessions
+      summary: Get event sessions
+      description: |
+        Retrieve a list of available event sessions with optional filtering and pagination.
+        
+        **Default Behavior**:
+        - Returns sessions starting from current time if `dateFrom` not specified
+        - Limited to 20 results by default (max 100)
+        - No authentication required
+        
+        **Filtering**:
+        The `filters` parameter accepts a URL-encoded JSON string with the following structure:
+        ```json
+        {
+          "types": ["surfingTraining", "tour"],
+          "minRemainingSeats": 2
+        }
+        ```
+      operationId: getEventSessions
+      security: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: "ISO datetime for filtering sessions from this date (default: current time)"
+          example: 2025-08-20T12:00:00.000Z
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: ISO datetime for filtering sessions until this date
+          example: 2025-08-25T12:00:00.000Z
+        - name: filters
+          in: query
+          schema:
+            type: string
+          description: "URL-encoded JSON with optional fields: types (EventType[]), minRemainingSeats (number)"
+          example: '{"types":["tour"],"minRemainingSeats":2}'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of items to skip for pagination
+          example: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of items to return
+          example: 20
+      responses:
+        '200':
+          description: Successfully retrieved event sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventSessionResponseDto'
+              example:
+                - title: Beginner Surf Training
+                  type: surfingTraining
+                  location: Almaty Wave Pool
+                  capacity: 8
+                  start: 2025-09-01T09:00:00.000Z
+                  end: 2025-09-01T10:30:00.000Z
+                  price:
+                    currency: RUB
+                    amount: "2500.00"
+                  remainingSeats: 5
+                  description:
+                    - heading: Level
+                      body: Beginners welcome
+                    - heading: Equipment
+                      body: All equipment provided
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: dateTo must be after dateFrom
+                statusCode: 400
+
+  /event-sessions/{id}:
+    get:
+      tags:
+        - Event Sessions
+      summary: Get event session by ID
+      description: Retrieve a specific event session by its ID
+      operationId: getEventSessionById
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Event session ID
+          example: cm0ybqr8v0001abcdef123456
+      responses:
+        '200':
+          description: Successfully retrieved event session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSessionResponseDto'
+              example:
+                title: Advanced Surf Training
+                type: surfingTraining
+                location: Almaty Wave Pool
+                capacity: 6
+                start: 2025-09-01T14:00:00.000Z
+                end: 2025-09-01T16:00:00.000Z
+                bookingPrice:
+                  currency: RUB
+                  amount: "500.00"
+                price:
+                  currency: RUB
+                  amount: "4000.00"
+                remainingSeats: 2
+                description:
+                  - heading: Level
+                    body: Advanced surfers only
+                  - heading: Requirements
+                    body: Previous experience required
+        '404':
+          description: Event session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Event session not found
+                statusCode: 404
+
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: |
+        Retrieve the profile information of the currently authenticated user.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token in the Authorization header.
+      operationId: getProfile
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublicResponseDto'
+              example:
+                id: uuid-12345-67890
+                email: user@example.com
+                name: John Doe
+                createdAt: 2023-01-01T00:00:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Unauthorized
+                statusCode: 401
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: User not found
+                statusCode: 404
+
+tags:
+  - name: Health Check
+    description: Server health and status endpoints
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Event Sessions
+    description: Event session management and retrieval endpoints
+  - name: Users
+    description: User profile and management endpoints
+
+externalDocs:
+  description: ProSurf Server Repository
+  url: https://github.com/example/prosurf-server
