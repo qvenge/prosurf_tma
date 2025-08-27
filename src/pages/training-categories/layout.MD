@@ -1,1 +1,0 @@
-Create page layout in "src/pages/training-categories/ui/TrainingCategories" without js logic, use my current selection in Figma to get the design. Use icon component from "src/shared/ui/icon" and icons from "src/shared/ds/icons" if needed. Use images from "public/images"

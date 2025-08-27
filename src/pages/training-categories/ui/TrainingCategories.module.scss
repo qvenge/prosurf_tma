@@ -25,7 +25,7 @@
   font-size: 28px;
   line-height: 36px;
   letter-spacing: 0.1px;
-  color: #ffffff;
+  color: ds.color('Text/Primary');
   margin: 0;
   width: 100%;
 }
@@ -45,7 +45,7 @@
 }
 
 .categoryItem {
-  background-color: #212121;
+  background-color: ds.color('Background/Secondary');
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -82,7 +82,7 @@
   font-weight: 700;
   font-size: 17px;
   line-height: 26px;
-  color: #ffffff;
+  color: ds.color('Text/Primary');
   margin: 0;
   width: min-content;
   min-width: 100%;
@@ -93,7 +93,7 @@
   font-weight: 400;
   font-size: 13px;
   line-height: 20px;
-  color: #d7f710;
+  color: ds.color('Text/Brand');
   margin: 0;
   white-space: nowrap;
 }

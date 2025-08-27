@@ -1,17 +1,9 @@
-// Fonts and colors from Figma design
-$primary-green: #d7f710;
-$secondary-gray: #78797e;
-$tertiary-bg: #2a2a2a;
-$card-bg: #212121;
-$text-primary: #ffffff;
-$text-secondary: #aaaaaa;
-$background: #0f0f0f;
-$blue: #007aff;
-$red: #e53935;
+// Colors from design system
+$blue: #007aff; // Custom color not in design system
 
 .root {
-  background: $background;
-  color: $text-primary;
+  background: ds.color('Background/Primary');
+  color: ds.color('Text/Primary');
   min-height: 100vh;
   max-width: 390px;
   margin: 0 auto;
@@ -43,7 +35,7 @@ $red: #e53935;
   font-family: 'SF Pro', -apple-system, system-ui, sans-serif;
   font-weight: 590;
   font-size: 17px;
-  color: $text-primary;
+  color: ds.color('Text/Primary');
 }
 
 .indicators {
@@ -55,7 +47,7 @@ $red: #e53935;
 .signal, .wifi, .battery {
   width: 15px;
   height: 12px;
-  background: $text-primary;
+  background: ds.color('Text/Primary');
   opacity: 0.8;
 }
 
@@ -100,7 +92,7 @@ $red: #e53935;
     font-family: 'SF Pro', -apple-system, system-ui, sans-serif;
     font-weight: 590;
     font-size: 17px;
-    color: $text-primary;
+    color: ds.color('Text/Primary');
     margin: 0 0 2px 0;
     letter-spacing: -0.4px;
   }
@@ -109,7 +101,7 @@ $red: #e53935;
     font-family: 'Roboto', sans-serif;
     font-weight: 400;
     font-size: 13px;
-    color: $text-secondary;
+    color: ds.color('Text/Secondary');
     margin: 0;
     letter-spacing: 0.1px;
   }
@@ -171,7 +163,7 @@ $red: #e53935;
     top: 0;
     bottom: 0;
     right: 9px;
-    background: $text-primary;
+    background: ds.color('Text/Primary');
     border-radius: 8px;
   }
 }
@@ -194,7 +186,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 15px;
-  color: $text-secondary;
+  color: ds.color('Text/Secondary');
   text-transform: uppercase;
   letter-spacing: 0.15px;
   line-height: 22px;
@@ -215,7 +207,7 @@ $red: #e53935;
 }
 
 .bookingCard {
-  background: $card-bg;
+  background: ds.color('Background/Secondary');
   border-radius: 16px;
   padding: 16px;
   min-width: 240px;
@@ -240,7 +232,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 13px;
-  color: $primary-green;
+  color: ds.color('Text/Brand');
   letter-spacing: 0.1px;
   line-height: 20px;
 }
@@ -255,7 +247,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 13px;
-  color: $text-primary;
+  color: ds.color('Text/Primary');
   letter-spacing: 0.1px;
   line-height: 20px;
 }
@@ -264,7 +256,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 13px;
-  color: $primary-green;
+  color: ds.color('Text/Brand');
   letter-spacing: 0.1px;
   line-height: 20px;
 }
@@ -277,7 +269,7 @@ $red: #e53935;
 }
 
 .workoutCard {
-  background: $card-bg;
+  background: ds.color('Background/Secondary');
   border-radius: 16px;
   padding: 8px;
   display: flex;
@@ -288,7 +280,7 @@ $red: #e53935;
 .workoutImage {
   width: 80px;
   height: 80px;
-  background: $secondary-gray;
+  background: ds.color('Text/Teritary');
   border-radius: 8px;
   flex-shrink: 0;
 }
@@ -303,7 +295,7 @@ $red: #e53935;
     font-family: 'Roboto', sans-serif;
     font-weight: 700;
     font-size: 17px;
-    color: $text-primary;
+    color: ds.color('Text/Primary');
     margin: 0;
     line-height: 26px;
     letter-spacing: 0.1px;
@@ -313,7 +305,7 @@ $red: #e53935;
     font-family: 'Roboto', sans-serif;
     font-weight: 400;
     font-size: 13px;
-    color: $primary-green;
+    color: ds.color('Text/Brand');
     margin: 0;
     line-height: 20px;
     letter-spacing: 0.1px;
@@ -321,7 +313,7 @@ $red: #e53935;
 }
 
 .chevron {
-  color: $text-secondary;
+  color: ds.color('Text/Secondary');
   font-size: 20px;
   font-weight: 400;
 }
@@ -334,7 +326,7 @@ $red: #e53935;
 }
 
 .eventCard {
-  background: $card-bg;
+  background: ds.color('Background/Secondary');
   border-radius: 16px;
   padding: 8px 16px 8px 8px;
   display: flex;
@@ -346,7 +338,7 @@ $red: #e53935;
 .eventImage {
   width: 80px;
   height: 80px;
-  background: $secondary-gray;
+  background: ds.color('Text/Teritary');
   border-radius: 8px;
   flex-shrink: 0;
 }
@@ -362,7 +354,7 @@ $red: #e53935;
     font-family: 'Roboto', sans-serif;
     font-weight: 400;
     font-size: 15px;
-    color: $text-primary;
+    color: ds.color('Text/Primary');
     margin: 0;
     line-height: 22px;
     letter-spacing: 0.15px;
@@ -373,7 +365,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 13px;
-  color: $primary-green;
+  color: ds.color('Text/Brand');
   letter-spacing: 0.1px;
   line-height: 20px;
 }
@@ -382,7 +374,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 13px;
-  color: $text-secondary;
+  color: ds.color('Text/Secondary');
   letter-spacing: 0.1px;
   line-height: 20px;
 }
@@ -391,7 +383,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
   font-size: 15px;
-  color: $primary-green;
+  color: ds.color('Text/Brand');
   letter-spacing: 0.15px;
   line-height: 22px;
 }
@@ -403,7 +395,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 13px;
-  color: $text-secondary;
+  color: ds.color('Text/Secondary');
   letter-spacing: 0.1px;
   line-height: 20px;
 }
@@ -418,17 +410,17 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 13px;
-  color: $red;
+  color: ds.color('Text/Error');
   letter-spacing: 0.1px;
   line-height: 20px;
   
   &:contains('нет мест') {
-    color: $text-secondary;
+    color: ds.color('Text/Secondary');
   }
 }
 
 .eventCardCompact {
-  background: $card-bg;
+  background: ds.color('Background/Secondary');
   border-radius: 16px;
   padding: 16px;
   position: relative;
@@ -456,7 +448,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
   font-size: 15px;
-  color: $primary-green;
+  color: ds.color('Text/Brand');
   letter-spacing: 0.15px;
   line-height: 22px;
 }
@@ -493,7 +485,7 @@ $red: #e53935;
     }
     
     .tabLabel {
-      color: $primary-green;
+      color: ds.color('Text/Brand');
     }
   }
 }
@@ -511,7 +503,7 @@ $red: #e53935;
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 13px;
-  color: $secondary-gray;
+  color: ds.color('Text/Teritary');
   letter-spacing: 0.1px;
   line-height: 20px;
   text-align: center;
