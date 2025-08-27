@@ -9,9 +9,13 @@
   border-radius: inherit;
   background: transparent;
   z-index: var(--tgui--z-index--simple);
-  color: var(--tgui--text_color);
+  color: ds.color('Text/Primary');
 }
 
 .wrapper--ios {
   padding: 6px 24px;
+}
+
+.wrapper--selected {
+  color: ds.color('Text/Brand');
 }

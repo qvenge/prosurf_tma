@@ -8,7 +8,7 @@
   box-sizing: border-box;
 
   border-radius: 44px;
-  background: var(--tgui--tertiary_bg_color);
+  background: ds.color('Background/Secondary');
 }
 
 .body {
@@ -31,12 +31,12 @@
   border-radius: 40px;
   z-index: var(--tgui--z-index--simple);
   box-sizing: border-box;
-  background: var(--tgui--segmented_control_active_bg);
+  background: ds.color('Background/Teritary');
 }
 
 .wrapper--ios {
   border-radius: 9px;
-  background: var(--tgui--tertiary_bg_color);
+  background: ds.color('Background/Secondary');
 }
 
 .wrapper--ios .slider {

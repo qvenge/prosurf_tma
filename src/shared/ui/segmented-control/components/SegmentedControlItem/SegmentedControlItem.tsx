@@ -31,6 +31,7 @@ export const SegmentedControlItem = ({
       Component="button"
       className={clsx(
         styles.wrapper,
+        selected && styles['wrapper--selected'],
         platform === 'ios' && styles['wrapper--ios'],
         className,
       )}
