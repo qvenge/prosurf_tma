@@ -16,7 +16,7 @@ export const router = createBrowserRouter([
         path: 'trainings',
         children: [
           { index: true, Component: TrainingCategories },
-          { path: 'categiries/:categoryId', Component: Trainings },
+          { path: 'categories/:categoryId', Component: Trainings },
           { path: 'details/:trainingId', Component: TrainingPage },
         ],
       },
