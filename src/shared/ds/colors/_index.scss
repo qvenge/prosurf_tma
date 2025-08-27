@@ -1,0 +1,12 @@
+@use 'sass:map';
+@use 'color-tokens' as *;
+
+@function color($token-name) {
+  $color: map.get($tokens, $token-name);
+
+  @if $color == null {
+    @error "Color token `#{$token-name}` does not exist";
+  }
+
+  @return $color;
+}

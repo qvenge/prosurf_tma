@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tabbar } from '@telegram-apps/telegram-ui';
+import { Tabbar } from '../tabbar';
 
 import { Icon} from '@/shared/ui/icon';
 

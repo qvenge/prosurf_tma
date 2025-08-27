@@ -17,7 +17,8 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@use "@/shared/lib/style-utils" as utils;`,
+        additionalData: '@use "@/shared/lib/style-utils" as utils;\n'
+          + '@use "@/shared/ds" as ds;\n',
       },
     },
   },

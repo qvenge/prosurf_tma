@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, type HTMLAttributes } from 'react';
-import styles from './AppRoot.module.css';
+import styles from './AppRoot.module.scss';
 
 import clsx from 'clsx';
 import { multipleRef } from '@/shared/lib/react/refs';

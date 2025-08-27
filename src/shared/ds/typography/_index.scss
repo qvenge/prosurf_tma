@@ -1,0 +1,19 @@
+@use 'sass:map';
+@use 'typo-tokens' as *;
+
+@mixin typo($name){
+  $typo: map.get($tokens, $name);
+
+  @if $typo == null {
+    @error "Typography `#{$name}` does not exist";
+  }
+
+  font-size: map.get($typo, 'font-size');
+  font-family: map.get($typo, 'font-family');
+  font-weight: map.get($typo, 'font-weight');
+  line-height: map.get($typo, 'line-height');
+  letter-spacing: map.get($typo, 'letter-spacing');
+  text-transform: map.get($typo, 'text-transform');
+  text-decoration: map.get($typo, 'text-decoration');
+  font-style: map.get($typo, 'font-style');
+}

@@ -1,0 +1,392 @@
+$tokens: (
+  'Roboto/Large Title/Regular': (
+    'font-size': 34px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 42px,
+    'letter-spacing': 0.25px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Large Title/Semibold': (
+    'font-size': 34px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 42px,
+    'letter-spacing': 0.25px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Large Title/Bold': (
+    'font-size': 34px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 42px,
+    'letter-spacing': 0.25px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Large Title/Bold Caps': (
+    'font-size': 34px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 42px,
+    'letter-spacing': 0.25px,
+    'text-transform': uppercase,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 1/Regular': (
+    'font-size': 28px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 36px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 1/Semibold': (
+    'font-size': 28px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 36px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 1/Bold': (
+    'font-size': 28px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 36px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 2/Regular': (
+    'font-size': 24px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 32px,
+    'letter-spacing': 0px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 2/Semibold': (
+    'font-size': 24px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 32px,
+    'letter-spacing': 0px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 2/Bold': (
+    'font-size': 24px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 32px,
+    'letter-spacing': 0px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 3/Regular': (
+    'font-size': 20px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 3/Semibold': (
+    'font-size': 20px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 3/Bold': (
+    'font-size': 20px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Title 3/Bold Caps': (
+    'font-size': 20px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Headline/Regular': (
+    'font-size': 19px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 28px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Headline/Semibold': (
+    'font-size': 19px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 28px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Headline/Bold': (
+    'font-size': 19px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 28px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Text/Regular': (
+    'font-size': 17px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 26px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Text/Medium': (
+    'font-size': 17px,
+    'font-family': Roboto,
+    'font-weight': Medium,
+    'line-height': 26px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Text/Semibold': (
+    'font-size': 17px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 26px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Text/Bold': (
+    'font-size': 17px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 26px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 1/Regular': (
+    'font-size': 16px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 1/Regular Mono': (
+    'font-size': 16px,
+    'font-family': 'Roboto Mono',
+    'font-weight': Regular,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 1/Semibold': (
+    'font-size': 16px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 1/Bold': (
+    'font-size': 16px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 24px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 2/Regular': (
+    'font-size': 15px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 22px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 2/Semibold': (
+    'font-size': 15px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 22px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 2/Semibold Caps': (
+    'font-size': 15px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 22px,
+    'letter-spacing': 0.15px,
+    'text-transform': uppercase,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 2/Bold': (
+    'font-size': 15px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 22px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 2/Bold Caps': (
+    'font-size': 15px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 22px,
+    'letter-spacing': 0.15px,
+    'text-transform': uppercase,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Subheadline 2/Regular Mono': (
+    'font-size': 15px,
+    'font-family': 'Roboto Mono',
+    'font-weight': Regular,
+    'line-height': 22px,
+    'letter-spacing': 0.15px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 1/Regular': (
+    'font-size': 13px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 20px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 1/Semibold': (
+    'font-size': 13px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 20px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 1/Bold': (
+    'font-size': 13px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 20px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 1/Bold Caps': (
+    'font-size': 13px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 20px,
+    'letter-spacing': 0.1px,
+    'text-transform': uppercase,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 2/Regular': (
+    'font-size': 10px,
+    'font-family': Roboto,
+    'font-weight': Regular,
+    'line-height': 16px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 2/Semibold': (
+    'font-size': 10px,
+    'font-family': Roboto,
+    'font-weight': SemiBold,
+    'line-height': 16px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 2/Bold': (
+    'font-size': 10px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 16px,
+    'letter-spacing': 0.1px,
+    'text-transform': none,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+  'Roboto/Caption 2/Bold Caps': (
+    'font-size': 10px,
+    'font-family': Roboto,
+    'font-weight': Bold,
+    'line-height': 16px,
+    'letter-spacing': 0.1px,
+    'text-transform': uppercase,
+    'text-decoration': none,
+    'font-style': normal
+  ),
+);

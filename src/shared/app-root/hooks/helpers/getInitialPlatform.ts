@@ -1,4 +1,4 @@
-import { getTelegramData } from 'helpers/telegram';
+import { getTelegramData } from '@/shared/lib/telegram';
 
 export const getInitialPlatform = () => {
   const telegramData = getTelegramData();

@@ -1,6 +1,6 @@
-import { canUseDOM } from 'helpers/dom';
+import { canUseDOM } from '@/shared/lib/dom';
 
-import { AppRootContextInterface } from 'components/Service/AppRoot/AppRootContext';
+import { type AppRootContextInterface } from '../../AppRootContext';
 
 export const getBrowserAppearanceSubscriber = (
   setAppearance: (appearance: NonNullable<AppRootContextInterface['appearance']>) => void,
