@@ -1,0 +1,1 @@
+export { TrainingCategories } from './ui/TrainingCategories';
