@@ -1,9 +1,12 @@
-import styles from './App.module.scss';
-import { Navbar } from '@/shared/ui';
+
+import { useState } from 'react';
 import { Outlet } from 'react-router';
+import { Navbar } from '@/shared/ui';
 import { AppRoot } from '@/shared/app-root';
+import styles from './App.module.scss';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
+
 
 import { HouseBold, BarbellBold, ConfettiBold, UserBold } from '@/shared/ds/icons';
 
@@ -15,13 +18,19 @@ const navItems = [
 ];
 
 export function App() {
+  const [navbarHeight, setNavbarHeight] = useState(0);
+
+  const handleNavbarHeightChange = (val: number) => {
+    setNavbarHeight(val);
+  };
+
   return (
     <AppRoot>
-      <div className={styles.root}>
+      <div className={styles.root} style={{paddingBottom: `${navbarHeight}px`}}>
         <div className={styles.content}>
           <Outlet />
         </div>
-        <Navbar items={navItems}/>
+        <Navbar onHeightChange={handleNavbarHeightChange} items={navItems}/>
       </div>
     </AppRoot>
   );

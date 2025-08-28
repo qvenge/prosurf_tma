@@ -5,4 +5,13 @@
   box-shadow: 0 -1px 0 ds.color('Border/Primary');
   background: ds.color('Background/Secondary');
   padding: 0 8px;
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  
+  padding-bottom: var(--tgui--safe_area_inset_bottom);
+  bottom: 0;
 }
+
+

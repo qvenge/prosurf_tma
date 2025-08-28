@@ -1,15 +1,15 @@
 'use client';
 
+import { useCallback } from 'react';
 import type { HTMLAttributes, ReactElement } from 'react';
 import styles from './Tabbar.module.scss';
 
 import clsx from 'clsx';
 import { usePlatform } from '@/shared/app-root/usePlatform';
-
-import { FixedLayout } from '@/shared/ui/fixed-layout';
 import { TabbarItem, type TabbarItemProps } from './components/TabbarItem/TabbarItem';
 
 export interface TabbarProps extends HTMLAttributes<HTMLDivElement> {
+  onHeightChange: (val: number) => void;
   /** The child elements of the Tabbar, expected to be `Tabbar.Item` components. */
   children: ReactElement<TabbarItemProps>[];
 }
@@ -24,12 +24,20 @@ export interface TabbarProps extends HTMLAttributes<HTMLDivElement> {
 export const Tabbar = ({
   children,
   className,
+  onHeightChange,
   ...restProps
 }: TabbarProps) => {
   const platform = usePlatform();
 
+  const measuredRef = useCallback((node: HTMLElement | null) => {
+    if (node !== null) {
+      onHeightChange(node.getBoundingClientRect().height);
+    }
+  }, []);
+
   return (
-    <FixedLayout
+    <div
+      ref={measuredRef}
       className={clsx(
         styles.wrapper,
         platform === 'ios' && styles['wrapper--ios'],
@@ -38,7 +46,7 @@ export const Tabbar = ({
       {...restProps}
     >
       {children}
-    </FixedLayout>
+    </div>
   );
 };
 

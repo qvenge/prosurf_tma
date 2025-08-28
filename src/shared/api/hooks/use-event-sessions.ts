@@ -48,7 +48,7 @@ export const useUpcomingEventSessions = (
   const query: GetEventSessionsQuery = {
     filters,
     offset: 0,
-    limit: 1,
+    limit: 20,
   };
 
   return useEventSessions(query, options);

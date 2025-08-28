@@ -13,10 +13,11 @@ interface Item {
 }
 
 export interface NavbarProps extends HTMLAttributes<HTMLDivElement> {
+  onHeightChange: (val: number) => void;
   items: Item[];
 }
 
-export function Navbar({items, className, ...restProps}: NavbarProps) {
+export function Navbar({items, className, onHeightChange, ...restProps}: NavbarProps) {
   const navigate = useNavigate();
   const matches = useMatches().reverse();
 
@@ -36,6 +37,7 @@ export function Navbar({items, className, ...restProps}: NavbarProps) {
 
   return (
     <Tabbar
+      onHeightChange={onHeightChange}
       className={clsx(className)}
       {...restProps}
     >
