@@ -3,7 +3,6 @@
   flex-direction: column;
   gap: 20px;
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
-  padding-bottom: 6px;
   padding-top: 24px;
   align-items: center;
   width: 100%;
@@ -11,5 +10,8 @@
 
 .title {
   @include ds.typo('Roboto/Title 1/Bold');
+  display: block;
+  margin: 0;
+  padding: 0 16px;
   color: ds.color('Text/Primary');
 }

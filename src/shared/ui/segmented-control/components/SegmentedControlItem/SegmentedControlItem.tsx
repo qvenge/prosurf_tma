@@ -7,7 +7,6 @@ import clsx from 'clsx';
 import { usePlatform } from '@/shared/app-root/usePlatform';
 
 import { Tapable } from '@/shared/ui/tapable';
-import { Caption } from '@/shared/typography';
 
 export interface SegmentedControlItemProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Whether the item is selected. Used by the parent SegmentedControl to style accordingly. */
@@ -37,7 +36,7 @@ export const SegmentedControlItem = ({
       )}
       {...restProps}
     >
-      <Caption weight={selected ? '2' : '3'}>{children}</Caption>
+      <span className={styles.text}>{children}</span>
     </Tapable>
   );
 };

@@ -12,10 +12,16 @@
   color: ds.color('Text/Primary');
 }
 
+.text {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Primary');
+}
+
 .wrapper--ios {
   padding: 6px 24px;
 }
 
-.wrapper--selected {
+.wrapper--selected .text {
+  @include ds.typo('Roboto/Caption 1/Semibold');
   color: ds.color('Text/Brand');
 }

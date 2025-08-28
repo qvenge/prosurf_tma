@@ -6,20 +6,17 @@
 }
 
 .dateHeader {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
-  text-transform: uppercase;
-  color: ds.color('Text/Secondary');
+  @include ds.typo('Roboto/Caption 1/Bold Caps');
+  padding: 0 var(--outer-horizontal-padding, 16px);
   margin: 0;
   width: 100%;
+  color: ds.color('Text/Secondary');
 }
 
 .sessionCards {
   display: flex;
   gap: 8px;
+  padding: 0 var(--outer-horizontal-padding, 16px);
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;

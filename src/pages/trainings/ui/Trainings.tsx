@@ -23,7 +23,7 @@ export const Trainings = () => {
   const sessionGroups = useSessionGroups(eventSessions);
 
   return (
-    <div className={styles.root}>
+    <div className={styles.wrapper}>
       <HeroSection />
 
       <div className={styles.filtersSection}>

@@ -1,70 +1,59 @@
-.sessionCard {
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  width: 220px;
+  position: relative;
   background: ds.color('Background/Secondary');
   border-radius: 16px;
-  padding: 16px;
-  min-width: 220px;
-  position: relative;
   flex-shrink: 0;
 }
 
-.cardContent {
+.content {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-grow: 1;
 }
 
-.timePrice {
+.header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: baseline;
 }
 
 .time {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 22px;
-  letter-spacing: 0.15px;
+  @include ds.typo('Roboto/Subheadline 2/Bold');
   color: ds.color('Text/Brand');
 }
 
 .duration {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 400;
-  font-size: 13px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
+  @include ds.typo('Roboto/Caption 1/Regular');
   color: ds.color('Text/Secondary');
-  position: absolute;
-  top: 8px;
-  right: 16px;
-  transform: translateY(-50%);
 }
 
-.sessionInfo {
+.body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex-grow: 1;
 }
 
-.sessionTitle {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 22px;
-  letter-spacing: 0.15px;
+.title {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
   color: ds.color('Text/Primary');
   margin: 0;
 }
 
 .location {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 400;
-  font-size: 13px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
+  @include ds.typo('Roboto/Caption 1/Regular');
   color: ds.color('Text/Secondary');
   margin: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: flex-end;
 }
 
 .price {
@@ -77,17 +66,11 @@
 }
 
 .availability {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  @include ds.typo('Roboto/Caption 1/Regular');
+  margin-left: auto;
   border-radius: 100px;
   padding: 4px 8px;
-  font-family: 'Roboto', sans-serif;
-  font-weight: 400;
-  font-size: 13px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
+  background: ds.color('Background/Teritary');
   
   &.noSeats {
     color: ds.color('Text/Secondary');

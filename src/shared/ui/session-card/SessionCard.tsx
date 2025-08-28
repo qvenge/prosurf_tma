@@ -21,27 +21,24 @@ export const SessionCard = ({
   availability 
 }: SessionCardProps) => {
   return (
-    <div className={styles.sessionCard}>
-      <div className={styles.cardContent}>
-        <div className={styles.timePrice}>
-          <span className={styles.time}>{time}</span>
-          {duration && <span className={styles.duration}>{duration}</span>}
+    <div className={styles.wrapper}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <div className={styles.time}>{time}</div>
+          {duration && <div className={styles.duration}>{duration}</div>}
         </div>
-        <div className={styles.sessionInfo}>
-          <h3 className={styles.sessionTitle}>{title}</h3>
+        <div className={styles.body}>
+          <h3 className={styles.title}>{title}</h3>
           <p className={styles.location}>
-            {location.split('\n').map((line, index) => (
-              <span key={index}>
-                {line}
-                {index < location.split('\n').length - 1 && <br />}
-              </span>
-            ))}
+            {location}
           </p>
         </div>
-        <span className={styles.price}>{price}</span>
-        <span className={`${styles.availability} ${availability.hasSeats ? styles.hasSeats : styles.noSeats}`}>
-          {availability.text}
-        </span>
+        <div className={styles.footer}>
+          <div className={styles.price}>{price}</div>
+          <div className={`${styles.availability} ${availability.hasSeats ? styles.hasSeats : styles.noSeats}`}>
+            {availability.text}
+          </div>
+        </div>
       </div>
     </div>
   );
