@@ -1,4 +1,4 @@
-import { SessionCard, SessionCardProps } from '@/shared/ui/session-card';
+import { SessionCard, type SessionCardProps } from '@/shared/ui/session-card';
 import styles from './SessionGroup.module.scss';
 
 export interface SessionGroupProps {
