@@ -1,6 +1,5 @@
-import { Icon } from '@/shared/ui/icon';
-import { CaretRightBold } from '@/shared/ds/icons';
 import { useUpcomingEventSessions, type EventSession } from '@/shared/api';
+import { CategoryItem } from './CategoryItem';
 import styles from './TrainingCategories.module.scss';
 
 const formatUpcomingDate = (dateString: string): string => {
@@ -45,60 +44,22 @@ export const TrainingCategories = () => {
         <h1 className={styles.title}>Тренировки</h1>
         <div className={styles.categories}>
           <div className={styles.categoryList}>
-            <div className={`${styles.categoryItem} ${!nextSurfingSession && !isLoading && !error ? styles.categoryItemDisabled : ''}`}>
-              <div 
-                className={styles.categoryImage}
-                style={{ backgroundImage: 'url(/images/surfing1.jpg)' }}
-              />
-              <div className={styles.categoryContent}>
-                <h2 className={styles.categoryTitle}>Серфинг</h2>
-                <p className={styles.categorySchedule}>
-                  {isLoading ? 
-                    'Загружаем...' :
-                    error ? 
-                      'Ошибка загрузки' :
-                    nextSurfingSession ? 
-                      `Ближайшая: ${formatUpcomingDate(nextSurfingSession.start)}` : 
-                      'Нет доступных тренировок'
-                  }
-                </p>
-              </div>
-              {nextSurfingSession && !isLoading && !error && (
-                <Icon 
-                  src={CaretRightBold} 
-                  className={styles.categoryIcon}
-                  width={20}
-                  height={20}
-                />
-              )}
-            </div>
-            <div className={`${styles.categoryItem} ${!nextSurfskateSession && !isLoading && !error ? styles.categoryItemDisabled : ''}`}>
-              <div 
-                className={styles.categoryImage}
-                style={{ backgroundImage: 'url(/images/surfskate1.png)' }}
-              />
-              <div className={styles.categoryContent}>
-                <h2 className={styles.categoryTitle}>Серфскейт</h2>
-                <p className={styles.categorySchedule}>
-                  {isLoading ? 
-                    'Загружаем...' :
-                    error ? 
-                      'Ошибка загрузки' :
-                    nextSurfskateSession ? 
-                      `Ближайшая: ${formatUpcomingDate(nextSurfskateSession.start)}` : 
-                      'Нет доступных тренировок'
-                  }
-                </p>
-              </div>
-              {nextSurfskateSession && !isLoading && !error && (
-                <Icon 
-                  src={CaretRightBold} 
-                  className={styles.categoryIcon}
-                  width={20}
-                  height={20}
-                />
-              )}
-            </div>
+            <CategoryItem
+              title="Серфинг"
+              imageUrl="/images/surfing1.jpg"
+              nextSession={nextSurfingSession}
+              isLoading={isLoading}
+              error={!!error}
+              formatUpcomingDate={formatUpcomingDate}
+            />
+            <CategoryItem
+              title="Серфскейт"
+              imageUrl="/images/surfskate1.png"
+              nextSession={nextSurfskateSession}
+              isLoading={isLoading}
+              error={!!error}
+              formatUpcomingDate={formatUpcomingDate}
+            />
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ export const Tabbar = ({
     if (node !== null) {
       onHeightChange(node.getBoundingClientRect().height);
     }
-  }, []);
+  }, [onHeightChange]);
 
   return (
     <div
