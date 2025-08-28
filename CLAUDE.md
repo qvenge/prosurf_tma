@@ -22,7 +22,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build Tool**: Vite 7.1.2 with SWC plugin for fast compilation
 - **Routing**: React Router 7.8.1
 - **UI Library**: Telegram Apps UI components
-- **Styling**: SASS with embedded compiler
+- **Styling**: SASS with embedded compiler and global imports:
+  - `@/shared/lib/style-utils` as `utils` - Utility functions and mixins
+  - `@/shared/ds` as `ds` - Design system tokens and variables
 - **Linting**: ESLint with TypeScript support and React hooks/refresh plugins
 - **API Integration**: TanStack Query 5.85.5 for data fetching and state management
 - **HTTP Client**: Axios 1.11.0 with request/response interceptors
@@ -58,7 +60,11 @@ src/
 ### Configuration Files
 - **TypeScript**: Uses project references with separate configs for app (`tsconfig.app.json`) and Node (`tsconfig.node.json`)
 - **ESLint**: Configured with TypeScript, React hooks, and React refresh plugins
-- **Vite**: Minimal configuration with React SWC plugin
+- **Vite**: Configuration includes:
+  - React SWC plugin for fast compilation
+  - Path alias `@` pointing to `src/` directory for imports
+  - SCSS preprocessor with globally imported utilities and design system tokens
+  - Asset inlining disabled for SVG icons
 
 ### Current Router Setup
 The application uses React Router with browser routing. Router configuration is in `src/app/routes.ts` and integrated in `src/app/main.tsx:9-14` with the API provider wrapping the entire application.
@@ -137,7 +143,8 @@ if (isAuthError(error)) {
 ## Development Notes
 - The project follows Feature-Sliced Design architectural methodology strictly
 - Uses Telegram Apps UI library, indicating this may be a Telegram Web App
-- Path alias `@` configured for `src/` directory imports
+- Path alias `@` configured for `src/` directory imports in Vite config
+- SCSS files have automatic access to style utilities and design system tokens
 - API provider is integrated at application root level for global access
 - No testing framework is currently configured
 - All API schemas are validated at runtime with Zod for type safety

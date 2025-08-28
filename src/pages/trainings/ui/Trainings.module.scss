@@ -7,83 +7,6 @@
   margin: 0 auto;
 }
 
-// Hero Section
-.heroSection {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
-  padding-bottom: 6px;
-  padding-top: 24px;
-  align-items: center;
-  width: 100%;
-}
-
-.cover {
-  height: 200px;
-  width: 390px;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 20px;
-  border-radius: 0;
-  overflow: hidden;
-}
-
-.pagination {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(22px);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 8px 9px;
-  border-radius: 28px;
-}
-
-.activeDot {
-  width: 20px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    right: 9px;
-    background: ds.color('Text/Primary');
-    border-radius: 8px;
-  }
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-}
-
-.title {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  font-size: 28px;
-  line-height: 36px;
-  letter-spacing: 0.1px;
-  color: ds.color('Text/Primary');
-  text-align: center;
-  margin: 0;
-  width: min-content;
-}
-
-// Filters Section
 .filtersSection {
   display: flex;
   flex-direction: column;
@@ -92,80 +15,12 @@
   width: 100%;
 }
 
-.monthSelector {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.segmentedControl {
-  background: ds.color('Background/Secondary');
-  border-radius: 44px;
-  padding: 2px;
-  display: flex;
-  height: 44px;
-  width: 358px;
-}
-
-.segment {
-  flex: 1;
-  background: none;
-  border: none;
-  border-radius: 40px;
-  padding: 6px 24px;
-  font-family: 'Roboto', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
-  color: ds.color('Text/Primary');
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: ds.color('Text/Brand');
-  }
-}
-
 .divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   width: 100%;
 }
 
-.filterChips {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  background: ds.color('Background/Secondary');
-  border-radius: 10px;
-  padding: 10px 12px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  cursor: pointer;
-  
-  span {
-    font-family: 'Roboto', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    line-height: 20px;
-    letter-spacing: 0.1px;
-    color: ds.color('Text/Primary');
-  }
-}
-
-.chipIcon {
-  width: 20px;
-  height: 20px;
-}
-
-// Sessions
 .sessions {
   display: flex;
   flex-direction: column;
