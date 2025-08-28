@@ -10,8 +10,8 @@
   border-radius: 50%;
 
   transition: opacity .15s ease-in-out;
-  opacity: var(--compact_pagination--dot--opacity--selected, .25);
-  background: var(--compact_pagination--dot--background--selected, ds.color('Background/Alternative'));
+  opacity: .25;
+  background: ds.color('Background/Alternative');
 }
 
 .wrapper--selected {

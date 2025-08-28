@@ -3,7 +3,6 @@
   width: 100%;
   aspect-ratio: 2/1;
   overflow: hidden;
-  border-radius: 12px;
   background: ds.color('Background/Secondary');
 }
 
@@ -51,20 +50,12 @@
 }
 
 @media (max-width: 768px) {
-  .wrapper {
-    border-radius: 8px;
-  }
-  
   .pagination {
     bottom: 12px;
   }
 }
 
 @media (max-width: 480px) {
-  .wrapper {
-    border-radius: 6px;
-  }
-  
   .pagination {
     bottom: 8px;
   }

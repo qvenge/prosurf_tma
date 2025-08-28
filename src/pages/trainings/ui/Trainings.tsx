@@ -2,9 +2,13 @@ import { useState, useMemo } from 'react';
 import styles from './Trainings.module.scss';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { SessionGroup } from '@/shared/ui/session-group';
+import { ImageSlider } from '@/shared/ui/image-slider';
 import { useEventSessions } from '@/shared/api';
 
-const imgCover = "http://localhost:3845/assets/9d56337fd9fd9a92228bee24103722e0187c8172.png";
+const heroImages = [
+  '/images/surfing1.jpg',
+  '/images/surfing2.png',
+];
 const imgMultiselectChecked = "http://localhost:3845/assets/aafa7c11b116dc581d1d62c95e5485577066b924.svg";
 const imgMultiselectUnchecked = "http://localhost:3845/assets/20db19bc67f555197498ea8643efdf8c29fca4a2.svg";
 
@@ -123,16 +127,10 @@ export const Trainings = () => {
     <div className={styles.root}>
       {/* Hero Section */}
       <div className={styles.heroSection}>
-        <div 
-          className={styles.cover}
-          style={{ backgroundImage: `url('${imgCover}')` }}
-        >
-          <div className={styles.pagination}>
-            <div className={styles.activeDot}></div>
-            <div className={styles.dot}></div>
-            <div className={styles.dot}></div>
-          </div>
-        </div>
+        <ImageSlider 
+          images={heroImages}
+          className={styles.imageSlider}
+        />
         <h1 className={styles.title}>Тренировки по серфингу</h1>
       </div>
 
