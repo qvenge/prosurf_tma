@@ -1,0 +1,19 @@
+.wrapper {
+  cursor: pointer;
+  display: block;
+
+  width: 8px;
+  height: 8px;
+
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+
+  transition: opacity .15s ease-in-out;
+  opacity: var(--compact_pagination--dot--opacity--selected, .25);
+  background: var(--compact_pagination--dot--background--selected, ds.color('Background/Alternative'));
+}
+
+.wrapper--selected {
+  opacity: 1;
+}
