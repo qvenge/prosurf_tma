@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import {type HTMLAttributes,useCallback } from 'react';
+import clsx from 'clsx';
 import { useNavigate, useMatches } from 'react-router';
 import { Tabbar } from '../tabbar';
 
@@ -11,11 +12,11 @@ interface Item {
   icon?: string;
 }
 
-export interface NavbarProps {
+export interface NavbarProps extends HTMLAttributes<HTMLDivElement> {
   items: Item[];
 }
 
-export function Navbar({items}: NavbarProps) {
+export function Navbar({items, className, ...restProps}: NavbarProps) {
   const navigate = useNavigate();
   const matches = useMatches().reverse();
 
@@ -34,7 +35,10 @@ export function Navbar({items}: NavbarProps) {
   }, [navigate]);
 
   return (
-    <Tabbar>
+    <Tabbar
+      className={clsx(className)}
+      {...restProps}
+    >
       {items.map(({ id, text, path, icon }) => (
         <Tabbar.Item
           key={id}
