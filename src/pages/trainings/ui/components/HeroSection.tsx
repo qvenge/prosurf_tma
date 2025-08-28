@@ -7,14 +7,18 @@ const heroImages = [
   '/images/surfing2.png',
 ];
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  title?: string;
+}
+
+export const HeroSection = ({ title = 'Тренировки' }: HeroSectionProps) => {
   return (
     <div className={styles.heroSection}>
       <ImageSlider 
         images={heroImages}
         className={styles.imageSlider}
       />
-      <h1 className={styles.title}>Тренировки по серфингу</h1>
+      <h1 className={styles.title}>{title}</h1>
     </div>
   );
 };
