@@ -1,7 +1,8 @@
 import clsx from 'clsx';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
 
-import { ImageSlider, Icon } from '@/shared/ui';
+import { ImageSlider, Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
 import styles from './TrainingPage.module.scss';
@@ -15,9 +16,26 @@ const heroImages = [
 const imgRectangle3 = "http://localhost:3845/assets/c13e3ca0ccd2db8f8894d5a02d936feb0dea78c3.png";
 
 export const TrainingPage = () => {
+  const { setOverride } = useBottomBar();
   const { trainingId } = useParams<{ trainingId: string; }>();
-  
   const { data: session, isLoading, error } = useEventSession(trainingId!);
+
+  const bookingButton = useMemo(() => (
+    <div className={styles.bookingButtonWrapper}>
+      <Button
+        size='l'
+        mode='filled'
+        stretched={true}
+      >
+        Записаться
+      </Button>
+    </div>
+  ), []);
+
+  useEffect(() => {
+    setOverride(bookingButton);
+    return () => setOverride(null);
+  }, [setOverride, bookingButton]);
 
   if (isLoading) {
     return <div className={styles.wrapper}>Loading...</div>;

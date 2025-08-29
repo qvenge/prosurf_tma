@@ -11,6 +11,8 @@ export function App() {
     setNavbarHeight(val);
   };
 
+  console.log('navbarHeight', navbarHeight);
+
   return (
     <>
       <div className={styles.wrapper} style={{paddingBottom: `${navbarHeight}px`}}>

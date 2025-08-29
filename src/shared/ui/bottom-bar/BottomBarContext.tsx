@@ -1,23 +1,25 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 
-type Setter = (node: ReactNode | null) => void;
-
-type BottomBarContextValue = {
-  content: ReactNode | null;
-  setContent: Setter;
-  reset: () => void;
+type BottomBarCtx = {
+  content: React.ReactNode;                     // override ?? defaultContent
+  setOverride: (node: React.ReactNode | null) => void; // вместо setContent/reset
 };
 
-const BottomBarContext = createContext<BottomBarContextValue | null>(null);
+const BottomBarContext = createContext<BottomBarCtx | null>(null);
 
-export function BottomBarProvider({ children, defaultContent }: {
-  children: ReactNode;
-  defaultContent: ReactNode;
-}) {
-  const [content, setContent] = useState<ReactNode | null>(defaultContent);
-  const reset = () => setContent(defaultContent);
+export function BottomBarProvider({
+  children,
+  defaultContent,
+}: { children: React.ReactNode; defaultContent: React.ReactNode }) {
+  const [override, setOverride] = useState<React.ReactNode | null>(null);
 
-  const value = useMemo(() => ({ content, setContent, reset }), [content, defaultContent]);
+  const value = useMemo(
+    () => ({
+      content: override ?? defaultContent,
+      setOverride,
+    }),
+    [override, defaultContent]
+  );
 
   return (
     <BottomBarContext.Provider value={value}>

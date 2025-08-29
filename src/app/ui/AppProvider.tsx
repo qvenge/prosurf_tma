@@ -1,4 +1,4 @@
-import { type PropsWithChildren, StrictMode } from 'react';
+import { type PropsWithChildren, StrictMode, useMemo } from 'react';
 import { Navbar, BottomBarProvider } from '@/shared/ui';
 import { AppRoot } from '@/shared/app-root';
 import { ApiProvider } from '@/shared/api';
@@ -12,11 +12,13 @@ const navItems = [
 ];
 
 export function AppProvider({ children }: PropsWithChildren) {
+  const defaultBar = useMemo(() => <Navbar items={navItems} />, []);
+
   return (
     <StrictMode>
       <ApiProvider>
         <AppRoot>
-          <BottomBarProvider defaultContent={<Navbar items={navItems} />}>
+          <BottomBarProvider defaultContent={defaultBar}>
             {children}
           </BottomBarProvider>
         </AppRoot>
