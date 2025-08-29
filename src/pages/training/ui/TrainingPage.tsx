@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useParams } from 'react-router';
 
 import { ImageSlider, Icon } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
@@ -13,7 +14,11 @@ const heroImages = [
 const imgRectangle3 = "http://localhost:3845/assets/c13e3ca0ccd2db8f8894d5a02d936feb0dea78c3.png";
 
 export const TrainingPage = () => {
+  const { trainingId } = useParams<{ trainingId: string; }>();
   const eventTitle = 'Общая группа • Tricks 🔥';
+
+  // TODO: Use trainingId to fetch training session data
+  console.log('Training ID:', trainingId);
 
   return (
     <div className={styles.wrapper}>

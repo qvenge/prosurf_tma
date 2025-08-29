@@ -3,6 +3,7 @@ import { formatDuration, formatAvailability, formatPrice } from '../format-utils
 import type { SessionGroup } from '../../types/session';
 
 interface EventSession {
+  id: string;
   start: string;
   end: string | null;
   title: string;
@@ -27,6 +28,7 @@ export const useSessionGroups = (eventSessions: EventSession[]) => {
       }
 
       groups[dateKey].push({
+        id: session.id,
         time: new Date(session.start).toLocaleTimeString('ru-RU', { 
           hour: '2-digit', 
           minute: '2-digit' 

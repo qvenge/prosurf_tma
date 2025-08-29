@@ -1,4 +1,5 @@
 export interface FormattedSession {
+  id: string;
   time: string;
   duration?: string;
   title: string;

@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router';
 import styles from './SessionCard.module.scss';
 
 export interface SessionCardProps {
+  id: string;
   time: string;
   duration?: string;
   title: string;
@@ -13,6 +15,7 @@ export interface SessionCardProps {
 }
 
 export const SessionCard = ({ 
+  id,
   time, 
   duration, 
   title, 
@@ -20,8 +23,14 @@ export const SessionCard = ({
   price, 
   availability 
 }: SessionCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/trainings/sessions/${id}`);
+  };
+
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} onClick={handleClick} style={{ cursor: 'pointer' }}>
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.time}>{time}</div>
