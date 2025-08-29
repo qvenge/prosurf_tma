@@ -1,7 +1,7 @@
+@use '@/shared/theme';
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  @include ds.typo('Roboto/Text/Regular');
 
   color-scheme: light dark;
 
@@ -17,8 +17,7 @@
 
 body {
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 button {

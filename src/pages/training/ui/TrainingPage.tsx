@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 
 import { ImageSlider, Icon } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
+import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
 import styles from './TrainingPage.module.scss';
 
 const heroImages = [
@@ -15,10 +16,20 @@ const imgRectangle3 = "http://localhost:3845/assets/c13e3ca0ccd2db8f8894d5a02d93
 
 export const TrainingPage = () => {
   const { trainingId } = useParams<{ trainingId: string; }>();
-  const eventTitle = 'Общая группа • Tricks 🔥';
+  
+  const { data: session, isLoading, error } = useEventSession(trainingId!);
 
-  // TODO: Use trainingId to fetch training session data
-  console.log('Training ID:', trainingId);
+  if (isLoading) {
+    return <div className={styles.wrapper}>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.wrapper}>Error loading training session</div>;
+  }
+
+  if (!session) {
+    return <div className={styles.wrapper}>Training session not found</div>;
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -29,15 +40,15 @@ export const TrainingPage = () => {
           className={styles.imageSlider}
         />
 
-        <h1 className={styles.title}>{eventTitle}</h1>
+        <h1 className={styles.title}>{session.title}</h1>
 
         <div className={styles.info}>
           <div className={styles.priceInfo}>
             <div className={styles.priceDetails}>
               <div className={styles.priceType}>Разовая тренировка</div>
-              <div className={styles.price}>7 900 ₽</div>
+              <div className={styles.price}>{session.price.amount} {session.price.currency === 'RUB' ? '₽' : '$'}</div>
             </div>
-            <div className={styles.spotsRemaining}>Осталось 3 места</div>
+            <div className={styles.spotsRemaining}>Осталось {session.remainingSeats} мест</div>
           </div>
 
           <div className={styles.dateInfo}>
@@ -47,7 +58,13 @@ export const TrainingPage = () => {
               width={16}
               height={16}
             />
-            <div className={styles.dateText}>4 июля • Пт</div>
+            <div className={styles.dateText}>
+              {new Date(session.start).toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+                weekday: 'short'
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -66,13 +83,18 @@ export const TrainingPage = () => {
                 src={MapPinRegular}
               />
               <div className={styles.address}>
-                Flow Moscow Ставропольская, ул. 43, Москва
+                {session.location}
               </div>
             </div>
           </div>
           <div className={styles.locationTimeRight}>
             <div className={styles.duration}>1 ч 30 мин.</div>
-            <div className={styles.time}>21:30</div>
+            <div className={styles.time}>
+              {new Date(session.start).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
           </div>
         </div>
 
@@ -85,21 +107,15 @@ export const TrainingPage = () => {
         />
       </div>
 
-      {/* Description */}
-      <div className={clsx(styles.wrapperItem, styles.descriptionSection)}>
-        <div className={styles.sectionTitle}>Описание тренировки</div>
-        <div className={styles.descriptionText}>
-          Новый формат тренировки для эффективной отработки трюков: - Заезды по 15 сек - Больше попыток - быстрее прогресс - Разбираем трюк на суше - Отрабатываем его на волне Ты не будешь осторожничать, так как попыток будет ооочень много. Быстрее освоишь новые трюки и застабилишь старые.
+      {/* Description Sections */}
+      {session.description.map((section, index) => (
+        <div key={index} className={clsx(styles.wrapperItem, styles.descriptionSection)}>
+          <div className={styles.sectionTitle}>{section.heading}</div>
+          <div className={styles.descriptionText}>
+            {section.body}
+          </div>
         </div>
-      </div>
-
-      {/* Equipment */}
-      <div className={clsx(styles.wrapperItem, styles.descriptionSection)}>
-        <div className={styles.sectionTitle}>Что с собой?</div>
-        <div className={styles.descriptionText}>
-          Новый формат тренировки для эффективной отработки трюков: - Заезды по 15 сек - Больше попыток - быстрее прогресс - Разбираем трюк на суше - Отрабатываем его на волне Ты не будешь осторожничать, так как попыток будет ооочень много. Быстрее освоишь новые трюки и застабилишь старые.
-        </div>
-      </div>
+      ))}
     </div>
   );
 };

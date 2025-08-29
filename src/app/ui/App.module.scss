@@ -1,4 +1,4 @@
-.root {
+.wrapper {
   width: 100%;
   height: 100vh;
 
@@ -11,7 +11,9 @@
 
 .content {
   flex-grow: 1;
+  flex-grow: 1;
   overflow: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }

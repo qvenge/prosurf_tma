@@ -10,6 +10,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     Component: App,
+    handle: { bottomBar: { visible: true, mode: 'nav' as const } },
     children: [
       { index: true, Component: Home },
       {
@@ -17,7 +18,11 @@ export const router = createBrowserRouter([
         children: [
           { index: true, Component: TrainingCategories },
           { path: 'categories/:categorySlug', Component: Trainings },
-          { path: 'sessions/:trainingId', Component: TrainingPage },
+          {
+            path: 'sessions/:trainingId',
+            Component: TrainingPage,
+            handle: { bottomBar: { visible: true, mode: 'custom' as const } },
+          },
         ],
       },
     ],
