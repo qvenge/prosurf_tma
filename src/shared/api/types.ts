@@ -20,6 +20,7 @@ export interface User {
 }
 
 export interface EventSession {
+  id: string;
   title: string;
   type: EventType;
   location: string;

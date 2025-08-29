@@ -22,6 +22,7 @@ export const UserSchema = z.object({
 });
 
 export const EventSessionSchema = z.object({
+  id: z.string(),
   title: z.string(),
   type: EventTypeSchema,
   location: z.string(),
