@@ -183,6 +183,10 @@ components:
     EventSessionResponseDto:
       type: object
       properties:
+        id:
+          type: string
+          description: Event session ID
+          example: cm0ybqr8v0001abcdef123456
         title:
           type: string
           description: Event session title
@@ -514,7 +518,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/EventSessionResponseDto'
               example:
-                - title: Beginner Surf Training
+                - id: cm0ybqr8v0001abcdef123456
+                  title: Beginner Surf Training
                   type: surfingTraining
                   location: Almaty Wave Pool
                   capacity: 8
@@ -564,6 +569,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/EventSessionResponseDto'
               example:
+                id: cm0ybqr8v0002abcdef123456
                 title: Advanced Surf Training
                 type: surfingTraining
                 location: Almaty Wave Pool
