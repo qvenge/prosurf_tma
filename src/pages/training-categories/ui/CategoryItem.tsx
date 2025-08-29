@@ -49,7 +49,7 @@ export const CategoryItem = ({
   const handleClick = () => {
     if (nextSession && !isLoading && !error) {
       const categoryId = trainingType === 'surfingTraining' ? 'surfing' : 'surfskate';
-      navigate(`/trainings/categories/${categoryId}`);
+      navigate(`/trainings/${categoryId}`);
     }
   };
 

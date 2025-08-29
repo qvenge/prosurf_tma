@@ -29,12 +29,12 @@ const getCategoryInfo = (categoryId: string) => {
 };
 
 export const Trainings = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+  const { categorySlug } = useParams<{ categorySlug: string }>();
   const { current, next } = getCurrentAndNextMonth();
   const [selectedMonth, setSelectedMonth] = useState(current);
   const { dateFrom, dateTo } = getMonthDateRange(selectedMonth);
   
-  const categoryInfo = getCategoryInfo(categoryId || '');
+  const categoryInfo = getCategoryInfo(categorySlug || '');
 
   const { data: eventSessions = [], isLoading, error } = useEventSessions({
     dateFrom,
