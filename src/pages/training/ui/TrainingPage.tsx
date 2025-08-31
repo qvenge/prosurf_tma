@@ -1,11 +1,13 @@
 import clsx from 'clsx';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
 import { ImageSlider, Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
 import styles from './TrainingPage.module.scss';
+
+import { BookingSelectionModal } from './components/BookingSelectionModal';
 
 const heroImages = [
   '/images/surfing1.jpg',
@@ -17,6 +19,8 @@ const imgRectangle3 = "http://localhost:3845/assets/c13e3ca0ccd2db8f8894d5a02d93
 
 export const TrainingPage = () => {
   const { setOverride } = useBottomBar();
+  const [modalOpen, setModalOpen] = useState(false);
+
   const { trainingId } = useParams<{ trainingId: string; }>();
   const { data: session, isLoading, error } = useEventSession(trainingId!);
 
@@ -26,6 +30,7 @@ export const TrainingPage = () => {
         size='l'
         mode='filled'
         stretched={true}
+        onClick={() => setModalOpen(true)}
       >
         Записаться
       </Button>
@@ -35,7 +40,7 @@ export const TrainingPage = () => {
   useEffect(() => {
     setOverride(bookingButton);
     return () => setOverride(null);
-  }, [setOverride, bookingButton]);
+  }, [setOverride, bookingButton, setModalOpen]);
 
   if (isLoading) {
     return <div className={styles.wrapper}>Loading...</div>;
@@ -51,6 +56,8 @@ export const TrainingPage = () => {
 
   return (
     <div className={styles.wrapper}>
+      <BookingSelectionModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+
       {/* Hero Section with Image and Training Info */}
       <div className={clsx(styles.wrapperItem, styles.heroSection)}>
         <ImageSlider 

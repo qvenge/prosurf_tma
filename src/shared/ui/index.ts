@@ -6,3 +6,4 @@ export * from './image-slider';
 export * from './bottom-bar';
 export * from './spinner';
 export * from './button';
+export * from './modal';
