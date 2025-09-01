@@ -14,6 +14,8 @@ export class ProSurfApiError extends Error {
 }
 
 export const handleApiError = (error: unknown): ProSurfApiError => {
+  console.log('REQUEST ERROR:', error);
+
   if (error instanceof AxiosError) {
     if (error.response?.data) {
       try {

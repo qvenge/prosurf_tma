@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import { SegmentedControl, Button, Switch } from '@/shared/ui';
 import styles from './Payment.module.scss';
 
-type Product = 'subscription' | 'single_session';
 
 export function PaymentPage() {
   const [product, setProduct] = useState('subscription');

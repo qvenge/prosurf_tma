@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import clsx from 'clsx';
 import { Link } from 'react-router';
 import { Icon, Button } from '@/shared/ui';
 import { CheckCircleFill } from '@/shared/ds/icons';

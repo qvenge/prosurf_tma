@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { usersApi } from '../users';
 import { getAccessToken } from '../config';
+import { authApi } from '../auth';
 import type { User } from '../schemas';
 
 export const useUserProfile = (
@@ -26,8 +27,25 @@ export const useIsAuthenticated = () => {
     retry: false,
   });
 
+  const hasToken = Boolean(getAccessToken());
+  
+  // If we get a 401 error, clear the invalid token
+  if (error && 'statusCode' in error && error.statusCode === 401) {
+    authApi.clearAuth();
+  }
+  
+  // Consider authenticated if:
+  // 1. We have a token and user data, OR
+  // 2. We have a token and we're still loading (optimistic), OR
+  // 3. We have a token and the error is NOT a 401 (network/server errors)
+  const isAuthenticated = hasToken && (
+    Boolean(user) ||
+    isLoading ||
+    (error && !('statusCode' in error && error.statusCode === 401))
+  );
+
   return {
-    isAuthenticated: Boolean(user && !error),
+    isAuthenticated,
     user,
     isLoading,
     error,

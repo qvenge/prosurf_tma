@@ -10,8 +10,7 @@ import {
   ChatCircleTextBold
 } from '@/shared/ds/icons';
 
-import { Icon, Button } from '@/shared/ui';
-import { useUserProfile } from '@/shared/api/hooks/use-user';
+import { Icon } from '@/shared/ui';
 import styles from './Profile.module.scss';
 
 const menuItems = [
@@ -84,8 +83,8 @@ export const Profile = () => {
       {/* Profile Header */}
       <div className={styles.header}>
         <div className={styles.avatar}>
-          {user.avatarSrc ? (<img 
-            src={user.avatarSrc} 
+          {(user as any).avatarSrc ? (<img 
+            src={(user as any).avatarSrc} 
             alt="Profile avatar"
             className={styles.avatarImage}
             onError={(e) => {

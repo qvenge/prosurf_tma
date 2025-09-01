@@ -1,4 +1,4 @@
-import { apiClient, setAccessToken } from './config';
+import { apiClient, setAccessToken, getAccessToken } from './config';
 import { handleApiError } from './error-handler';
 import {
   LoginCredentialsSchema,
@@ -89,7 +89,8 @@ export const authApi = {
   initializeAuth: (): void => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('accessToken');
-      if (token) {
+      const currentToken = getAccessToken();
+      if (token && token !== currentToken) {
         setAccessToken(token);
       }
     }

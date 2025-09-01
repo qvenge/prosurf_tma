@@ -14,7 +14,7 @@ export const apiClient = axios.create({
   },
 });
 
-let accessToken: string | null = null;
+let accessToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 let isRefreshing = false;
 let failedQueue: Array<{resolve: (token: string) => void; reject: (error: unknown) => void}> = [];
 

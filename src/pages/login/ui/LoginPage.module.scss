@@ -1,0 +1,65 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: ds.color('Background/Primary');
+}
+
+.form {
+  width: 100%;
+  max-width: 400px;
+  background-color: ds.color('Background/Secondary');
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  @include ds.typo('Roboto/Title 1/Semibold');
+  text-align: center;
+  margin-bottom: 32px;
+  color: ds.color('Text/Primary');
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.label {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  display: block;
+  color: ds.color('Text/Primary');
+  margin-bottom: 8px;
+}
+
+.input {
+  @include ds.typo('Roboto/Text/Regular');
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid ds.color('Border/Primary');
+  border-radius: 12px;
+  color: ds.color('Text/Primary');
+  background-color: ds.color('Background/Primary');
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ds.color('Background/Brand');
+  }
+
+  &::placeholder {
+    color: ds.color('Text/Secondary');
+  }
+}
+
+.error {
+  background-color: rgba(255, 69, 58, 0.1);
+  color: ds.color('Text/Error');
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 69, 58, 0.2);
+}
