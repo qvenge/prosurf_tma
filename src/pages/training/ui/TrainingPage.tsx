@@ -1,11 +1,11 @@
 import clsx from 'clsx';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 
 import { ImageSlider, Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
-import { useCreateBooking } from '@/shared/api';
+import { useCreateBooking, useUserSubscriptions, useRedeemSubscription } from '@/shared/api';
 import styles from './TrainingPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal';
@@ -22,14 +22,57 @@ export const TrainingPage = () => {
   const { setOverride } = useBottomBar();
   const [modalOpen, setModalOpen] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { trainingId } = useParams<{ trainingId: string; }>();
   const { data: session, isLoading, error } = useEventSession(trainingId!);
+  const { data: subscriptions = [], isLoading: subscriptionsLoading } = useUserSubscriptions();
   
   const createBookingMutation = useCreateBooking();
+  const redeemSubscriptionMutation = useRedeemSubscription();
 
-  const handleBookingClick = async () => {
+  const handleBookingClick = useCallback(() => {
+    if (!session || subscriptionsLoading) return;
+    
+    setBookingError(null);
+    setModalOpen(true);
+  }, [session, subscriptionsLoading]);
+
+  const handleUseSubscription = useCallback(() => {
+    if (!trainingId) return;
+    
+    setBookingError(null);
+    
+    createBookingMutation.mutate(
+      { sessionId: trainingId },
+      {
+        onSuccess: (booking) => {
+          setPendingBookingId(booking.id);
+          redeemSubscriptionMutation.mutate(
+            booking.id,
+            {
+              onSuccess: () => {
+                setModalOpen(false);
+                navigate(`/trainings/sessions/${trainingId}/booked`);
+              },
+              onError: (error: any) => {
+                console.error('Subscription redemption error:', error);
+                setBookingError(error.message || 'Произошла ошибка при использовании абонемента');
+                setPendingBookingId(null);
+              }
+            }
+          );
+        },
+        onError: (error: any) => {
+          console.error('Booking error:', error);
+          setBookingError(error.message || 'Произошла ошибка при создании записи');
+        }
+      }
+    );
+  }, [trainingId, createBookingMutation, redeemSubscriptionMutation, navigate]);
+
+  const handleGoToPayment = useCallback(() => {
     if (!trainingId) return;
     
     setBookingError(null);
@@ -38,15 +81,16 @@ export const TrainingPage = () => {
       { sessionId: trainingId },
       {
         onSuccess: () => {
-          navigate(`/trainings/sessions/${trainingId}/booked`);
+          setModalOpen(false);
+          navigate(`/trainings/sessions/${trainingId}/payment`);
         },
         onError: (error: any) => {
           console.error('Booking error:', error);
-          setBookingError(error.message || 'Произошла ошибка при записи');
+          setBookingError(error.message || 'Произошла ошибка при создании записи');
         }
       }
     );
-  };
+  }, [trainingId, createBookingMutation, navigate]);
 
   const bookingButton = useMemo(() => (
     <div className={styles.bookingButtonWrapper}>
@@ -54,18 +98,26 @@ export const TrainingPage = () => {
         size='l'
         mode='primary'
         stretched={true}
-        loading={createBookingMutation.isPending}
+        loading={subscriptionsLoading}
+        disabled={!session}
         onClick={handleBookingClick}
       >
         Записаться
       </Button>
     </div>
-  ), [createBookingMutation.isPending, handleBookingClick]);
+  ), [subscriptionsLoading, session, handleBookingClick]);
 
   useEffect(() => {
     setOverride(bookingButton);
     return () => setOverride(null);
   }, [setOverride, bookingButton]);
+
+  useEffect(() => {
+    if (modalOpen) {
+      setBookingError(null);
+      setPendingBookingId(null);
+    }
+  }, [modalOpen]);
 
   if (isLoading) {
     return <div className={styles.wrapper}>Loading...</div>;
@@ -81,7 +133,18 @@ export const TrainingPage = () => {
 
   return (
     <div className={styles.wrapper}>
-      <BookingSelectionModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      {session && (
+        <BookingSelectionModal 
+          isOpen={modalOpen} 
+          onClose={() => setModalOpen(false)}
+          session={session}
+          subscriptions={subscriptions}
+          onUseSubscription={handleUseSubscription}
+          onGoToPayment={handleGoToPayment}
+          isRedeeming={redeemSubscriptionMutation.isPending}
+          isBooking={createBookingMutation.isPending && !pendingBookingId}
+        />
+      )}
       
       {bookingError && (
         <div className={styles.errorMessage}>
