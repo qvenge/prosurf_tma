@@ -14,7 +14,7 @@ export const apiClient = axios.create({
   },
 });
 
-let accessToken: string | null = null;
+let accessToken: string | null = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOTAzMDkzYS02NzU4LTRhNjctOWI1My02MzJmZmI5MjZlOTgiLCJlbWFpbCI6ImNvb3ZlbmJtQGdtYWlsLmNvbSIsImlhdCI6MTc1NjcxMTUxNywiZXhwIjoxNzU2NzEyNDE3fQ.rzscVFgW3x2ZKni2Ty3m8qEo25LrmnTYgKRUi2utlfM';
 let isRefreshing = false;
 let failedQueue: Array<{resolve: (token: string) => void; reject: (error: unknown) => void}> = [];
 

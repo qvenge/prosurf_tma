@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
             handle: { bottomBar: { visible: false } },
           },
                     {
-            path: 'sessions/:trainingId/booking',
+            path: 'sessions/:trainingId/booked',
             Component: BookingPage,
             handle: { bottomBar: { visible: false } },
           },

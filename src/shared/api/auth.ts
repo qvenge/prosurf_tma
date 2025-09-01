@@ -97,6 +97,7 @@ export const authApi = {
 
   getStoredRefreshToken: (): string | null => {
     if (typeof window !== 'undefined') {
+      return 'Zm0UKsGQkqzvJXH36cL1hHN8CJTehx8K6A4IAPQwj_evv9-4HBX4QZupAzw20GRH_gjiHx3UqgVacbQ3AZizrg'
       return localStorage.getItem('refreshToken');
     }
     return null;

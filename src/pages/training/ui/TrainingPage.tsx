@@ -1,10 +1,11 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 
 import { ImageSlider, Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
+import { useCreateBooking } from '@/shared/api';
 import styles from './TrainingPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal';
@@ -20,9 +21,32 @@ const imgRectangle3 = "http://localhost:3845/assets/c13e3ca0ccd2db8f8894d5a02d93
 export const TrainingPage = () => {
   const { setOverride } = useBottomBar();
   const [modalOpen, setModalOpen] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
   const { trainingId } = useParams<{ trainingId: string; }>();
   const { data: session, isLoading, error } = useEventSession(trainingId!);
+  
+  const createBookingMutation = useCreateBooking();
+
+  const handleBookingClick = async () => {
+    if (!trainingId) return;
+    
+    setBookingError(null);
+    
+    createBookingMutation.mutate(
+      { sessionId: trainingId },
+      {
+        onSuccess: () => {
+          navigate(`/trainings/sessions/${trainingId}/booked`);
+        },
+        onError: (error: any) => {
+          console.error('Booking error:', error);
+          setBookingError(error.message || 'Произошла ошибка при записи');
+        }
+      }
+    );
+  };
 
   const bookingButton = useMemo(() => (
     <div className={styles.bookingButtonWrapper}>
@@ -30,17 +54,18 @@ export const TrainingPage = () => {
         size='l'
         mode='primary'
         stretched={true}
-        onClick={() => setModalOpen(true)}
+        loading={createBookingMutation.isPending}
+        onClick={handleBookingClick}
       >
         Записаться
       </Button>
     </div>
-  ), []);
+  ), [createBookingMutation.isPending, handleBookingClick]);
 
   useEffect(() => {
     setOverride(bookingButton);
     return () => setOverride(null);
-  }, [setOverride, bookingButton, setModalOpen]);
+  }, [setOverride, bookingButton]);
 
   if (isLoading) {
     return <div className={styles.wrapper}>Loading...</div>;
@@ -57,6 +82,12 @@ export const TrainingPage = () => {
   return (
     <div className={styles.wrapper}>
       <BookingSelectionModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      
+      {bookingError && (
+        <div className={styles.errorMessage}>
+          {bookingError}
+        </div>
+      )}
 
       {/* Hero Section with Image and Training Info */}
       <div className={clsx(styles.wrapperItem, styles.heroSection)}>
