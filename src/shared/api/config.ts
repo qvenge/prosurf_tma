@@ -1,5 +1,9 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 
+interface RetryableAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const apiClient = axios.create({
@@ -10,7 +14,21 @@ export const apiClient = axios.create({
   },
 });
 
-let accessToken: string | null = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOTAzMDkzYS02NzU4LTRhNjctOWI1My02MzJmZmI5MjZlOTgiLCJlbWFpbCI6ImNvb3ZlbmJtQGdtYWlsLmNvbSIsImlhdCI6MTc1NjY5NTI3MSwiZXhwIjoxNzU2Njk2MTcxfQ.2ETucCsVJpKOIqz0-hT8PLV0J3a-8m_G80qEEuK-5r0';
+let accessToken: string | null = null;
+let isRefreshing = false;
+let failedQueue: Array<{resolve: (token: string) => void; reject: (error: unknown) => void}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token!);
+    }
+  });
+  
+  failedQueue = [];
+};
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
@@ -30,14 +48,56 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      setAccessToken(null);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableAxiosRequestConfig;
+    
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers!['Authorization'] = `Bearer ${token}`;
+          return apiClient(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+      
+      originalRequest._retry = true;
+      isRefreshing = true;
+      
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      
+      if (refreshToken) {
+        try {
+          const { authApi } = await import('./auth');
+          const refreshResponse = await authApi.refreshAccessToken(refreshToken);
+          
+          setAccessToken(refreshResponse.accessToken);
+          processQueue(null, refreshResponse.accessToken);
+          
+          originalRequest.headers!['Authorization'] = `Bearer ${refreshResponse.accessToken}`;
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          setAccessToken(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+          }
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        setAccessToken(null);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
       }
     }
+    
     return Promise.reject(error);
   }
 );

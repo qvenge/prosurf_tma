@@ -21,6 +21,9 @@ export const UserSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
+export type RefreshTokenRequest = z.infer<typeof RefreshTokenRequestSchema>;
+export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
+
 export const EventSessionSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -50,6 +53,17 @@ export const RegisterDataSchema = z.object({
 });
 
 export const LoginResponseSchema = z.object({
+  tokenType: z.string(),
+  accessToken: z.string(),
+  expiresIn: z.number(),
+  refreshToken: z.string(),
+});
+
+export const RefreshTokenRequestSchema = z.object({
+  refreshToken: z.string(),
+});
+
+export const RefreshTokenResponseSchema = z.object({
   tokenType: z.string(),
   accessToken: z.string(),
   expiresIn: z.number(),

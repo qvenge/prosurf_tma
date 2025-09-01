@@ -6,12 +6,15 @@ import {
   LoginResponseSchema,
   LogoutRequestSchema,
   LogoutResponseSchema,
+  RefreshTokenRequestSchema,
+  RefreshTokenResponseSchema,
   UserSchema,
   type LoginCredentials,
   type RegisterData,
   type LoginResponse,
   type LogoutRequest,
   type LogoutResponse,
+  type RefreshTokenResponse,
   type User,
 } from './schemas';
 
@@ -40,6 +43,25 @@ export const authApi = {
       }
       
       return loginResponse;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  refreshAccessToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
+    try {
+      const validatedData = RefreshTokenRequestSchema.parse({ refreshToken });
+      const response = await apiClient.post('/auth/refresh', validatedData);
+      const refreshResponse = RefreshTokenResponseSchema.parse(response.data);
+      
+      setAccessToken(refreshResponse.accessToken);
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', refreshResponse.accessToken);
+        localStorage.setItem('refreshToken', refreshResponse.refreshToken);
+      }
+      
+      return refreshResponse;
     } catch (error) {
       throw handleApiError(error);
     }
