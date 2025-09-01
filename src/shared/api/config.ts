@@ -10,7 +10,7 @@ export const apiClient = axios.create({
   },
 });
 
-let accessToken: string | null = null;
+let accessToken: string | null = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOTAzMDkzYS02NzU4LTRhNjctOWI1My02MzJmZmI5MjZlOTgiLCJlbWFpbCI6ImNvb3ZlbmJtQGdtYWlsLmNvbSIsImlhdCI6MTc1NjY5NTI3MSwiZXhwIjoxNzU2Njk2MTcxfQ.2ETucCsVJpKOIqz0-hT8PLV0J3a-8m_G80qEEuK-5r0';
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token;

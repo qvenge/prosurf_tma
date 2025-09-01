@@ -71,3 +71,19 @@ export interface GetEventSessionsQuery {
   offset?: number;
   limit?: number;
 }
+
+export type BookingStatus = 'HOLD' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+
+export interface CreateBooking {
+  sessionId: string;
+  idempotencyKey?: string;
+}
+
+export interface BookingResponse {
+  id: string;
+  sessionId: string;
+  status: BookingStatus;
+  price: Price;
+  holdExpiresAt: string | null;
+  createdAt: string;
+}

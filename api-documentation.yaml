@@ -4,15 +4,18 @@ info:
   description: |
     NestJS backend application for ProSurf - a surfing training and event management platform.
     
-    This API provides endpoints for user authentication, event session management, and user profiles.
+    This API provides endpoints for user authentication, event session management, booking management, and user profiles.
     The application uses PostgreSQL with Prisma ORM and implements JWT-based authentication.
     
     ## Features
     - JWT Authentication with access and refresh tokens
     - Rate limiting and throttling
     - Event session filtering and pagination
+    - Booking system with hold/cancel functionality
+    - Automatic booking expiration (configurable TTL)
     - Multi-currency support (RUB, USD)
     - Comprehensive input validation
+    - Race-safe booking capacity management
     
     ## Authentication
     Most endpoints require Bearer token authentication. Use the `/auth/login` endpoint to obtain tokens.
@@ -274,6 +277,71 @@ components:
           default: 20
           description: Maximum number of items to return
           example: 20
+
+    # Booking Schemas
+    BookingStatus:
+      type: string
+      enum:
+        - HOLD
+        - CONFIRMED
+        - CANCELLED
+        - EXPIRED
+      description: |
+        Booking status:
+        - HOLD: Temporary reservation (expires automatically)
+        - CONFIRMED: Confirmed reservation (payment completed)
+        - CANCELLED: Cancelled by user or system
+        - EXPIRED: Hold expired automatically
+
+    CreateBookingDto:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          description: ID of the event session to book
+          example: cm0ybqr8v0001abcdef123456
+        idempotencyKey:
+          type: string
+          description: Optional idempotency key for duplicate request protection
+          example: unique-key-12345
+
+    BookingResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique booking ID
+          example: cm0ybqr8v0002abcdef123456
+        sessionId:
+          type: string
+          description: ID of the booked event session
+          example: cm0ybqr8v0001abcdef123456
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        price:
+          type: object
+          properties:
+            currency:
+              $ref: '#/components/schemas/Currency'
+            amount:
+              type: string
+              pattern: '^\\d+\\.\\d{2}$'
+              description: Booking price amount as decimal string
+              example: "2500.00"
+          description: Booking price (from session's bookingPrice or main price)
+        holdExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the hold expires (only for HOLD status)
+          example: 2025-09-01T09:15:00.000Z
+        createdAt:
+          type: string
+          format: date-time
+          description: When the booking was created
+          example: 2025-08-31T19:30:00.000Z
 
     # Error Response
     ErrorResponseDto:
@@ -642,6 +710,267 @@ paths:
                 message: User not found
                 statusCode: 404
 
+  /bookings:
+    post:
+      tags:
+        - Bookings
+      summary: Create a booking hold
+      description: |
+        Create a booking hold for an event session. The hold will expire automatically after the configured TTL (default 15 minutes).
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        
+        **Business Rules**:
+        - One active booking per user per session (409 if already exists)
+        - Capacity checked atomically to prevent overbooking
+        - Idempotency key prevents duplicate bookings on retries
+        - Price taken from session's bookingPrice or main price
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingDto'
+            example:
+              sessionId: cm0ybqr8v0001abcdef123456
+              idempotencyKey: unique-key-12345
+      responses:
+        '200':
+          description: Booking hold created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: HOLD
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: 2025-09-01T09:15:00.000Z
+                createdAt: 2025-08-31T19:30:00.000Z
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: sessionId must be a string
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Unauthorized
+                statusCode: 401
+        '404':
+          description: Event session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Event session not found
+                statusCode: 404
+        '409':
+          description: Conflict - user already has booking for session, no seats available, or idempotency key conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: You already have an active booking for this session
+                statusCode: 409
+    get:
+      tags:
+        - Bookings
+      summary: Get user bookings
+      description: |
+        Retrieve all bookings for the authenticated user, ordered by creation date (newest first).
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+      operationId: getUserBookings
+      responses:
+        '200':
+          description: User bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                - id: cm0ybqr8v0002abcdef123456
+                  sessionId: cm0ybqr8v0001abcdef123456
+                  status: HOLD
+                  price:
+                    currency: RUB
+                    amount: "2500.00"
+                  holdExpiresAt: 2025-09-01T09:15:00.000Z
+                  createdAt: 2025-08-31T19:30:00.000Z
+                - id: cm0ybqr8v0003abcdef123456
+                  sessionId: cm0ybqr8v0004abcdef123456
+                  status: CONFIRMED
+                  price:
+                    currency: RUB
+                    amount: "4000.00"
+                  holdExpiresAt: null
+                  createdAt: 2025-08-30T14:20:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /bookings/{id}:
+    get:
+      tags:
+        - Bookings
+      summary: Get booking by ID
+      description: |
+        Retrieve a specific booking by its ID. Users can only access their own bookings.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization**: Users can only access their own bookings (403 if accessing others).
+      operationId: getBooking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Booking ID
+          example: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Booking retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: HOLD
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: 2025-09-01T09:15:00.000Z
+                createdAt: 2025-08-31T19:30:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - cannot access other users' bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: You can only access your own bookings
+                statusCode: 403
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Booking not found
+                statusCode: 404
+    delete:
+      tags:
+        - Bookings
+      summary: Cancel a booking
+      description: |
+        Cancel a booking. Only HOLD status bookings can be cancelled by users. 
+        CONFIRMED bookings require contacting support for refunds.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization**: Users can only cancel their own bookings (403 if accessing others).
+        
+        **Cancellation Rules**:
+        - Only HOLD bookings can be cancelled
+        - CONFIRMED bookings cannot be cancelled (contact support)
+        - CANCELLED and EXPIRED bookings cannot be cancelled again
+      operationId: cancelBooking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Booking ID
+          example: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Booking cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: CANCELLED
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: 2025-09-01T09:15:00.000Z
+                createdAt: 2025-08-31T19:30:00.000Z
+        '400':
+          description: Cannot cancel booking (already cancelled, expired, or confirmed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Cannot cancel confirmed booking. Contact support for refunds.
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - cannot access other users' bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: You can only access your own bookings
+                statusCode: 403
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Booking not found
+                statusCode: 404
+
 tags:
   - name: Health Check
     description: Server health and status endpoints
@@ -649,6 +978,8 @@ tags:
     description: User authentication and authorization endpoints
   - name: Event Sessions
     description: Event session management and retrieval endpoints
+  - name: Bookings
+    description: Booking management endpoints for creating holds, cancelling, and managing reservations
   - name: Users
     description: User profile and management endpoints
 

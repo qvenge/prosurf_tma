@@ -74,3 +74,13 @@ export const isRateLimitError = (error: unknown): boolean => {
   const apiError = handleApiError(error);
   return apiError.statusCode === 429;
 };
+
+export const isNotFoundError = (error: unknown): boolean => {
+  const apiError = handleApiError(error);
+  return apiError.statusCode === 404;
+};
+
+export const isForbiddenError = (error: unknown): boolean => {
+  const apiError = handleApiError(error);
+  return apiError.statusCode === 403;
+};

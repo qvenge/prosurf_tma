@@ -77,6 +77,22 @@ export const GetEventSessionsQuerySchema = z.object({
   limit: z.number().int().positive().max(100).optional().default(20),
 });
 
+export const BookingStatusSchema = z.enum(['HOLD', 'CONFIRMED', 'CANCELLED', 'EXPIRED']);
+
+export const CreateBookingSchema = z.object({
+  sessionId: z.string(),
+  idempotencyKey: z.string().optional(),
+});
+
+export const BookingResponseSchema = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  status: BookingStatusSchema,
+  price: PriceSchema,
+  holdExpiresAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+});
+
 export const ApiErrorSchema = z.object({
   error: z.string(),
   message: z.string(),
@@ -96,4 +112,7 @@ export type LogoutRequest = z.infer<typeof LogoutRequestSchema>;
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
 export type EventSessionFilters = z.infer<typeof EventSessionFiltersSchema>;
 export type GetEventSessionsQuery = z.infer<typeof GetEventSessionsQuerySchema>;
+export type BookingStatus = z.infer<typeof BookingStatusSchema>;
+export type CreateBooking = z.infer<typeof CreateBookingSchema>;
+export type BookingResponse = z.infer<typeof BookingResponseSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;

@@ -7,6 +7,7 @@ export * from './error-handler';
 export { authApi } from './auth';
 export { eventSessionsApi } from './event-sessions';
 export { usersApi } from './users';
+export { bookingsApi } from './bookings';
 
 // Types and schemas
 export * from './schemas';
@@ -15,6 +16,7 @@ export * from './schemas';
 export * from './hooks/use-auth';
 export * from './hooks/use-event-sessions';
 export * from './hooks/use-user';
+export * from './hooks/use-bookings';
 
 // Providers
 export { QueryProvider } from './providers/query-provider';
