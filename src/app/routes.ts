@@ -5,6 +5,7 @@ import { Home } from '@/pages/home';
 import { TrainingCategories } from '@/pages/training-categories';
 import { Trainings } from '@/pages/trainings';
 import { TrainingPage } from '@/pages/training';
+import { Profile } from '@/pages/profile';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      { path: 'profile', Component: Profile },
     ],
   },
 ]);
