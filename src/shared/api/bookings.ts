@@ -19,7 +19,16 @@ export const bookingsApi = {
     }
   },
 
-  getUserBookings: async (): Promise<BookingResponse[]> => {
+  getUserBookings: async (userId: string): Promise<BookingResponse[]> => {
+    try {
+      const response = await apiClient.get(`/users/${encodeURIComponent(userId)}/bookings`);
+      return z.array(BookingResponseSchema).parse(response.data);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getAllBookings: async (): Promise<BookingResponse[]> => {
     try {
       const response = await apiClient.get('/bookings');
       return z.array(BookingResponseSchema).parse(response.data);
@@ -40,6 +49,15 @@ export const bookingsApi = {
   cancelBooking: async (id: string): Promise<BookingResponse> => {
     try {
       const response = await apiClient.delete(`/bookings/${encodeURIComponent(id)}`);
+      return BookingResponseSchema.parse(response.data);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  redeemSubscription: async (id: string): Promise<BookingResponse> => {
+    try {
+      const response = await apiClient.post(`/bookings/${encodeURIComponent(id)}/redeem-subscription`);
       return BookingResponseSchema.parse(response.data);
     } catch (error) {
       throw handleApiError(error);

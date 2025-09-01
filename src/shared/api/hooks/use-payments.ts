@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi } from '../payments';
 import { handleApiError, isAuthError, isConflictError, isNotFoundError, isForbiddenError } from '../error-handler';
-import type { CreatePaymentIntent } from '../schemas';
+import { useUserProfile } from './use-user';
 
 export const useCreatePaymentIntent = () => {
   const queryClient = useQueryClient();
@@ -43,6 +43,26 @@ export const usePayment = (id: string) => {
     queryKey: ['payments', id],
     queryFn: () => paymentsApi.getPaymentById(id),
     enabled: !!id,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+
+export const useUserPayments = (userId?: string) => {
+  const { data: currentUser } = useUserProfile();
+  const effectiveUserId = userId || currentUser?.id;
+
+  return useQuery({
+    queryKey: ['payments', 'user', effectiveUserId],
+    queryFn: () => paymentsApi.getUserPayments(effectiveUserId!),
+    enabled: Boolean(effectiveUserId),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+
+export const useAllPayments = () => {
+  return useQuery({
+    queryKey: ['payments', 'all'],
+    queryFn: paymentsApi.getAllPayments,
     staleTime: 30 * 1000, // 30 seconds
   });
 };

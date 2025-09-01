@@ -33,3 +33,30 @@ export const useIsAuthenticated = () => {
     error,
   };
 };
+
+export const useUserBookingsById = (userId: string) => {
+  return useQuery({
+    queryKey: ['users', userId, 'bookings'],
+    queryFn: () => usersApi.getUserBookings(userId),
+    enabled: Boolean(userId),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+
+export const useUserSubscriptionsById = (userId: string) => {
+  return useQuery({
+    queryKey: ['users', userId, 'subscriptions'],
+    queryFn: () => usersApi.getUserSubscriptions(userId),
+    enabled: Boolean(userId),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+
+export const useUserPaymentsById = (userId: string) => {
+  return useQuery({
+    queryKey: ['users', userId, 'payments'],
+    queryFn: () => usersApi.getUserPayments(userId),
+    enabled: Boolean(userId),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};

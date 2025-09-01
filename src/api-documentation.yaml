@@ -1,0 +1,2037 @@
+openapi: 3.0.3
+info:
+  title: ProSurf Server API
+  description: |
+    NestJS backend application for ProSurf - a surfing training and event management platform.
+    
+    This API provides endpoints for user authentication, event session management, booking management, payment processing, and user profiles.
+    The application uses PostgreSQL with Prisma ORM and implements JWT-based authentication.
+    
+    ## Features
+    - JWT Authentication with access and refresh tokens (including token rotation)
+    - Rate limiting and throttling
+    - Event session filtering and pagination
+    - Booking system with hold/cancel functionality
+    - Payment processing with provider abstraction
+    - Webhook handling for payment status updates
+    - Automatic booking confirmation on successful payment
+    - Automatic booking expiration (configurable TTL)
+    - Subscription system with event-type-specific plans and redemption
+    - Multi-currency support (RUB, USD)
+    - Comprehensive input validation
+    - Race-safe booking capacity management
+    - Idempotent webhook processing
+    
+    ## Authentication
+    Most endpoints require Bearer token authentication. Use the `/auth/login` endpoint to obtain tokens.
+    When access tokens expire, use `/auth/refresh` to get new tokens without re-authenticating.
+    
+    ## Role-Based Access Control
+    The API implements role-based access control with two roles:
+    - **USER**: Regular users can access their own data only
+    - **ADMIN**: Administrators can access data from all users
+    
+    Some endpoints require admin privileges and will return 403 Forbidden for regular users.
+    User-specific endpoints (e.g., `/users/{userId}/bookings`) allow users to access their own data,
+    while admins can access any user's data.
+  version: 0.0.1
+  contact:
+    name: ProSurf API Support
+  license:
+    name: Unlicensed
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.prosurf.example.com
+    description: Production server (example)
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /auth/login
+
+  schemas:
+    # Auth Schemas
+    RegisterDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address (will be converted to lowercase and trimmed)
+          example: user@example.com
+        password:
+          type: string
+          minLength: 12
+          pattern: '^(?=.*[A-Za-z])(?=.*\d)'
+          description: Password (minimum 12 characters, must contain letters and digits)
+          example: MySecurePassword123
+        name:
+          type: string
+          minLength: 1
+          description: User full name (optional)
+          example: John Doe
+    
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        password:
+          type: string
+          description: User password
+          example: MySecurePassword123
+    
+    LogoutDto:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token to revoke
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    RefreshDto:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token received from login or previous refresh
+          example: base64url-encoded-refresh-token
+
+    UserPublicResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+          example: uuid-string
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        name:
+          type: string
+          nullable: true
+          description: User full name
+          example: John Doe
+        role:
+          $ref: '#/components/schemas/Role'
+        createdAt:
+          type: string
+          format: date-time
+          description: User registration date
+          example: 2023-01-01T00:00:00.000Z
+
+    LoginResponseDto:
+      type: object
+      properties:
+        tokenType:
+          type: string
+          description: Token type
+          example: Bearer
+        accessToken:
+          type: string
+          description: JWT access token for authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: number
+          description: Token expiry time in seconds
+          example: 900
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: base64url-encoded-refresh-token
+
+    LogoutResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Logout success message
+          example: Logged out successfully
+
+    RefreshResponseDto:
+      type: object
+      properties:
+        tokenType:
+          type: string
+          description: Token type
+          example: Bearer
+        accessToken:
+          type: string
+          description: New JWT access token for authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: number
+          description: Token expiry time in seconds
+          example: 900
+        refreshToken:
+          type: string
+          description: New refresh token for obtaining future access tokens
+          example: new-base64url-encoded-refresh-token
+
+    # Event Sessions Schemas
+    EventType:
+      type: string
+      enum:
+        - surfingTraining
+        - surfskateTraining
+        - tour
+        - other
+      description: Type of event session
+
+    Currency:
+      type: string
+      enum:
+        - RUB
+        - USD
+      description: Supported currencies
+
+    PaymentStatus:
+      type: string
+      enum:
+        - REQUIRES_ACTION
+        - PENDING
+        - SUCCEEDED
+        - FAILED
+        - CANCELED
+      description: |-
+        Payment status:
+        - REQUIRES_ACTION: Payment requires user action to complete (e.g., authentication)
+        - PENDING: Payment is being processed
+        - SUCCEEDED: Payment completed successfully
+        - FAILED: Payment failed to process
+        - CANCELED: Payment was canceled
+
+    SubscriptionStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - EXPIRED
+        - CANCELED
+      description: |-
+        Subscription status:
+        - ACTIVE: Subscription is active and can be used
+        - EXPIRED: Subscription has expired
+        - CANCELED: Subscription was canceled
+
+    PaymentMethod:
+      type: string
+      enum:
+        - PAYMENT
+        - SUBSCRIPTION
+        - GIFT
+        - WALLET
+      description: |-
+        Payment methods used for bookings:
+        - PAYMENT: Regular payment via payment provider
+        - SUBSCRIPTION: Paid using subscription redemption
+        - GIFT: Paid using gift certificate
+        - WALLET: Paid using wallet balance
+
+    Role:
+      type: string
+      enum:
+        - USER
+        - ADMIN
+      description: |-
+        User roles:
+        - USER: Regular user with access to their own data
+        - ADMIN: Administrator with access to all users' data
+
+    PriceDto:
+      type: object
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        amount:
+          type: string
+          pattern: '^\d+\.\d{2}$'
+          description: Price amount as decimal string to avoid floating-point issues
+          example: "2500.00"
+
+    DescriptionSectionDto:
+      type: object
+      properties:
+        heading:
+          type: string
+          description: Section heading
+          example: Level
+        body:
+          type: string
+          description: Section content
+          example: Beginners welcome
+
+    EventSessionResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Event session ID
+          example: cm0ybqr8v0001abcdef123456
+        title:
+          type: string
+          description: Event session title
+          example: Beginner Surf Training
+        type:
+          $ref: '#/components/schemas/EventType'
+        location:
+          type: string
+          description: Event location
+          example: Almaty Wave Pool
+        capacity:
+          type: integer
+          description: Total capacity of the session
+          example: 8
+        start:
+          type: string
+          format: date-time
+          description: Session start time in ISO 8601 format
+          example: 2025-09-01T09:00:00.000Z
+        end:
+          type: string
+          format: date-time
+          nullable: true
+          description: Session end time in ISO 8601 format (optional)
+          example: 2025-09-01T10:30:00.000Z
+        bookingPrice:
+          allOf:
+            - $ref: '#/components/schemas/PriceDto'
+          nullable: true
+          description: Optional booking price (may be absent for immediate payment sessions)
+        price:
+          $ref: '#/components/schemas/PriceDto'
+        remainingSeats:
+          type: integer
+          description: Number of available seats
+          example: 5
+        description:
+          type: array
+          items:
+            $ref: '#/components/schemas/DescriptionSectionDto'
+          description: Detailed description sections
+
+    EventSessionFiltersDto:
+      type: object
+      properties:
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType'
+          description: Filter by event types
+          example: ["tour", "surfingTraining"]
+        minRemainingSeats:
+          type: integer
+          minimum: 0
+          description: Minimum number of remaining seats
+          example: 2
+
+    GetEventSessionsQueryDto:
+      type: object
+      properties:
+        dateFrom:
+          type: string
+          format: date-time
+          description: Filter sessions from this date (defaults to current time if not provided)
+          example: 2025-08-20T12:00:00.000Z
+        dateTo:
+          type: string
+          format: date-time
+          description: Filter sessions until this date (must be after dateFrom)
+          example: 2025-08-25T12:00:00.000Z
+        filters:
+          type: string
+          description: URL-encoded JSON string containing EventSessionFiltersDto
+          example: '{"types":["tour"],"minRemainingSeats":2}'
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Number of items to skip for pagination
+          example: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          description: Maximum number of items to return
+          example: 20
+
+    # Booking Schemas
+    BookingStatus:
+      type: string
+      enum:
+        - HOLD
+        - CONFIRMED
+        - CANCELLED
+        - EXPIRED
+      description: |
+        Booking status:
+        - HOLD: Temporary reservation (expires automatically)
+        - CONFIRMED: Confirmed reservation (payment completed)
+        - CANCELLED: Cancelled by user or system
+        - EXPIRED: Hold expired automatically
+
+    CreateBookingDto:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          description: ID of the event session to book
+          example: cm0ybqr8v0001abcdef123456
+        idempotencyKey:
+          type: string
+          description: Optional idempotency key for duplicate request protection
+          example: unique-key-12345
+
+    BookingResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique booking ID
+          example: cm0ybqr8v0002abcdef123456
+        sessionId:
+          type: string
+          description: ID of the booked event session
+          example: cm0ybqr8v0001abcdef123456
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        price:
+          type: object
+          properties:
+            currency:
+              $ref: '#/components/schemas/Currency'
+            amount:
+              type: string
+              pattern: '^\\d+\\.\\d{2}$'
+              description: Booking price amount as decimal string
+              example: "2500.00"
+          description: Booking price (from session's bookingPrice or main price)
+        holdExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the hold expires (only for HOLD status)
+          example: 2025-09-01T09:15:00.000Z
+        createdAt:
+          type: string
+          format: date-time
+          description: When the booking was created
+          example: 2025-08-31T19:30:00.000Z
+
+    # Payment Schemas
+    CreatePaymentIntentDto:
+      type: object
+      required:
+        - bookingId
+        - method
+      properties:
+        bookingId:
+          type: string
+          description: ID of the booking to create payment for
+          example: cm0ybqr8v0002abcdef123456
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+
+    PaymentResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Payment ID
+          example: cm0ybqr8v0003abcdef123456
+        bookingId:
+          type: string
+          nullable: true
+          description: Booking ID associated with this payment (null for subscription payments)
+          example: cm0ybqr8v0002abcdef123456
+        provider:
+          type: string
+          description: Payment provider name
+          example: mock
+        providerRef:
+          type: string
+          description: Provider-specific payment reference
+          example: mock_pi_abc123
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        amountMinor:
+          type: integer
+          description: Payment amount in minor units (cents)
+          example: 5000
+        currency:
+          $ref: '#/components/schemas/Currency'
+        createdAt:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+          example: 2025-09-01T08:00:00.000Z
+        updatedAt:
+          type: string
+          format: date-time
+          description: Payment last update timestamp
+          example: 2025-09-01T08:05:00.000Z
+
+    CreatePaymentIntentResponseDto:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/PaymentResponseDto'
+        checkoutUrl:
+          type: string
+          nullable: true
+          description: Checkout URL for completing payment (if applicable)
+          example: https://mock-payment-provider.com/checkout/mock_pi_abc123
+        clientSecret:
+          type: string
+          nullable: true
+          description: Client secret for payment confirmation (if applicable)
+          example: pi_abc123_secret_xyz
+        metadata:
+          type: object
+          nullable: true
+          description: Additional metadata from payment provider
+          additionalProperties: true
+
+    WebhookResponseDto:
+      type: object
+      properties:
+        received:
+          type: boolean
+          description: Indicates webhook was received successfully
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Webhook processing timestamp (only on errors)
+          example: 2025-09-01T08:00:00.000Z
+        error:
+          type: string
+          description: Error message (only on failures)
+          example: Webhook processing failed
+
+    # Subscription Schemas
+    SubscriptionPlanResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Subscription plan ID
+          example: cm0ybqr8v0002abcdef123456
+        name:
+          type: string
+          description: Plan name
+          example: "10 Surfing Sessions"
+        sessionsTotal:
+          type: integer
+          description: Total number of sessions included
+          example: 10
+        validityDays:
+          type: integer
+          description: Validity period in days
+          example: 30
+        priceMinor:
+          type: integer
+          description: Price in minor currency units (cents)
+          example: 15000
+        currency:
+          $ref: '#/components/schemas/Currency'
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        isActive:
+          type: boolean
+          description: Whether the plan is currently active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Plan creation timestamp
+          example: '2024-08-15T10:30:00.000Z'
+
+    SubscriptionResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Subscription ID
+          example: cm0ybqr8v0002abcdef123456
+        userId:
+          type: string
+          description: User ID
+          example: cm0ybqr8v0001abcdef123456
+        remaining:
+          type: integer
+          description: Remaining session count
+          example: 7
+        expiresAt:
+          type: string
+          format: date-time
+          description: Subscription expiration timestamp
+          example: '2024-09-15T10:30:00.000Z'
+        status:
+          $ref: '#/components/schemas/SubscriptionStatus'
+        createdAt:
+          type: string
+          format: date-time
+          description: Subscription creation timestamp
+          example: '2024-08-15T10:30:00.000Z'
+        plan:
+          $ref: '#/components/schemas/SubscriptionPlanResponseDto'
+
+    PurchaseSubscriptionDto:
+      type: object
+      required:
+        - planId
+      properties:
+        planId:
+          type: string
+          description: ID of the subscription plan to purchase
+          example: cm0ybqr8v0002abcdef123456
+
+    PurchaseSubscriptionResponseDto:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          description: Payment ID
+          example: cm0ybqr8v0003abcdef123456
+        providerRef:
+          type: string
+          description: Payment provider reference ID
+          example: pi_1234567890
+        clientSecret:
+          type: string
+          description: Client secret for completing the payment
+          example: pi_1234567890_secret_abcdef123456
+        amountMinor:
+          type: integer
+          description: Amount in minor currency units
+          example: 15000
+        currency:
+          type: string
+          description: Currency code
+          example: RUB
+        planId:
+          type: string
+          description: Subscription plan ID
+          example: cm0ybqr8v0002abcdef123456
+
+    # Error Response
+    ErrorResponseDto:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: Bad Request
+        message:
+          type: string
+          description: Error message
+          example: Invalid input data
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 400
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Create a new user account with email and password. Email must be unique.
+        
+        **Rate Limiting**: 5 requests per minute
+        
+        **Password Requirements**:
+        - Minimum 12 characters
+        - Must contain at least one letter and one digit
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+            example:
+              email: user@example.com
+              password: MySecurePassword123
+              name: John Doe
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublicResponseDto'
+        '400':
+          description: Invalid input data (weak password, invalid email, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Password must be at least 12 characters long
+                statusCode: 400
+        '409':
+          description: Email is already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: Email is already registered
+                statusCode: 409
+        '429':
+          description: Too many registration attempts (rate limited)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: |
+        Authenticate user and return JWT access token and refresh token for Bearer authentication.
+        
+        **Rate Limiting**: 10 requests per minute
+        
+        The access token should be used in the Authorization header as: `Bearer <token>`
+        
+        **Token Lifecycle**: Access tokens expire in 15 minutes. Use the refresh token with `/auth/refresh` to get new tokens.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+            example:
+              email: user@example.com
+              password: MySecurePassword123
+      responses:
+        '200':
+          description: Login successful - returns access token and refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+              example:
+                tokenType: Bearer
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                expiresIn: 900
+                refreshToken: base64url-encoded-refresh-token
+        '400':
+          description: Invalid input data (malformed email, missing fields, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '401':
+          description: Invalid credentials (wrong email or password)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Invalid credentials
+                statusCode: 401
+        '429':
+          description: Too many login attempts (rate limited)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: |
+        Exchange a valid refresh token for a new access token and refresh token pair. Implements token rotation for security.
+        
+        **Rate Limiting**: 10 requests per minute
+        
+        **Token Rotation**: Each successful refresh invalidates the old refresh token and issues new access and refresh tokens.
+        This prevents replay attacks and ensures that stolen refresh tokens have limited lifetime.
+      operationId: refresh
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshDto'
+            example:
+              refreshToken: base64url-encoded-refresh-token
+      responses:
+        '200':
+          description: Tokens refreshed successfully - returns new access and refresh tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponseDto'
+              example:
+                tokenType: Bearer
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                expiresIn: 900
+                refreshToken: new-base64url-encoded-refresh-token
+        '400':
+          description: Invalid input data (missing refresh token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: refreshToken should not be empty
+                statusCode: 400
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Invalid or expired refresh token
+                statusCode: 401
+        '429':
+          description: Too many refresh attempts (rate limited)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: |
+        Revoke the provided refresh token. Requires valid Bearer token in Authorization header.
+        
+        This endpoint invalidates the refresh token, preventing it from being used to generate new access tokens.
+      operationId: logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutDto'
+            example:
+              refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Logout successful - refresh token revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponseDto'
+        '400':
+          description: Invalid request body (missing refresh token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '401':
+          description: Unauthorized (invalid or missing Bearer token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /event-sessions:
+    get:
+      tags:
+        - Event Sessions
+      summary: Get event sessions
+      description: |
+        Retrieve a list of available event sessions with optional filtering and pagination.
+        
+        **Default Behavior**:
+        - Returns sessions starting from current time if `dateFrom` not specified
+        - Limited to 20 results by default (max 100)
+        - No authentication required
+        
+        **Filtering**:
+        The `filters` parameter accepts a URL-encoded JSON string with the following structure:
+        ```json
+        {
+          "types": ["surfingTraining", "tour"],
+          "minRemainingSeats": 2
+        }
+        ```
+      operationId: getEventSessions
+      security: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: "ISO datetime for filtering sessions from this date (default: current time)"
+          example: 2025-08-20T12:00:00.000Z
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: ISO datetime for filtering sessions until this date
+          example: 2025-08-25T12:00:00.000Z
+        - name: filters
+          in: query
+          schema:
+            type: string
+          description: "URL-encoded JSON with optional fields: types (EventType[]), minRemainingSeats (number)"
+          example: '{"types":["tour"],"minRemainingSeats":2}'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of items to skip for pagination
+          example: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of items to return
+          example: 20
+      responses:
+        '200':
+          description: Successfully retrieved event sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventSessionResponseDto'
+              example:
+                - id: cm0ybqr8v0001abcdef123456
+                  title: Beginner Surf Training
+                  type: surfingTraining
+                  location: Almaty Wave Pool
+                  capacity: 8
+                  start: 2025-09-01T09:00:00.000Z
+                  end: 2025-09-01T10:30:00.000Z
+                  price:
+                    currency: RUB
+                    amount: "2500.00"
+                  remainingSeats: 5
+                  description:
+                    - heading: Level
+                      body: Beginners welcome
+                    - heading: Equipment
+                      body: All equipment provided
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: dateTo must be after dateFrom
+                statusCode: 400
+
+  /event-sessions/{id}:
+    get:
+      tags:
+        - Event Sessions
+      summary: Get event session by ID
+      description: Retrieve a specific event session by its ID
+      operationId: getEventSessionById
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Event session ID
+          example: cm0ybqr8v0001abcdef123456
+      responses:
+        '200':
+          description: Successfully retrieved event session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSessionResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                title: Advanced Surf Training
+                type: surfingTraining
+                location: Almaty Wave Pool
+                capacity: 6
+                start: 2025-09-01T14:00:00.000Z
+                end: 2025-09-01T16:00:00.000Z
+                bookingPrice:
+                  currency: RUB
+                  amount: "500.00"
+                price:
+                  currency: RUB
+                  amount: "4000.00"
+                remainingSeats: 2
+                description:
+                  - heading: Level
+                    body: Advanced surfers only
+                  - heading: Requirements
+                    body: Previous experience required
+        '404':
+          description: Event session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Event session not found
+                statusCode: 404
+
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: |
+        Retrieve the profile information of the currently authenticated user.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token in the Authorization header.
+      operationId: getProfile
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublicResponseDto'
+              example:
+                id: uuid-12345-67890
+                email: user@example.com
+                name: John Doe
+                role: USER
+                createdAt: 2023-01-01T00:00:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Unauthorized
+                statusCode: 401
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: User not found
+                statusCode: 404
+
+  /users/{userId}/bookings:
+    get:
+      tags:
+        - Users
+      summary: Get user bookings
+      description: |-
+        Retrieve bookings for a specific user. Users can only access their own bookings, admins can access any user's bookings.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization Rules**: 
+        - Regular users can only access their own bookings (userId must match their user ID)
+        - Admin users can access bookings for any user
+      operationId: getUserBookings
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+          example: cm0ybqr8v0001abcdef123456
+      responses:
+        '200':
+          description: User bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                - id: cm0ybqr8v0002abcdef123456
+                  sessionId: cm0ybqr8v0001abcdef123456
+                  status: HOLD
+                  price:
+                    currency: RUB
+                    amount: "2500.00"
+                  holdExpiresAt: 2025-09-01T09:15:00.000Z
+                  createdAt: 2025-08-31T19:30:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - can only access own bookings or admin required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Access denied
+                statusCode: 403
+
+  /users/{userId}/subscriptions:
+    get:
+      tags:
+        - Users
+      summary: Get user subscriptions
+      description: |-
+        Retrieve subscriptions for a specific user. Users can only access their own subscriptions, admins can access any user's subscriptions.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization Rules**: 
+        - Regular users can only access their own subscriptions (userId must match their user ID)
+        - Admin users can access subscriptions for any user
+      operationId: getUserSubscriptions
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+          example: cm0ybqr8v0001abcdef123456
+      responses:
+        '200':
+          description: User subscriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionResponseDto'
+              example:
+                - id: cm0ybqr8v0002abcdef123456
+                  userId: cm0ybqr8v0001abcdef123456
+                  remaining: 7
+                  expiresAt: '2024-09-15T10:30:00.000Z'
+                  status: ACTIVE
+                  createdAt: '2024-08-15T10:30:00.000Z'
+                  plan:
+                    id: cm0ybqr8v0003abcdef123456
+                    name: "10 Surfing Sessions"
+                    sessionsTotal: 10
+                    validityDays: 30
+                    priceMinor: 15000
+                    currency: RUB
+                    eventType: surfingTraining
+                    isActive: true
+                    createdAt: '2024-08-15T10:30:00.000Z'
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - can only access own subscriptions or admin required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Access denied
+                statusCode: 403
+
+  /users/{userId}/payments:
+    get:
+      tags:
+        - Users
+      summary: Get user payments
+      description: |-
+        Retrieve payments for a specific user. Users can only access their own payments, admins can access any user's payments.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization Rules**: 
+        - Regular users can only access their own payments (userId must match their user ID)
+        - Admin users can access payments for any user
+      operationId: getUserPayments
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+          example: cm0ybqr8v0001abcdef123456
+      responses:
+        '200':
+          description: User payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentResponseDto'
+              example:
+                - id: cm0ybqr8v0003abcdef123456
+                  bookingId: cm0ybqr8v0002abcdef123456
+                  provider: mock
+                  providerRef: mock_pi_abc123
+                  status: SUCCEEDED
+                  amountMinor: 5000
+                  currency: USD
+                  createdAt: 2025-09-01T08:00:00.000Z
+                  updatedAt: 2025-09-01T08:05:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - can only access own payments or admin required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Access denied
+                statusCode: 403
+
+  /bookings:
+    post:
+      tags:
+        - Bookings
+      summary: Create a booking hold
+      description: |
+        Create a booking hold for an event session. The hold will expire automatically after the configured TTL (default 15 minutes).
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        
+        **Business Rules**:
+        - One active booking per user per session (409 if already exists)
+        - Capacity checked atomically to prevent overbooking
+        - Idempotency key prevents duplicate bookings on retries
+        - Price taken from session's bookingPrice or main price
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingDto'
+            example:
+              sessionId: cm0ybqr8v0001abcdef123456
+              idempotencyKey: unique-key-12345
+      responses:
+        '200':
+          description: Booking hold created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: HOLD
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: 2025-09-01T09:15:00.000Z
+                createdAt: 2025-08-31T19:30:00.000Z
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: sessionId must be a string
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Unauthorized
+                message: Unauthorized
+                statusCode: 401
+        '404':
+          description: Event session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Event session not found
+                statusCode: 404
+        '409':
+          description: Conflict - user already has booking for session, no seats available, or idempotency key conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: You already have an active booking for this session
+                statusCode: 409
+    get:
+      tags:
+        - Bookings
+      summary: Get all bookings (Admin only)
+      description: |
+        Retrieve all bookings from all users, ordered by creation date (newest first).
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization Required**: Admin role required to access all bookings.
+      operationId: getAllBookings
+      responses:
+        '200':
+          description: All bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                - id: cm0ybqr8v0002abcdef123456
+                  sessionId: cm0ybqr8v0001abcdef123456
+                  status: HOLD
+                  price:
+                    currency: RUB
+                    amount: "2500.00"
+                  holdExpiresAt: 2025-09-01T09:15:00.000Z
+                  createdAt: 2025-08-31T19:30:00.000Z
+                - id: cm0ybqr8v0003abcdef123456
+                  sessionId: cm0ybqr8v0004abcdef123456
+                  status: CONFIRMED
+                  price:
+                    currency: RUB
+                    amount: "4000.00"
+                  holdExpiresAt: null
+                  createdAt: 2025-08-30T14:20:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Admin role required
+                statusCode: 403
+
+  /bookings/{id}:
+    get:
+      tags:
+        - Bookings
+      summary: Get booking by ID
+      description: |
+        Retrieve a specific booking by its ID. Users can only access their own bookings.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization**: Users can only access their own bookings (403 if accessing others).
+      operationId: getBooking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Booking ID
+          example: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Booking retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: HOLD
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: 2025-09-01T09:15:00.000Z
+                createdAt: 2025-08-31T19:30:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - cannot access other users' bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: You can only access your own bookings
+                statusCode: 403
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Booking not found
+                statusCode: 404
+    delete:
+      tags:
+        - Bookings
+      summary: Cancel a booking
+      description: |
+        Cancel a booking. Only HOLD status bookings can be cancelled by users. 
+        CONFIRMED bookings require contacting support for refunds.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization**: Users can only cancel their own bookings (403 if accessing others).
+        
+        **Cancellation Rules**:
+        - Only HOLD bookings can be cancelled
+        - CONFIRMED bookings cannot be cancelled (contact support)
+        - CANCELLED and EXPIRED bookings cannot be cancelled again
+      operationId: cancelBooking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Booking ID
+          example: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Booking cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: CANCELLED
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: 2025-09-01T09:15:00.000Z
+                createdAt: 2025-08-31T19:30:00.000Z
+        '400':
+          description: Cannot cancel booking (already cancelled, expired, or confirmed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Cannot cancel confirmed booking. Contact support for refunds.
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - cannot access other users' bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: You can only access your own bookings
+                statusCode: 403
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Booking not found
+                statusCode: 404
+
+  /payments:
+    get:
+      tags:
+        - Payments
+      summary: Get all payments (Admin only)
+      description: |-
+        Retrieve all payments from all users, ordered by creation date (newest first).
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization Required**: Admin role required to access all payments.
+      operationId: getAllPayments
+      responses:
+        '200':
+          description: All payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentResponseDto'
+              example:
+                - id: cm0ybqr8v0003abcdef123456
+                  bookingId: cm0ybqr8v0002abcdef123456
+                  provider: mock
+                  providerRef: mock_pi_abc123
+                  status: SUCCEEDED
+                  amountMinor: 5000
+                  currency: USD
+                  createdAt: 2025-09-01T08:00:00.000Z
+                  updatedAt: 2025-09-01T08:05:00.000Z
+                - id: cm0ybqr8v0004abcdef123456
+                  bookingId: null
+                  provider: mock
+                  providerRef: mock_pi_def456
+                  status: PENDING
+                  amountMinor: 15000
+                  currency: RUB
+                  createdAt: 2025-09-01T09:00:00.000Z
+                  updatedAt: 2025-09-01T09:00:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Admin role required
+                statusCode: 403
+
+  /payments/intents:
+    post:
+      tags:
+        - Payments
+      summary: Create payment intent
+      description: |-
+        Create a payment intent for a booking in HOLD status. This creates a payment record and returns 
+        payment provider-specific information needed to complete the payment.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        
+        **Business Rules**:
+        - Only bookings in HOLD status can have payment intents created
+        - User must own the booking
+        - Only one payment intent per booking is allowed
+        - Payment amount is taken from the booking's price
+        
+        **Payment Flow**:
+        1. Create payment intent (this endpoint)
+        2. User completes payment using checkoutUrl or clientSecret
+        3. Payment provider sends webhook notification
+        4. System processes webhook and updates payment/booking status
+      operationId: createPaymentIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentIntentDto'
+            example:
+              bookingId: cm0ybqr8v0002abcdef123456
+              method: card
+      responses:
+        '201':
+          description: Payment intent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePaymentIntentResponseDto'
+              example:
+                payment:
+                  id: cm0ybqr8v0003abcdef123456
+                  bookingId: cm0ybqr8v0002abcdef123456
+                  provider: mock
+                  providerRef: mock_pi_abc123
+                  status: REQUIRES_ACTION
+                  amountMinor: 5000
+                  currency: USD
+                  createdAt: 2025-09-01T08:00:00.000Z
+                  updatedAt: 2025-09-01T08:00:00.000Z
+                checkoutUrl: https://mock-payment-provider.com/checkout/mock_pi_abc123
+                metadata:
+                  bookingId: cm0ybqr8v0002abcdef123456
+        '400':
+          description: Invalid request - booking not in HOLD status or invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Only bookings in HOLD status can have payment intents created
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - user does not own the booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Access denied to this booking
+                statusCode: 403
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Booking not found
+                statusCode: 404
+        '409':
+          description: Conflict - payment intent already exists for booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: Payment intent already exists for this booking
+                statusCode: 409
+
+  /payments/{id}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment by ID
+      description: |-
+        Retrieve payment details for the authenticated user. Users can only access their own payments.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization**: Users can only access their own payments (404 if accessing others).
+      operationId: getPayment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Payment ID
+          example: cm0ybqr8v0003abcdef123456
+      responses:
+        '200':
+          description: Payment details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponseDto'
+              example:
+                id: cm0ybqr8v0003abcdef123456
+                bookingId: cm0ybqr8v0002abcdef123456
+                provider: mock
+                providerRef: mock_pi_abc123
+                status: SUCCEEDED
+                amountMinor: 5000
+                currency: USD
+                createdAt: 2025-09-01T08:00:00.000Z
+                updatedAt: 2025-09-01T08:05:00.000Z
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '404':
+          description: Payment not found or does not belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Payment not found
+                statusCode: 404
+
+  /payments/webhooks/{provider}:
+    post:
+      tags:
+        - Payments
+      summary: Handle payment webhook
+      description: |-
+        Process webhook events from payment providers. This endpoint is called by payment providers 
+        to notify the system of payment status changes.
+        
+        **Security**: Webhook signatures are verified to ensure authenticity.
+        **Idempotency**: Webhook events are processed idempotently to prevent duplicate processing.
+        
+        **Supported Events**:
+        - Payment succeeded - confirms the booking and updates payment status
+        - Payment failed - updates payment status to FAILED
+        - Payment canceled - updates payment status to CANCELED
+        - Payment pending - updates payment status to PENDING
+        
+        **Note**: This endpoint is intended for payment provider webhooks, not for direct client use.
+      operationId: handleWebhook
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Payment provider name
+          example: mock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Webhook payload from payment provider (format varies by provider)
+            example:
+              type: payment.succeeded
+              id: mock_pi_abc123
+              data:
+                object:
+                  id: mock_pi_abc123
+                  metadata:
+                    bookingId: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponseDto'
+              example:
+                received: true
+        '400':
+          description: Bad request - invalid webhook payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponseDto'
+              example:
+                error: Webhook processing failed
+                timestamp: 2025-09-01T08:00:00.000Z
+        '401':
+          description: Unauthorized - invalid webhook signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponseDto'
+              example:
+                error: Webhook processing failed
+                timestamp: 2025-09-01T08:00:00.000Z
+
+  /subscriptions:
+    get:
+      tags:
+        - Subscriptions
+      summary: Get all subscriptions (Admin only)
+      description: |-
+        Retrieve all subscriptions from all users, including both active and expired subscriptions.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        **Authorization Required**: Admin role required to access all subscriptions.
+      operationId: getAllSubscriptions
+      responses:
+        '200':
+          description: All subscriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionResponseDto'
+              example:
+                - id: cm0ybqr8v0002abcdef123456
+                  userId: cm0ybqr8v0001abcdef123456
+                  remaining: 7
+                  expiresAt: '2024-09-15T10:30:00.000Z'
+                  status: ACTIVE
+                  createdAt: '2024-08-15T10:30:00.000Z'
+                  plan:
+                    id: cm0ybqr8v0003abcdef123456
+                    name: "10 Surfing Sessions"
+                    sessionsTotal: 10
+                    validityDays: 30
+                    priceMinor: 15000
+                    currency: RUB
+                    eventType: surfingTraining
+                    isActive: true
+                    createdAt: '2024-08-15T10:30:00.000Z'
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '403':
+          description: Forbidden - admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Forbidden
+                message: Admin role required
+                statusCode: 403
+
+  /subscriptions/purchase:
+    post:
+      tags:
+        - Subscriptions
+      summary: Purchase a subscription plan
+      description: |-
+        Create a payment intent for purchasing a subscription plan. On successful payment webhook, 
+        a subscription will be automatically issued to the user.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        
+        **Business Rules**:
+        - Plan must be active (isActive: true)
+        - Only one pending payment per plan per user
+        - Payment intent created with subscription metadata
+        
+        **Payment Flow**:
+        1. Purchase subscription plan (this endpoint)
+        2. User completes payment using clientSecret or checkoutUrl
+        3. Payment provider sends webhook notification
+        4. System processes webhook and issues subscription automatically
+      operationId: purchaseSubscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseSubscriptionDto'
+            example:
+              planId: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Payment intent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseSubscriptionResponseDto'
+              example:
+                paymentId: cm0ybqr8v0003abcdef123456
+                providerRef: pi_1234567890
+                clientSecret: pi_1234567890_secret_abcdef123456
+                amountMinor: 15000
+                currency: RUB
+                planId: cm0ybqr8v0002abcdef123456
+        '400':
+          description: Invalid request data or inactive plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Subscription plan is not active
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '404':
+          description: Subscription plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Subscription plan not found
+                statusCode: 404
+        '409':
+          description: Payment intent already exists for this plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: Payment intent already exists for this subscription plan
+                statusCode: 409
+
+  /bookings/{id}/redeem-subscription:
+    post:
+      tags:
+        - Bookings
+      summary: Redeem subscription for booking
+      description: |-
+        Use an active subscription to confirm a booking. The subscription must match the event type 
+        of the session and have remaining sessions available.
+        
+        **Authentication Required**: This endpoint requires a valid Bearer token.
+        
+        **Business Rules**:
+        - Booking must be in HOLD status
+        - Booking must not already have a payment method
+        - User must have active subscription for the event type
+        - Subscription must not be expired and have remaining sessions > 0
+        - Event type must match between subscription plan and session
+        
+        **Transaction Safety**: All operations are performed atomically in a database transaction.
+      operationId: redeemSubscriptionForBooking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Booking ID
+          example: cm0ybqr8v0002abcdef123456
+      responses:
+        '200':
+          description: Subscription redeemed successfully, booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponseDto'
+              example:
+                id: cm0ybqr8v0002abcdef123456
+                sessionId: cm0ybqr8v0001abcdef123456
+                status: CONFIRMED
+                price:
+                  currency: RUB
+                  amount: "2500.00"
+                holdExpiresAt: null
+                createdAt: 2025-08-31T19:30:00.000Z
+        '400':
+          description: Bad request - invalid booking status or user mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: Booking must be in HOLD status to redeem subscription
+                statusCode: 400
+        '401':
+          description: Unauthorized - invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Not Found
+                message: Booking not found
+                statusCode: 404
+        '409':
+          description: Conflict - no active subscription available, already has payment method, or booking not in HOLD status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Conflict
+                message: No active subscription available for this event type
+                statusCode: 409
+
+tags:
+  - name: Health Check
+    description: Server health and status endpoints
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Event Sessions
+    description: Event session management and retrieval endpoints
+  - name: Bookings
+    description: Booking management endpoints for creating holds, cancelling, and managing reservations
+  - name: Payments
+    description: Payment processing endpoints for creating payment intents, retrieving payment details, and handling webhooks
+  - name: Users
+    description: User profile and management endpoints
+  - name: Subscriptions
+    description: Subscription management endpoints for purchasing plans and redeeming sessions
+
+externalDocs:
+  description: ProSurf Server Repository
+  url: https://github.com/example/prosurf-server

@@ -4,6 +4,8 @@ export const CurrencySchema = z.enum(['RUB', 'USD']);
 
 export const EventTypeSchema = z.enum(['surfingTraining', 'surfskateTraining', 'tour', 'other']);
 
+export const RoleSchema = z.enum(['USER', 'ADMIN']);
+
 export const PriceSchema = z.object({
   currency: CurrencySchema,
   amount: z.string().regex(/^\d+\.\d{2}$/, 'Price must be in format "0.00"'),
@@ -18,6 +20,7 @@ export const UserSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   name: z.string().nullable(),
+  role: RoleSchema,
   createdAt: z.string().datetime(),
 });
 
@@ -109,7 +112,7 @@ export const BookingResponseSchema = z.object({
 
 export const PaymentStatusSchema = z.enum(['REQUIRES_ACTION', 'PENDING', 'SUCCEEDED', 'FAILED', 'CANCELED']);
 
-export const PaymentMethodSchema = z.enum(['card', 'bank_transfer']);
+export const PaymentMethodSchema = z.enum(['PAYMENT', 'SUBSCRIPTION', 'GIFT', 'WALLET']);
 
 export const CreatePaymentIntentSchema = z.object({
   bookingId: z.string(),
@@ -118,7 +121,7 @@ export const CreatePaymentIntentSchema = z.object({
 
 export const PaymentResponseSchema = z.object({
   id: z.string(),
-  bookingId: z.string(),
+  bookingId: z.string().nullable(),
   provider: z.string(),
   providerRef: z.string(),
   status: PaymentStatusSchema,
@@ -132,7 +135,7 @@ export const CreatePaymentIntentResponseSchema = z.object({
   payment: PaymentResponseSchema,
   checkoutUrl: z.string().nullable(),
   clientSecret: z.string().nullable(),
-  metadata: z.record(z.any()).nullable(),
+  metadata: z.record(z.string(), z.any()).nullable(),
 });
 
 export const WebhookResponseSchema = z.object({
@@ -147,8 +150,47 @@ export const ApiErrorSchema = z.object({
   statusCode: z.number(),
 });
 
+// Subscription Schemas
+export const SubscriptionStatusSchema = z.enum(['ACTIVE', 'EXPIRED', 'CANCELED']);
+
+export const SubscriptionPlanResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  sessionsTotal: z.number().int(),
+  validityDays: z.number().int(),
+  priceMinor: z.number().int(),
+  currency: CurrencySchema,
+  eventType: EventTypeSchema,
+  isActive: z.boolean(),
+  createdAt: z.string().datetime(),
+});
+
+export const SubscriptionResponseSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  remaining: z.number().int(),
+  expiresAt: z.string().datetime(),
+  status: SubscriptionStatusSchema,
+  createdAt: z.string().datetime(),
+  plan: SubscriptionPlanResponseSchema,
+});
+
+export const PurchaseSubscriptionSchema = z.object({
+  planId: z.string(),
+});
+
+export const PurchaseSubscriptionResponseSchema = z.object({
+  paymentId: z.string(),
+  providerRef: z.string(),
+  clientSecret: z.string(),
+  amountMinor: z.number().int(),
+  currency: z.string(),
+  planId: z.string(),
+});
+
 export type Currency = z.infer<typeof CurrencySchema>;
 export type EventType = z.infer<typeof EventTypeSchema>;
+export type Role = z.infer<typeof RoleSchema>;
 export type Price = z.infer<typeof PriceSchema>;
 export type DescriptionSection = z.infer<typeof DescriptionSectionSchema>;
 export type User = z.infer<typeof UserSchema>;
@@ -170,3 +212,8 @@ export type PaymentResponse = z.infer<typeof PaymentResponseSchema>;
 export type CreatePaymentIntentResponse = z.infer<typeof CreatePaymentIntentResponseSchema>;
 export type WebhookResponse = z.infer<typeof WebhookResponseSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
+export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
+export type SubscriptionPlanResponse = z.infer<typeof SubscriptionPlanResponseSchema>;
+export type SubscriptionResponse = z.infer<typeof SubscriptionResponseSchema>;
+export type PurchaseSubscription = z.infer<typeof PurchaseSubscriptionSchema>;
+export type PurchaseSubscriptionResponse = z.infer<typeof PurchaseSubscriptionResponseSchema>;

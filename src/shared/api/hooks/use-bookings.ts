@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '../bookings';
 import { handleApiError, isAuthError, isConflictError, isNotFoundError, isForbiddenError } from '../error-handler';
-import type { CreateBooking } from '../schemas';
+import { useUserProfile } from './use-user';
 
 export const useCreateBooking = () => {
   const queryClient = useQueryClient();
@@ -32,10 +32,22 @@ export const useCreateBooking = () => {
   });
 };
 
-export const useUserBookings = () => {
+export const useUserBookings = (userId?: string) => {
+  const { data: currentUser } = useUserProfile();
+  const effectiveUserId = userId || currentUser?.id;
+
   return useQuery({
-    queryKey: ['bookings'],
-    queryFn: bookingsApi.getUserBookings,
+    queryKey: ['bookings', 'user', effectiveUserId],
+    queryFn: () => bookingsApi.getUserBookings(effectiveUserId!),
+    enabled: Boolean(effectiveUserId),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+
+export const useAllBookings = () => {
+  return useQuery({
+    queryKey: ['bookings', 'all'],
+    queryFn: bookingsApi.getAllBookings,
     staleTime: 30 * 1000, // 30 seconds
   });
 };

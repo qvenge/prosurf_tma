@@ -8,6 +8,7 @@ import {
   type PaymentResponse,
   type CreatePaymentIntentResponse,
 } from './schemas';
+import { z } from 'zod';
 
 export const paymentsApi = {
   createPaymentIntent: async (data: CreatePaymentIntent): Promise<CreatePaymentIntentResponse> => {
@@ -15,6 +16,24 @@ export const paymentsApi = {
       const validatedData = CreatePaymentIntentSchema.parse(data);
       const response = await apiClient.post('/payments/intents', validatedData);
       return CreatePaymentIntentResponseSchema.parse(response.data);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getAllPayments: async (): Promise<PaymentResponse[]> => {
+    try {
+      const response = await apiClient.get('/payments');
+      return z.array(PaymentResponseSchema).parse(response.data);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getUserPayments: async (userId: string): Promise<PaymentResponse[]> => {
+    try {
+      const response = await apiClient.get(`/users/${encodeURIComponent(userId)}/payments`);
+      return z.array(PaymentResponseSchema).parse(response.data);
     } catch (error) {
       throw handleApiError(error);
     }
