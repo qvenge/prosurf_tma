@@ -188,6 +188,10 @@ export const PurchaseSubscriptionResponseSchema = z.object({
   planId: z.string(),
 });
 
+export const GetPlansQuerySchema = z.object({
+  eventType: EventTypeSchema.optional(),
+});
+
 export type Currency = z.infer<typeof CurrencySchema>;
 export type EventType = z.infer<typeof EventTypeSchema>;
 export type Role = z.infer<typeof RoleSchema>;
@@ -217,3 +221,4 @@ export type SubscriptionPlanResponse = z.infer<typeof SubscriptionPlanResponseSc
 export type SubscriptionResponse = z.infer<typeof SubscriptionResponseSchema>;
 export type PurchaseSubscription = z.infer<typeof PurchaseSubscriptionSchema>;
 export type PurchaseSubscriptionResponse = z.infer<typeof PurchaseSubscriptionResponseSchema>;
+export type GetPlansQuery = z.infer<typeof GetPlansQuerySchema>;

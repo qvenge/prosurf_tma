@@ -2,7 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionsApi } from '../subscriptions';
 import { bookingsApi } from '../bookings';
 import { useUserProfile } from './use-user';
-import type { PurchaseSubscription } from '../schemas';
+import type { PurchaseSubscription, GetPlansQuery } from '../schemas';
+
+export const useSubscriptionPlans = (query?: GetPlansQuery) => {
+  return useQuery({
+    queryKey: ['subscriptions', 'plans', query],
+    queryFn: () => subscriptionsApi.getSubscriptionPlans(query),
+  });
+};
 
 export const useUserSubscriptions = (userId?: string) => {
   const { data: currentUser } = useUserProfile();

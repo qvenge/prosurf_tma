@@ -639,6 +639,14 @@ components:
           description: Subscription plan ID
           example: cm0ybqr8v0002abcdef123456
 
+    GetPlansQueryDto:
+      type: object
+      properties:
+        eventType:
+          $ref: '#/components/schemas/EventType'
+          description: Filter plans by event type (optional)
+          example: surfingTraining
+
     # Error Response
     ErrorResponseDto:
       type: object
@@ -1799,6 +1807,64 @@ paths:
               example:
                 error: Webhook processing failed
                 timestamp: 2025-09-01T08:00:00.000Z
+
+  /subscriptions/plans:
+    get:
+      tags:
+        - Subscriptions
+      summary: Get available subscription plans
+      description: |-
+        Retrieve all active subscription plans, optionally filtered by event type.
+        
+        **Public Access**: No authentication required.
+        **Filtering**: Use the eventType query parameter to filter plans for specific event types.
+      operationId: getSubscriptionPlans
+      security: []
+      parameters:
+        - name: eventType
+          in: query
+          schema:
+            $ref: '#/components/schemas/EventType'
+          description: Filter plans by event type (optional)
+          example: surfingTraining
+      responses:
+        '200':
+          description: Subscription plans retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlanResponseDto'
+              example:
+                - id: cm0ybqr8v0002abcdef123456
+                  name: "10 Surfing Sessions"
+                  sessionsTotal: 10
+                  validityDays: 30
+                  priceMinor: 15000
+                  currency: RUB
+                  eventType: surfingTraining
+                  isActive: true
+                  createdAt: '2024-08-15T10:30:00.000Z'
+                - id: cm0ybqr8v0003abcdef123456
+                  name: "5 Surfskate Sessions"
+                  sessionsTotal: 5
+                  validityDays: 20
+                  priceMinor: 8000
+                  currency: RUB
+                  eventType: surfskateTraining
+                  isActive: true
+                  createdAt: '2024-08-15T10:30:00.000Z'
+        '400':
+          description: Invalid eventType parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              example:
+                error: Bad Request
+                message: eventType must be a valid event type
+                statusCode: 400
 
   /subscriptions:
     get:
