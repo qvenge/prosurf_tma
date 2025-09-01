@@ -107,6 +107,40 @@ export const BookingResponseSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
+export const PaymentStatusSchema = z.enum(['REQUIRES_ACTION', 'PENDING', 'SUCCEEDED', 'FAILED', 'CANCELED']);
+
+export const PaymentMethodSchema = z.enum(['card', 'bank_transfer']);
+
+export const CreatePaymentIntentSchema = z.object({
+  bookingId: z.string(),
+  method: PaymentMethodSchema,
+});
+
+export const PaymentResponseSchema = z.object({
+  id: z.string(),
+  bookingId: z.string(),
+  provider: z.string(),
+  providerRef: z.string(),
+  status: PaymentStatusSchema,
+  amountMinor: z.number().int(),
+  currency: CurrencySchema,
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export const CreatePaymentIntentResponseSchema = z.object({
+  payment: PaymentResponseSchema,
+  checkoutUrl: z.string().nullable(),
+  clientSecret: z.string().nullable(),
+  metadata: z.record(z.any()).nullable(),
+});
+
+export const WebhookResponseSchema = z.object({
+  received: z.boolean(),
+  timestamp: z.string().datetime().optional(),
+  error: z.string().optional(),
+});
+
 export const ApiErrorSchema = z.object({
   error: z.string(),
   message: z.string(),
@@ -129,4 +163,10 @@ export type GetEventSessionsQuery = z.infer<typeof GetEventSessionsQuerySchema>;
 export type BookingStatus = z.infer<typeof BookingStatusSchema>;
 export type CreateBooking = z.infer<typeof CreateBookingSchema>;
 export type BookingResponse = z.infer<typeof BookingResponseSchema>;
+export type PaymentStatus = z.infer<typeof PaymentStatusSchema>;
+export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
+export type CreatePaymentIntent = z.infer<typeof CreatePaymentIntentSchema>;
+export type PaymentResponse = z.infer<typeof PaymentResponseSchema>;
+export type CreatePaymentIntentResponse = z.infer<typeof CreatePaymentIntentResponseSchema>;
+export type WebhookResponse = z.infer<typeof WebhookResponseSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
