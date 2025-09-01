@@ -28,7 +28,7 @@ export const TrainingPage = () => {
     <div className={styles.bookingButtonWrapper}>
       <Button
         size='l'
-        mode='filled'
+        mode='primary'
         stretched={true}
         onClick={() => setModalOpen(true)}
       >

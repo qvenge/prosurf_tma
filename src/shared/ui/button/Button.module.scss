@@ -65,10 +65,12 @@
 }
 
 .wrapper--m {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+
   height: 42px;
   min-width: 42px;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 12px 16px;
 }
 
 .wrapper--l {
@@ -76,35 +78,21 @@
 
   height: 50px;
   gap: 10px;
-  padding: 10px 20px;
+  padding: 15px 12px;
 }
 
-.wrapper--filled {
+.wrapper--primary {
   --tgui--button--hovered-opacity: .15;
   --tgui--button--spinner-color: ds.color('Text/Alternative');
   color: ds.color('Text/Alternative');
   background: ds.color('Background/Brand');
 }
 
-.wrapper--bezeled {
-  --tgui--button--hovered-opacity: .07;
-  --tgui--button--spinner-color: var(--tgui--link_color);
-  color: var(--tgui--link_color);
-  background: var(--tgui--secondary_fill);
-}
-
-.wrapper--plain {
-  --tgui--button--hovered-opacity: .03;
-  --tgui--button--spinner-color: var(--tgui--plain_foreground);
-  color: var(--tgui--link_color);
-  background: transparent;
-}
-
-.wrapper--gray {
-  --tgui--button--hovered-opacity: .5;
-  --tgui--button--spinner-color: var(--tgui--plain_foreground);
-  color: var(--tgui--plain_foreground);
-  background: var(--tgui--plain_background);
+.wrapper--secondary {
+  --tgui--button--hovered-opacity: .15;
+  --tgui--button--spinner-color: ds.color('Text/Primary');
+  color: ds.color('Text/Primary');
+  background: ds.color('Background/Teritary');
 }
 
 .wrapper--outline {
@@ -113,12 +101,6 @@
   color: var(--tgui--plain_foreground);
   background: inherit;
   box-shadow: 0 0 0 1px var(--tgui--outline);
-}
-
-.wrapper--white {
-  --tgui--button--hovered-opacity: .5;
-  --tgui--button--spinner-color: var(--tgui--surface_dark);
-  background: var(--tgui--white);
 }
 
 .wrapper--ios.wrapper--m {

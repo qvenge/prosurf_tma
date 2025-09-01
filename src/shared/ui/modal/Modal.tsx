@@ -1,10 +1,9 @@
 'use client';
 import type { ForwardRefExoticComponent, HTMLAttributes, ReactNode, RefAttributes } from 'react';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef } from 'react';
 import styles from './Modal.module.scss';
 
 import clsx from 'clsx';
-import { useAppRootContext } from '@/shared/app-root/useAppRootContext';
 
 import { Drawer } from 'vaul';
 
@@ -70,15 +69,15 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(({
   dismissible,
   ...restProps
 }, ref) => {
-  const container = useAppRootContext();
-  const [portal, setPortal] = useState(container.portalContainer?.current);
+  // const container = useAppRootContext();
+  // const [portal, setPortal] = useState(container.portalContainer?.current);
 
   // This is internal optimization for AppRoot
   // React sets ref to normal value only after the first render
   // If we will have this logic inside the AppRoot component, then all tree will be re-rendered
-  useEffect(() => {
-    setPortal(container.portalContainer?.current);
-  }, [container.portalContainer]);
+  // useEffect(() => {
+  //   setPortal(container.portalContainer?.current);
+  // }, [container.portalContainer]);
 
   const Component = nested ? Drawer.NestedRoot : Drawer.Root;
   return (
@@ -94,7 +93,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(({
       dismissible={dismissible}
     >
       {trigger && <Drawer.Trigger asChild>{trigger}</Drawer.Trigger>}
-      <Drawer.Portal container={portal}>
+      <Drawer.Portal>
         {overlayComponent}
         <Drawer.Content
           ref={ref}

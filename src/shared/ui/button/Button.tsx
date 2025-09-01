@@ -22,7 +22,7 @@ export interface ButtonProps extends Omit<AllHTMLAttributes<HTMLButtonElement>, 
   /** If true, stretches the button to fill the width with its container. */
   stretched?: boolean;
   /** Defines the button's visual style, affecting its background and text color. */
-  mode?: 'filled' | 'bezeled' | 'plain' | 'gray' | 'outline' | 'white';
+  mode?: 'primary' | 'secondary';
   /** Displays a loading indicator in place of the button content when true. */
   loading?: boolean;
   /** Disables the button, preventing user interactions, when true. */
@@ -32,12 +32,8 @@ export interface ButtonProps extends Omit<AllHTMLAttributes<HTMLButtonElement>, 
 }
 
 const modeStyles = {
-  filled: styles['wrapper--filled'],
-  bezeled: styles['wrapper--bezeled'],
-  plain: styles['wrapper--plain'],
-  gray: styles['wrapper--gray'],
-  outline: styles['wrapper--outline'],
-  white: styles['wrapper--white'],
+  primary: styles['wrapper--primary'],
+  secondary: styles['wrapper--secondary'],
 };
 
 const sizeStyles = {
@@ -57,7 +53,7 @@ export const Button = forwardRef(({
   stretched,
   children,
   className,
-  mode = 'filled',
+  mode = 'primary',
   loading,
   Component = 'button',
   ...restProps

@@ -9,5 +9,5 @@
   background: ds.color('Background/Secondary');
   // border-top: 1px solid ds.color('Border/Primary');
   box-shadow: 0 -1px 0 ds.color('Border/Primary');
-  z-index: 50;
+  z-index: var(--tgui--z-index--overlay);
 }

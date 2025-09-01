@@ -6,6 +6,8 @@ import { TrainingCategories } from '@/pages/training-categories';
 import { Trainings } from '@/pages/trainings';
 import { TrainingPage } from '@/pages/training';
 import { Profile } from '@/pages/profile';
+import { PaymentPage } from '@/pages/payment';
+import { BookingPage } from '@/pages/booking';
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +25,16 @@ export const router = createBrowserRouter([
             path: 'sessions/:trainingId',
             Component: TrainingPage,
             handle: { bottomBar: { visible: true, mode: 'custom' as const } },
+          },
+          {
+            path: 'sessions/:trainingId/payment',
+            Component: PaymentPage,
+            handle: { bottomBar: { visible: false } },
+          },
+                    {
+            path: 'sessions/:trainingId/booking',
+            Component: BookingPage,
+            handle: { bottomBar: { visible: false } },
           },
         ],
       },

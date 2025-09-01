@@ -7,3 +7,4 @@ export * from './bottom-bar';
 export * from './spinner';
 export * from './button';
 export * from './modal';
+export * from './switch';

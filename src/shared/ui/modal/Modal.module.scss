@@ -12,7 +12,7 @@
   flex-direction: column;
 
   outline: none;
-  background-color: var(--tgui--bg_color);
+  background-color: ds.color('Background/Secondary');
   z-index: var(--tgui--z-index--overlay);
 }
 
@@ -22,10 +22,10 @@
   align-items: center;
 
   padding: 16px;
-  border-bottom: 1px solid var(--tgui--divider);
+  border-bottom: 1px solid ds.color('Background/Teritary');
 }
 
 .body {
   overflow-y: auto;
-  padding-bottom: var(--tgui--safe_area_inset_bottom);
+  padding-bottom: var(--safe-area-inset-bottom);
 }
