@@ -12,7 +12,7 @@ info:
     - Rate limiting and throttling
     - Event session filtering and pagination
     - Booking system with hold/cancel functionality
-    - Payment processing with provider abstraction
+    - Payment processing with provider abstraction (YooKassa, Mock)
     - Webhook handling for payment status updates
     - Automatic booking confirmation on successful payment
     - Automatic booking expiration (configurable TTL)
@@ -34,6 +34,25 @@ info:
     Some endpoints require admin privileges and will return 403 Forbidden for regular users.
     User-specific endpoints (e.g., `/users/{userId}/bookings`) allow users to access their own data,
     while admins can access any user's data.
+    
+    ## Payment Integration
+    The API supports multiple payment providers:
+    
+    ### YooKassa Integration
+    - **Primary Provider**: YooKassa (formerly Yandex.Checkout)
+    - **Supported Methods**: Bank cards, YooMoney, Sberbank, Alfa-Click, QIWI, Apple Pay, Google Pay
+    - **Configuration Required**:
+      - `YOOKASSA_SHOP_ID`: Your YooKassa shop identifier
+      - `YOOKASSA_SECRET_KEY`: Secret key for API authentication
+      - `YOOKASSA_RETURN_URL`: URL to redirect users after payment completion
+    - **Security**: IP address whitelisting recommended for webhook endpoints
+    - **Currency**: Primarily RUB (Russian Rubles)
+    - **Flow**: Redirect-based payment confirmation
+    
+    ### Development/Testing
+    - **Mock Provider**: For testing and development
+    - **Configuration**: No additional setup required
+    - **Security**: HMAC signature verification for webhooks
   version: 0.0.1
   contact:
     name: ProSurf API Support
@@ -43,7 +62,7 @@ servers:
   - url: http://localhost:3000
     description: Local development server
   - url: https://api.prosurf.example.com
-    description: Production server (example)
+    description: Production server (example) with YooKassa payment processing
 
 security:
   - bearerAuth: []
@@ -244,10 +263,44 @@ components:
         - WALLET
       description: |-
         Payment methods used for bookings:
-        - PAYMENT: Regular payment via payment provider
+        - PAYMENT: Regular payment via payment provider (YooKassa, Mock)
         - SUBSCRIPTION: Paid using subscription redemption
         - GIFT: Paid using gift certificate
         - WALLET: Paid using wallet balance
+
+    YooKassaPaymentMethodType:
+      type: string
+      enum:
+        - bank_card
+        - yoo_money
+        - sberbank
+        - alfabank
+        - qiwi
+        - apple_pay
+        - google_pay
+        - webmoney
+        - tinkoff_bank
+        - sbp
+        - b2b_sberbank
+        - mobile_balance
+        - cash
+        - installments
+      description: |-
+        YooKassa payment method types:
+        - bank_card: Bank card payments (Visa, MasterCard, Mir)
+        - yoo_money: YooMoney (formerly Yandex.Money) wallet
+        - sberbank: Sberbank Online
+        - alfabank: Alfa-Click
+        - qiwi: QIWI Wallet
+        - apple_pay: Apple Pay
+        - google_pay: Google Pay
+        - webmoney: WebMoney
+        - tinkoff_bank: Tinkoff Bank
+        - sbp: System of Fast Payments
+        - b2b_sberbank: Sberbank Business Online
+        - mobile_balance: Mobile phone balance
+        - cash: Cash payment
+        - installments: Installment payments
 
     Role:
       type: string
@@ -471,11 +524,11 @@ components:
         provider:
           type: string
           description: Payment provider name
-          example: mock
+          example: yookassa
         providerRef:
           type: string
           description: Provider-specific payment reference
-          example: mock_pi_abc123
+          example: 24b94598-000f-5000-9000-1b68e7b15f3f
         status:
           $ref: '#/components/schemas/PaymentStatus'
         amountMinor:
@@ -503,8 +556,8 @@ components:
         checkoutUrl:
           type: string
           nullable: true
-          description: Checkout URL for completing payment (if applicable)
-          example: https://mock-payment-provider.com/checkout/mock_pi_abc123
+          description: Checkout URL for completing payment (redirect to YooKassa)
+          example: https://yoomoney.ru/checkout/payments/v2/contract?orderId=24b94598-000f-5000-9000-1b68e7b15f3f
         clientSecret:
           type: string
           nullable: true
@@ -624,7 +677,8 @@ components:
           example: pi_1234567890
         clientSecret:
           type: string
-          description: Client secret for completing the payment
+          nullable: true
+          description: Client secret for completing the payment (if applicable)
           example: pi_1234567890_secret_abcdef123456
         amountMinor:
           type: integer
@@ -1231,11 +1285,11 @@ paths:
               example:
                 - id: cm0ybqr8v0003abcdef123456
                   bookingId: cm0ybqr8v0002abcdef123456
-                  provider: mock
-                  providerRef: mock_pi_abc123
+                  provider: yookassa
+                  providerRef: 24b94598-000f-5000-9000-1b68e7b15f3f
                   status: SUCCEEDED
-                  amountMinor: 5000
-                  currency: USD
+                  amountMinor: 250000
+                  currency: RUB
                   createdAt: 2025-09-01T08:00:00.000Z
                   updatedAt: 2025-09-01T08:05:00.000Z
         '401':
@@ -1550,19 +1604,19 @@ paths:
               example:
                 - id: cm0ybqr8v0003abcdef123456
                   bookingId: cm0ybqr8v0002abcdef123456
-                  provider: mock
-                  providerRef: mock_pi_abc123
+                  provider: yookassa
+                  providerRef: 24b94598-000f-5000-9000-1b68e7b15f3f
                   status: SUCCEEDED
-                  amountMinor: 5000
-                  currency: USD
+                  amountMinor: 250000
+                  currency: RUB
                   createdAt: 2025-09-01T08:00:00.000Z
                   updatedAt: 2025-09-01T08:05:00.000Z
                 - id: cm0ybqr8v0004abcdef123456
                   bookingId: null
-                  provider: mock
-                  providerRef: mock_pi_def456
+                  provider: yookassa
+                  providerRef: 24c94598-000f-5000-9000-1b68e7b15f4g
                   status: PENDING
-                  amountMinor: 15000
+                  amountMinor: 1500000
                   currency: RUB
                   createdAt: 2025-09-01T09:00:00.000Z
                   updatedAt: 2025-09-01T09:00:00.000Z
@@ -1614,7 +1668,7 @@ paths:
               $ref: '#/components/schemas/CreatePaymentIntentDto'
             example:
               bookingId: cm0ybqr8v0002abcdef123456
-              method: card
+              method: bank_card
       responses:
         '201':
           description: Payment intent created successfully
@@ -1626,16 +1680,18 @@ paths:
                 payment:
                   id: cm0ybqr8v0003abcdef123456
                   bookingId: cm0ybqr8v0002abcdef123456
-                  provider: mock
-                  providerRef: mock_pi_abc123
-                  status: REQUIRES_ACTION
-                  amountMinor: 5000
-                  currency: USD
+                  provider: yookassa
+                  providerRef: 24b94598-000f-5000-9000-1b68e7b15f3f
+                  status: PENDING
+                  amountMinor: 250000
+                  currency: RUB
                   createdAt: 2025-09-01T08:00:00.000Z
                   updatedAt: 2025-09-01T08:00:00.000Z
-                checkoutUrl: https://mock-payment-provider.com/checkout/mock_pi_abc123
+                checkoutUrl: https://yoomoney.ru/checkout/payments/v2/contract?orderId=24b94598-000f-5000-9000-1b68e7b15f3f
                 metadata:
                   bookingId: cm0ybqr8v0002abcdef123456
+                  userId: cm0ybqr8v0001abcdef123456
+                  yookassaStatus: pending
         '400':
           description: Invalid request - booking not in HOLD status or invalid data
           content:
@@ -1712,11 +1768,11 @@ paths:
               example:
                 id: cm0ybqr8v0003abcdef123456
                 bookingId: cm0ybqr8v0002abcdef123456
-                provider: mock
-                providerRef: mock_pi_abc123
+                provider: yookassa
+                providerRef: 24b94598-000f-5000-9000-1b68e7b15f3f
                 status: SUCCEEDED
-                amountMinor: 5000
-                currency: USD
+                amountMinor: 250000
+                currency: RUB
                 createdAt: 2025-09-01T08:00:00.000Z
                 updatedAt: 2025-09-01T08:05:00.000Z
         '401':
@@ -1745,7 +1801,10 @@ paths:
         Process webhook events from payment providers. This endpoint is called by payment providers 
         to notify the system of payment status changes.
         
-        **Security**: Webhook signatures are verified to ensure authenticity.
+        **Security**: 
+        - YooKassa: IP address whitelisting and HTTPS validation
+        - Mock: HMAC signature verification
+        
         **Idempotency**: Webhook events are processed idempotently to prevent duplicate processing.
         
         **Supported Events**:
@@ -1753,6 +1812,12 @@ paths:
         - Payment failed - updates payment status to FAILED
         - Payment canceled - updates payment status to CANCELED
         - Payment pending - updates payment status to PENDING
+        
+        **YooKassa Events**:
+        - payment.succeeded
+        - payment.canceled
+        - payment.pending
+        - payment.waiting_for_capture
         
         **Note**: This endpoint is intended for payment provider webhooks, not for direct client use.
       operationId: handleWebhook
@@ -1763,8 +1828,9 @@ paths:
           required: true
           schema:
             type: string
+            enum: [mock, yookassa]
           description: Payment provider name
-          example: mock
+          example: yookassa
       requestBody:
         required: true
         content:
@@ -1772,14 +1838,27 @@ paths:
             schema:
               type: object
               description: Webhook payload from payment provider (format varies by provider)
-            example:
-              type: payment.succeeded
-              id: mock_pi_abc123
-              data:
-                object:
+            examples:
+              yookassa_webhook:
+                summary: YooKassa webhook payload
+                value:
+                  event: payment.succeeded
+                  object:
+                    id: 24b94598-000f-5000-9000-1b68e7b15f3f
+                    status: succeeded
+                    metadata:
+                      bookingId: cm0ybqr8v0002abcdef123456
+                      userId: cm0ybqr8v0001abcdef123456
+              mock_webhook:
+                summary: Mock provider webhook payload
+                value:
+                  type: payment.succeeded
                   id: mock_pi_abc123
-                  metadata:
-                    bookingId: cm0ybqr8v0002abcdef123456
+                  data:
+                    object:
+                      id: mock_pi_abc123
+                      metadata:
+                        bookingId: cm0ybqr8v0002abcdef123456
       responses:
         '200':
           description: Webhook processed successfully

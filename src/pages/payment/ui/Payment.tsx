@@ -1,12 +1,21 @@
 import { useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import clsx from 'clsx';
 import { SegmentedControl, Button, Switch } from '@/shared/ui';
-import { useEventSession, useSubscriptionPlans } from '@/shared/api';
+import { 
+  useEventSession, 
+  useSubscriptionPlans,
+  useCreateBooking,
+  usePurchaseSubscription,
+  useCreatePaymentIntent,
+  useUserProfile,
+  useUserBookings
+} from '@/shared/api';
 import styles from './Payment.module.scss';
 
 export function PaymentPage() {
   const { trainingId } = useParams<{ trainingId: string }>();
+  const navigate = useNavigate();
   
   // Fetch session data
   const { data: session, isLoading: sessionLoading, error: sessionError } = useEventSession(trainingId!);
@@ -16,12 +25,21 @@ export function PaymentPage() {
     session ? { eventType: session.type } : undefined
   );
   
-  // TODO: Fetch user profile for cashback balance when API supports it
-  // const { data: user } = useUserProfile();
+  // Fetch user profile
+  const { data: user } = useUserProfile();
+  
+  // Fetch user bookings to check for existing bookings
+  const { data: userBookings } = useUserBookings();
+  
+  // Mutation hooks
+  const createBooking = useCreateBooking();
+  const purchaseSubscription = usePurchaseSubscription();
+  const createPaymentIntent = useCreatePaymentIntent();
   
   const [product, setProduct] = useState('subscription');
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [activeCashback, setActiveCashback] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   
   // Set initial plan selection when plans load
   if (subscriptionPlans && subscriptionPlans.length > 0 && !selectedPlanId) {
@@ -49,7 +67,128 @@ export function PaymentPage() {
   // Helper to format price for display
   const formatPrice = (priceMinor: number) => {
     return Math.round(priceMinor / 100).toLocaleString('ru-RU');
+  };
+
+  // Handle payment processing
+  const handlePayment = async () => {
+    setPaymentError(null);
+    
+    if (!user) {
+      // User is not authenticated, redirect to login
+      navigate('/auth/login');
+      return;
+    }
+
+    if (!session) {
+      setPaymentError('Данные о тренировке не найдены');
+      return;
+    }
+
+    try {
+      if (product === 'subscription') {
+        if (!selectedPlanId) {
+          setPaymentError('Выберите план подписки');
+          return;
+        }
+
+        // Purchase subscription
+        const result = await purchaseSubscription.mutateAsync({
+          planId: selectedPlanId
+        });
+
+        // Redirect to payment provider checkout
+        if (result.clientSecret) {
+          // Handle client secret for payment completion
+          window.location.href = result.clientSecret;
+        } else {
+          setPaymentError('Ошибка при создании платежа');
+        }
+      } else {
+        // Single session payment flow
+        // Check for existing HOLD booking for this session
+        const existingBooking = userBookings?.find(
+          booking => booking.sessionId === session.id && booking.status === 'HOLD'
+        );
+
+        let bookingId: string;
+
+        if (existingBooking) {
+          // Use existing booking
+          bookingId = existingBooking.id;
+          console.log('Using existing booking:', bookingId);
+        } else {
+          // Create new booking
+          const booking = await createBooking.mutateAsync({
+            sessionId: session.id,
+            idempotencyKey: `booking-${session.id}-${Date.now()}`
+          });
+          bookingId = booking.id;
+          console.log('Created new booking:', bookingId);
+        }
+
+        // Create payment intent for the booking
+        const paymentResult = await createPaymentIntent.mutateAsync({
+          bookingId: bookingId,
+          method: 'PAYMENT'
+        });
+
+        // Redirect to payment provider checkout
+        if (paymentResult.checkoutUrl) {
+          window.location.href = paymentResult.checkoutUrl;
+        } else if (paymentResult.clientSecret) {
+          // Handle client secret for payment completion
+          window.location.href = paymentResult.clientSecret;
+        } else {
+          setPaymentError('Ошибка при создании платежа');
+        }
+      }
+    } catch (error: unknown) {
+      console.error('Payment processing failed:', error);
+      
+      // Handle different types of errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Authentication required')) {
+        navigate('/auth/login');
+      } else if (errorMessage.includes('already have an active booking')) {
+        // Try to find the existing booking and create payment for it
+        const existingBooking = userBookings?.find(
+          booking => booking.sessionId === session?.id && booking.status === 'HOLD'
+        );
+        
+        if (existingBooking) {
+          try {
+            // Attempt to create payment intent for existing booking
+            const paymentResult = await createPaymentIntent.mutateAsync({
+              bookingId: existingBooking.id,
+              method: 'PAYMENT'
+            });
+
+            // Redirect to payment provider checkout
+            if (paymentResult.checkoutUrl) {
+              window.location.href = paymentResult.checkoutUrl;
+              return; // Exit successfully
+            } else if (paymentResult.clientSecret) {
+              window.location.href = paymentResult.clientSecret;
+              return; // Exit successfully
+            }
+          } catch (paymentError) {
+            console.error('Failed to create payment for existing booking:', paymentError);
+          }
+        }
+        
+        setPaymentError('У вас уже есть активное бронирование на эту тренировку. Попробуйте обновить страницу и повторить попытку.');
+      } else if (errorMessage.includes('no seats available')) {
+        setPaymentError('Нет свободных мест на эту тренировку');
+      } else if (errorMessage.includes('not found')) {
+        setPaymentError('Тренировка не найдена');
+      } else {
+        setPaymentError('Произошла ошибка при обработке платежа. Попробуйте снова.');
+      }
+    }
   }; 
+
+  // Check if any operation is in progress
+  const isProcessing = createBooking.isPending || purchaseSubscription.isPending || createPaymentIntent.isPending;
 
   // Loading state
   if (sessionLoading || plansLoading) {
@@ -174,6 +313,13 @@ export function PaymentPage() {
         </div>
 
         <div className={styles.divider} />
+        
+        {/* Error message */}
+        {paymentError && (
+          <div className={styles.error}>
+            {paymentError}
+          </div>
+        )}
       </div>
       
       <div className={styles.footer}>
@@ -182,7 +328,16 @@ export function PaymentPage() {
           {price !== totalPrice && <div className={styles.initialPrice}>{formatPrice(price)} ₽</div>}
           <div className={styles.totalPrice}>{formatPrice(totalPrice)} ₽</div>
         </div>
-        <Button className={styles.payButton} size='l' stretched={true} mode='primary'>Оплатить</Button>
+        <Button 
+          className={styles.payButton} 
+          size='l' 
+          stretched={true} 
+          mode='primary'
+          onClick={handlePayment}
+          disabled={isProcessing}
+        >
+          {isProcessing ? 'Обработка...' : 'Оплатить'}
+        </Button>
         <div className={styles.cashback}>{`Начислим кэшбек: ${formatPrice(calcCashback(totalPrice))} ₽`}</div>
       </div>
     </div>
