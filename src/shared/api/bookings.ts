@@ -19,14 +19,6 @@ export const bookingsApi = {
     }
   },
 
-  getUserBookings: async (userId: string): Promise<BookingResponse[]> => {
-    try {
-      const response = await apiClient.get(`/users/${encodeURIComponent(userId)}/bookings`);
-      return z.array(BookingResponseSchema).parse(response.data);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
 
   getAllBookings: async (): Promise<BookingResponse[]> => {
     try {

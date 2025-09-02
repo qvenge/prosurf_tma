@@ -52,10 +52,10 @@ export const useIsAuthenticated = () => {
   };
 };
 
-export const useUserBookingsById = (userId: string) => {
+export const useUserBookingsById = (userId: string, query?: import('../schemas').GetUserBookingsQuery) => {
   return useQuery({
-    queryKey: ['users', userId, 'bookings'],
-    queryFn: () => usersApi.getUserBookings(userId),
+    queryKey: ['users', userId, 'bookings', query],
+    queryFn: () => usersApi.getUserBookings(userId, query),
     enabled: Boolean(userId),
     staleTime: 30 * 1000, // 30 seconds
   });

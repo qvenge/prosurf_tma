@@ -110,9 +110,57 @@ export const BookingResponseSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
+export const BookingWithSessionResponseSchema = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  session: z.object({
+    id: z.string(),
+    title: z.string(),
+    type: EventTypeSchema,
+    location: z.string(),
+    start: z.string().datetime(),
+    end: z.string().datetime().nullable(),
+  }),
+  status: BookingStatusSchema,
+  price: PriceSchema,
+  holdExpiresAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+}).transform((data) => ({
+  ...data,
+  sessionId: data.sessionId || data.session.id,
+}));
+
 export const PaymentStatusSchema = z.enum(['REQUIRES_ACTION', 'PENDING', 'SUCCEEDED', 'FAILED', 'CANCELED']);
 
 export const PaymentMethodSchema = z.enum(['PAYMENT', 'SUBSCRIPTION', 'GIFT', 'WALLET']);
+
+export const YooKassaPaymentMethodTypeSchema = z.enum([
+  'bank_card',
+  'yoo_money', 
+  'sberbank',
+  'alfabank',
+  'qiwi',
+  'apple_pay',
+  'google_pay',
+  'webmoney',
+  'tinkoff_bank',
+  'sbp',
+  'b2b_sberbank',
+  'mobile_balance',
+  'cash',
+  'installments'
+]);
+
+export const GetUserBookingsQuerySchema = z.object({
+  status: z.array(BookingStatusSchema).optional(),
+  sessionType: z.array(EventTypeSchema).optional(),
+  sessionStartFrom: z.string().datetime().optional(),
+  sessionStartTo: z.string().datetime().optional(),
+  sortBy: z.enum(['bookingCreatedAt', 'sessionStart']).default('bookingCreatedAt').optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
+  offset: z.number().int().nonnegative().default(0).optional(),
+  limit: z.number().int().positive().max(100).default(20).optional(),
+});
 
 export const CreatePaymentIntentSchema = z.object({
   bookingId: z.string(),
@@ -223,3 +271,6 @@ export type SubscriptionResponse = z.infer<typeof SubscriptionResponseSchema>;
 export type PurchaseSubscription = z.infer<typeof PurchaseSubscriptionSchema>;
 export type PurchaseSubscriptionResponse = z.infer<typeof PurchaseSubscriptionResponseSchema>;
 export type GetPlansQuery = z.infer<typeof GetPlansQuerySchema>;
+export type BookingWithSessionResponse = z.infer<typeof BookingWithSessionResponseSchema>;
+export type YooKassaPaymentMethodType = z.infer<typeof YooKassaPaymentMethodTypeSchema>;
+export type GetUserBookingsQuery = z.infer<typeof GetUserBookingsQuerySchema>;

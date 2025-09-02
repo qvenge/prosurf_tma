@@ -495,6 +495,67 @@ components:
           description: When the booking was created
           example: 2025-08-31T19:30:00.000Z
 
+    BookingWithSessionResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique booking ID
+          example: cm0ybqr8v0002abcdef123456
+        session:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Event session ID
+              example: cm0ybqr8v0001abcdef123456
+            title:
+              type: string
+              description: Event session title
+              example: Beginner Surf Training
+            type:
+              $ref: '#/components/schemas/EventType'
+            location:
+              type: string
+              description: Event location
+              example: Almaty Wave Pool
+            start:
+              type: string
+              format: date-time
+              description: Session start time in ISO 8601 format
+              example: 2025-09-01T09:00:00.000Z
+            end:
+              type: string
+              format: date-time
+              nullable: true
+              description: Session end time in ISO 8601 format (optional)
+              example: 2025-09-01T10:30:00.000Z
+          description: Event session details
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        price:
+          type: object
+          properties:
+            currency:
+              $ref: '#/components/schemas/Currency'
+            amount:
+              type: string
+              pattern: '^\\d+\\.\\d{2}$'
+              description: Booking price amount as decimal string
+              example: "2500.00"
+          description: Booking price (from session's bookingPrice or main price)
+        holdExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the hold expires (only for HOLD status)
+          example: 2025-09-01T09:15:00.000Z
+        createdAt:
+          type: string
+          format: date-time
+          description: When the booking was created
+          example: 2025-08-31T19:30:00.000Z
+
     # Payment Schemas
     CreatePaymentIntentDto:
       type: object
@@ -1138,12 +1199,24 @@ paths:
         - Users
       summary: Get user bookings
       description: |-
-        Retrieve bookings for a specific user. Users can only access their own bookings, admins can access any user's bookings.
+        Retrieve bookings for a specific user with optional filtering and sorting. Users can only access their own bookings, admins can access any user's bookings.
         
         **Authentication Required**: This endpoint requires a valid Bearer token.
         **Authorization Rules**: 
         - Regular users can only access their own bookings (userId must match their user ID)
         - Admin users can access bookings for any user
+        
+        **Filtering & Sorting Features**:
+        - Filter by booking status (HOLD, CONFIRMED, CANCELLED, EXPIRED)
+        - Filter by session event type (surfingTraining, surfskateTraining, tour, other)
+        - Filter by session start date range
+        - Sort by booking creation time or session start time
+        - Pagination support with offset and limit
+        
+        **Default Behavior**:
+        - Returns bookings sorted by creation time (newest first)
+        - Limited to 20 results by default (max 100)
+        - All booking statuses included if not filtered
       operationId: getUserBookings
       parameters:
         - name: userId
@@ -1153,6 +1226,73 @@ paths:
             type: string
           description: User ID
           example: cm0ybqr8v0001abcdef123456
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BookingStatus'
+          style: form
+          explode: true
+          description: Filter by booking status (can specify multiple)
+          example: ["HOLD", "CONFIRMED"]
+        - name: sessionType
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/EventType'
+          style: form
+          explode: true
+          description: Filter by session event type (can specify multiple)
+          example: ["surfingTraining", "tour"]
+        - name: sessionStartFrom
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter sessions starting from this date (ISO 8601)
+          example: 2025-09-01T00:00:00.000Z
+        - name: sessionStartTo
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter sessions starting until this date (ISO 8601)
+          example: 2025-09-30T23:59:59.999Z
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [bookingCreatedAt, sessionStart]
+            default: bookingCreatedAt
+          description: Sort field (bookingCreatedAt or sessionStart)
+          example: bookingCreatedAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order (ascending or descending)
+          example: desc
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of items to skip for pagination
+          example: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of items to return
+          example: 20
       responses:
         '200':
           description: User bookings retrieved successfully
@@ -1161,16 +1301,81 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BookingResponseDto'
-              example:
-                - id: cm0ybqr8v0002abcdef123456
-                  sessionId: cm0ybqr8v0001abcdef123456
-                  status: HOLD
-                  price:
-                    currency: RUB
-                    amount: "2500.00"
-                  holdExpiresAt: 2025-09-01T09:15:00.000Z
-                  createdAt: 2025-08-31T19:30:00.000Z
+                  $ref: '#/components/schemas/BookingWithSessionResponseDto'
+              examples:
+                default:
+                  summary: Default response with mixed booking statuses
+                  value:
+                    - id: cm0ybqr8v0002abcdef123456
+                      session:
+                        id: cm0ybqr8v0001abcdef123456
+                        title: Beginner Surf Training
+                        type: surfingTraining
+                        location: Almaty Wave Pool
+                        start: 2025-09-01T09:00:00.000Z
+                        end: 2025-09-01T10:30:00.000Z
+                      status: CONFIRMED
+                      price:
+                        currency: RUB
+                        amount: "2500.00"
+                      holdExpiresAt: null
+                      createdAt: 2025-08-31T19:30:00.000Z
+                    - id: cm0ybqr8v0003abcdef123456
+                      session:
+                        id: cm0ybqr8v0004abcdef123456
+                        title: Advanced Surf Training
+                        type: surfingTraining
+                        location: Almaty Wave Pool
+                        start: 2025-09-02T14:00:00.000Z
+                        end: 2025-09-02T16:00:00.000Z
+                      status: HOLD
+                      price:
+                        currency: RUB
+                        amount: "4000.00"
+                      holdExpiresAt: 2025-09-02T14:15:00.000Z
+                      createdAt: 2025-08-30T15:20:00.000Z
+                filtered:
+                  summary: Filtered response (status=CONFIRMED, sessionType=tour)
+                  value:
+                    - id: cm0ybqr8v0005abcdef123456
+                      session:
+                        id: cm0ybqr8v0006abcdef123456
+                        title: Surfing Adventure Tour
+                        type: tour
+                        location: Bali Beach
+                        start: 2025-09-05T08:00:00.000Z
+                        end: 2025-09-05T18:00:00.000Z
+                      status: CONFIRMED
+                      price:
+                        currency: USD
+                        amount: "150.00"
+                      holdExpiresAt: null
+                      createdAt: 2025-08-29T10:45:00.000Z
+        '400':
+          description: Bad Request - invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+              examples:
+                invalid_date_range:
+                  summary: Invalid date range
+                  value:
+                    error: Bad Request
+                    message: sessionStartTo must be after sessionStartFrom
+                    statusCode: 400
+                invalid_enum:
+                  summary: Invalid enum value
+                  value:
+                    error: Bad Request
+                    message: sortBy must be one of [bookingCreatedAt, sessionStart]
+                    statusCode: 400
+                invalid_limit:
+                  summary: Invalid pagination limit
+                  value:
+                    error: Bad Request
+                    message: limit must not be greater than 100
+                    statusCode: 400
         '401':
           description: Unauthorized - invalid or missing Bearer token
           content:

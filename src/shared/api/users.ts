@@ -2,13 +2,15 @@ import { apiClient } from './config';
 import { handleApiError } from './error-handler';
 import {
   UserSchema,
-  BookingResponseSchema,
+  BookingWithSessionResponseSchema,
   SubscriptionResponseSchema,
   PaymentResponseSchema,
+  GetUserBookingsQuerySchema,
   type User,
-  type BookingResponse,
+  type BookingWithSessionResponse,
   type SubscriptionResponse,
   type PaymentResponse,
+  type GetUserBookingsQuery,
 } from './schemas';
 import { z } from 'zod';
 
@@ -22,10 +24,53 @@ export const usersApi = {
     }
   },
 
-  getUserBookings: async (userId: string): Promise<BookingResponse[]> => {
+  getUserBookings: async (
+    userId: string, 
+    query: GetUserBookingsQuery = {}
+  ): Promise<BookingWithSessionResponse[]> => {
     try {
-      const response = await apiClient.get(`/users/${encodeURIComponent(userId)}/bookings`);
-      return z.array(BookingResponseSchema).parse(response.data);
+      const validatedQuery = GetUserBookingsQuerySchema.parse(query);
+      const params = new URLSearchParams();
+
+      if (validatedQuery.status?.length) {
+        validatedQuery.status.forEach(status => params.append('status', status));
+      }
+
+      if (validatedQuery.sessionType?.length) {
+        validatedQuery.sessionType.forEach(type => params.append('sessionType', type));
+      }
+
+      if (validatedQuery.sessionStartFrom) {
+        params.append('sessionStartFrom', validatedQuery.sessionStartFrom);
+      }
+
+      if (validatedQuery.sessionStartTo) {
+        params.append('sessionStartTo', validatedQuery.sessionStartTo);
+      }
+
+      if (validatedQuery.sortBy) {
+        params.append('sortBy', validatedQuery.sortBy);
+      }
+
+      if (validatedQuery.sortOrder) {
+        params.append('sortOrder', validatedQuery.sortOrder);
+      }
+
+      if (validatedQuery.offset !== undefined) {
+        params.append('offset', validatedQuery.offset.toString());
+      }
+
+      if (validatedQuery.limit !== undefined) {
+        params.append('limit', validatedQuery.limit.toString());
+      }
+
+      const queryString = params.toString();
+      const url = queryString 
+        ? `/users/${encodeURIComponent(userId)}/bookings?${queryString}`
+        : `/users/${encodeURIComponent(userId)}/bookings`;
+
+      const response = await apiClient.get(url);
+      return z.array(BookingWithSessionResponseSchema).parse(response.data);
     } catch (error) {
       throw handleApiError(error);
     }

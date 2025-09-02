@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionsApi } from '../subscriptions';
-import { bookingsApi } from '../bookings';
 import { useUserProfile } from './use-user';
 import type { PurchaseSubscription, GetPlansQuery } from '../schemas';
 
@@ -41,15 +40,3 @@ export const usePurchaseSubscription = () => {
   });
 };
 
-export const useRedeemSubscription = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (bookingId: string) => bookingsApi.redeemSubscription(bookingId),
-    onSuccess: () => {
-      // Invalidate both subscriptions and bookings after redemption
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    },
-  });
-};
