@@ -75,22 +75,9 @@ export const TrainingPage = () => {
   const handleGoToPayment = useCallback(() => {
     if (!trainingId) return;
     
-    setBookingError(null);
-    
-    createBookingMutation.mutate(
-      { sessionId: trainingId },
-      {
-        onSuccess: () => {
-          setModalOpen(false);
-          navigate(`/trainings/sessions/${trainingId}/payment`);
-        },
-        onError: (error: any) => {
-          console.error('Booking error:', error);
-          setBookingError(error.message || 'Произошла ошибка при создании записи');
-        }
-      }
-    );
-  }, [trainingId, createBookingMutation, navigate]);
+    setModalOpen(false);
+    navigate(`/trainings/sessions/${trainingId}/payment`);
+  }, [trainingId, navigate]);
 
   const bookingButton = useMemo(() => (
     <div className={styles.bookingButtonWrapper}>

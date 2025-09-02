@@ -97,8 +97,10 @@ export function PaymentPage() {
         });
 
         // Redirect to payment provider checkout
-        if (result.clientSecret) {
-          // Handle client secret for payment completion
+        if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+        } else if (result.clientSecret) {
+          // Handle client secret for payment completion (fallback)
           window.location.href = result.clientSecret;
         } else {
           setPaymentError('Ошибка при создании платежа');

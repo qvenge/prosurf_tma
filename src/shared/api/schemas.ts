@@ -133,8 +133,8 @@ export const PaymentResponseSchema = z.object({
 
 export const CreatePaymentIntentResponseSchema = z.object({
   payment: PaymentResponseSchema,
-  checkoutUrl: z.string().nullable(),
-  clientSecret: z.string().nullable(),
+  checkoutUrl: z.string().nullable().optional(),
+  clientSecret: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.any()).nullable(),
 });
 
@@ -182,7 +182,8 @@ export const PurchaseSubscriptionSchema = z.object({
 export const PurchaseSubscriptionResponseSchema = z.object({
   paymentId: z.string(),
   providerRef: z.string(),
-  clientSecret: z.string(),
+  clientSecret: z.string().nullable().optional(),
+  checkoutUrl: z.string().nullable().optional(),
   amountMinor: z.number().int(),
   currency: z.string(),
   planId: z.string(),

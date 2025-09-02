@@ -9,6 +9,8 @@ import { Profile } from '@/pages/profile';
 import { PaymentPage } from '@/pages/payment';
 import { BookingPage } from '@/pages/booking';
 import { LoginPage } from '@/pages/login';
+import { EventsPage } from '@/pages/events';
+import { MyBookings } from '@/pages/my-bookings';
 import { ProtectedRoute } from '@/shared/ui/protected-route';
 
 const ProtectedHome = () => <ProtectedRoute><Home /></ProtectedRoute>;
@@ -18,6 +20,8 @@ const ProtectedTrainingPage = () => <ProtectedRoute><TrainingPage /></ProtectedR
 const ProtectedPaymentPage = () => <ProtectedRoute><PaymentPage /></ProtectedRoute>;
 const ProtectedBookingPage = () => <ProtectedRoute><BookingPage /></ProtectedRoute>;
 const ProtectedProfile = () => <ProtectedRoute><Profile /></ProtectedRoute>;
+const ProtectedBookings = () => <ProtectedRoute><MyBookings /></ProtectedRoute>;
+const ProtectedEventsPages = () => <ProtectedRoute><EventsPage /></ProtectedRoute>;
 
 export const router = createBrowserRouter([
   {
@@ -61,8 +65,27 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path: 'events',
+        children: [
+          { 
+            index: true, 
+            Component: ProtectedEventsPages
+          },
+        ]
+      },
       { 
         path: 'profile', 
+        children: [
+          { 
+            index: true, 
+            Component: ProtectedProfile
+          },
+          { 
+            path: 'bookings', 
+            Component: ProtectedBookings
+          },
+        ],
         Component: ProtectedProfile
       },
     ],
