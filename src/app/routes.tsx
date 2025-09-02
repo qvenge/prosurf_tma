@@ -11,6 +11,8 @@ import { BookingPage } from '@/pages/booking';
 import { LoginPage } from '@/pages/login';
 import { EventsPage } from '@/pages/events';
 import { MyBookings } from '@/pages/my-bookings';
+import { MyWaitlist } from '@/pages/my-waitlist';
+import { MyPayments } from '@/pages/my-payments';
 import { ProtectedRoute } from '@/shared/ui/protected-route';
 
 const ProtectedHome = () => <ProtectedRoute><Home /></ProtectedRoute>;
@@ -19,9 +21,12 @@ const ProtectedTrainings = () => <ProtectedRoute><Trainings /></ProtectedRoute>;
 const ProtectedTrainingPage = () => <ProtectedRoute><TrainingPage /></ProtectedRoute>;
 const ProtectedPaymentPage = () => <ProtectedRoute><PaymentPage /></ProtectedRoute>;
 const ProtectedBookingPage = () => <ProtectedRoute><BookingPage /></ProtectedRoute>;
+const ProtectedEventsPages = () => <ProtectedRoute><EventsPage /></ProtectedRoute>;
+
 const ProtectedProfile = () => <ProtectedRoute><Profile /></ProtectedRoute>;
 const ProtectedBookings = () => <ProtectedRoute><MyBookings /></ProtectedRoute>;
-const ProtectedEventsPages = () => <ProtectedRoute><EventsPage /></ProtectedRoute>;
+const ProtectedWaitlist = () => <ProtectedRoute><MyWaitlist /></ProtectedRoute>;
+const ProtectedPayments = () => <ProtectedRoute><MyPayments /></ProtectedRoute>;
 
 export const router = createBrowserRouter([
   {
@@ -85,8 +90,15 @@ export const router = createBrowserRouter([
             path: 'bookings', 
             Component: ProtectedBookings
           },
+          { 
+            path: 'waitlist', 
+            Component: ProtectedWaitlist
+          },
+          { 
+            path: 'payments', 
+            Component: ProtectedPayments
+          },
         ],
-        Component: ProtectedProfile
       },
     ],
   },

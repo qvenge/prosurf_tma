@@ -22,3 +22,62 @@ export const getMonthDateRange = (monthName: string) => {
   
   return { dateFrom, dateTo };
 };
+
+export const formatTourDates = (start: string, end: string | null) => {
+  const startDate = new Date(start);
+  const endDate = end ? new Date(end) : startDate;
+  
+  const startDay = startDate.getDate();
+  const endDay = endDate.getDate();
+  
+  const startMonth = startDate.toLocaleDateString('ru-RU', { month: 'long' });
+  const endMonth = endDate.toLocaleDateString('ru-RU', { month: 'long' });
+  
+  const year = startDate.getFullYear().toString();
+  
+  if (startMonth === endMonth) {
+    return {
+      dates: `${startDay} – ${endDay} ${startMonth}`,
+      year: `${year} г`
+    };
+  } else {
+    return {
+      dates: `${startDay} ${startMonth} – ${endDay} ${endMonth}`,
+      year: `${year} г`
+    };
+  }
+};
+
+export const formatTime = (datetime: string) => {
+  const date = new Date(datetime);
+  return date.toLocaleTimeString('ru-RU', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
+export const formatEventDate = (datetime: string) => {
+  const date = new Date(datetime);
+  const day = date.getDate();
+  const month = date.toLocaleDateString('ru-RU', { month: 'long' });
+  const weekday = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+  
+  return `${day} ${month} • ${weekday}`;
+};
+
+export const groupEventsByDate = <T extends { start: string }>(events: T[]) => {
+  const grouped = events.reduce((acc, event) => {
+    const dateKey = new Date(event.start).toDateString();
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(event);
+    return acc;
+  }, {} as Record<string, T[]>);
+
+  return Object.entries(grouped).map(([, events]) => ({
+    date: formatEventDate(events[0].start),
+    events
+  }));
+};

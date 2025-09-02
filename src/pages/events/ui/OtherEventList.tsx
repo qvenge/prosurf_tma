@@ -1,36 +1,47 @@
 import styles from './OtherEventList.module.scss';
-
 import { OtherEventCard } from './OtherEventCard';
+import { useEventSessionsByType } from '@/shared/api';
+import { groupEventsByDate } from '@/shared/lib/date-utils';
 
-const data = {
-  imgSrc: '/images/surfing1.jpg',
-  time: '21:30',
-  name: 'SurfSkate Встреча',
-  location: 'Flow Moscow Ставропольская, ул. 43, Москва',
-  price: '2 000 ₽',
-  remainingSeats: 3
- }
+export const OtherEventList = () => {
+  const { data: otherEvents, isLoading, error } = useEventSessionsByType('other');
 
+  if (isLoading) {
+    return (
+      <div className={styles.wrapper}>
+        <div>Загрузка событий...</div>
+      </div>
+    );
+  }
 
-interface OtherEventListProps {
+  if (error) {
+    return (
+      <div className={styles.wrapper}>
+        <div>Ошибка загрузки событий</div>
+      </div>
+    );
+  }
 
-}
+  if (!otherEvents || otherEvents.length === 0) {
+    return (
+      <div className={styles.wrapper}>
+        <div>Событий пока нет</div>
+      </div>
+    );
+  }
 
-export const OtherEventList = ({
-
-}: OtherEventListProps) => {
+  const groupedEvents = groupEventsByDate(otherEvents);
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.eventsBlock}>
-        <div className={styles.day}>3 июля • четверг</div>
-        <OtherEventCard data={data} />
-      </div>
-      <div className={styles.eventsBlock}>
-        <div className={styles.day}>4 июля • пятница</div>
-        <OtherEventCard data={data} />
-        <OtherEventCard data={data} />
-      </div>
+      {groupedEvents.map((group) => (
+        <div key={group.date} className={styles.eventsBlock}>
+          <div className={styles.day}>{group.date}</div>
+          {group.events.map((event) => (
+            <OtherEventCard key={event.id} data={event} />
+          ))}
+        </div>
+      ))}
     </div>
   );
 };

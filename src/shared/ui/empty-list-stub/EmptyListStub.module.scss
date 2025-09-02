@@ -1,0 +1,17 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px
+}
+
+.icon {
+  color: ds.color('Graphic/Teritary');
+}
+
+.message {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Secondary');
+  margin: 0;
+}

@@ -8,3 +8,4 @@ export * from './spinner';
 export * from './button';
 export * from './modal';
 export * from './switch';
+export * from './empty-list-stub';

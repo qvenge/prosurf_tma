@@ -12,32 +12,38 @@ import {
 
 import { Icon } from '@/shared/ui';
 import styles from './Profile.module.scss';
+import { Link } from 'react-router';
 
 const menuItems = [
   {
     icon: CalendarBlankBold,
     title: 'Мои записи',
     subtitle: 'Ближайшее: 4 июля в 21:30',
+    href: '/profile/bookings',
   },
   {
     icon: ClockBold,
     title: 'Лист ожиданий',
     subtitle: 'Доступно: 2/10',
+    href: '/profile/waitlist',
   },
   {
     icon: ListChecksBold,
     title: 'Аттестация ProSurf',
     subtitle: 'Что это?',
+    href: '/profile/prosurf-validation-info',
   },
   {
     icon: ArrowsLeftRightBold,
     title: 'История покупок',
     subtitle: '5 транзакций',
+    href: '/profile/payments',
   },
   {
     icon: ChatCircleTextBold,
     title: 'Поддержка',
     subtitle: 'Написать в ТГ',
+    href: '/profile',
   }
 ];
 
@@ -161,26 +167,28 @@ export const Profile = () => {
 
       {/* Menu Items */}
       <div className={styles.menuSection}>{menuItems.map((item, index) => (
-        <div key={index} className={styles.menuItem}>
-          <span className={styles.menuIcon}>
+        <Link key={index} to={item.href}   style={{textDecoration: 'none', color: 'inherit'}} >
+          <div key={index} className={styles.menuItem}>
+            <span className={styles.menuIcon}>
+              <Icon 
+                src={item.icon} 
+                width={20} 
+                height={20} 
+                className={styles.calendarIcon}
+              />
+            </span>
+            <div className={styles.menuContent}>
+              <div className={styles.menuTitle}>{item.title}</div>
+              <div className={styles.menuSubtitle}>{item.subtitle}</div>
+            </div>
             <Icon 
-              src={item.icon} 
+              src={CaretRightBold} 
               width={20} 
               height={20} 
-              className={styles.calendarIcon}
+              className={styles.chevron}
             />
-          </span>
-          <div className={styles.menuContent}>
-            <div className={styles.menuTitle}>{item.title}</div>
-            <div className={styles.menuSubtitle}>{item.subtitle}</div>
           </div>
-          <Icon 
-            src={CaretRightBold} 
-            width={20} 
-            height={20} 
-            className={styles.chevron}
-          />
-        </div>
+        </Link>
       ))}</div>
 
       {/* Footer Links */}

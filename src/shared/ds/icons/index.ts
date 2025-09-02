@@ -12,3 +12,6 @@ export { default as ClockBold } from './clock_bold.svg';
 export { default as ListChecksBold } from './list-checks_bold.svg';
 export { default as ArrowsLeftRightBold } from './arrows-left-right_bold.svg';
 export { default as ChatCircleTextBold } from './chat-circle-text_bold.svg';
+export { default as InfoFill } from './info_fill.svg';
+export { default as AirplaneTiltBold } from './airplane-tilt_bold.svg';
+export { default as CertificateBold } from './certificate_bold.svg';

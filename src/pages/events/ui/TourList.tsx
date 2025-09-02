@@ -1,30 +1,39 @@
 import styles from './TourList.module.scss';
-
 import { TourCard } from './TourCard';
+import { useEventSessionsByType } from '@/shared/api';
 
-const data = {
-  imgSrc: '/images/surfing1.jpg',
-  dates: '1 мая – 6 июня',
-  year: '2025 г',
-  name: 'ProSurf Camp / Bali',
-  location: 'Бали, Индонезия',
-  price: '$ 1 690',
-  remainingSeats: 3
- }
+export const TourList = () => {
+  const { data: tours, isLoading, error } = useEventSessionsByType('tour');
 
+  if (isLoading) {
+    return (
+      <div className={styles.wrapper}>
+        <div>Загрузка туров...</div>
+      </div>
+    );
+  }
 
-interface TourListProps {
+  if (error) {
+    return (
+      <div className={styles.wrapper}>
+        <div>Ошибка загрузки туров</div>
+      </div>
+    );
+  }
 
-}
-
-export const TourList = ({
-
-}: TourListProps) => {
+  if (!tours || tours.length === 0) {
+    return (
+      <div className={styles.wrapper}>
+        <div>Туров пока нет</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrapper}>
-      <TourCard data={data} />
-      <TourCard data={data} />
+      {tours.map((tour) => (
+        <TourCard key={tour.id} data={tour} />
+      ))}
     </div>
   );
 };
