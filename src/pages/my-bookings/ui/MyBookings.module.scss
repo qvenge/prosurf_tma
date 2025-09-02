@@ -12,6 +12,19 @@
   justify-content: center;
 }
 
+.loading, .error {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @include ds.typo('Roboto/Text/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.error {
+  color: ds.color('Text/Error');
+}
+
 .dayBlocks {
   display: flex;
   flex-direction: column;

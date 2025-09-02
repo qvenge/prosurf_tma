@@ -112,7 +112,6 @@ export const BookingResponseSchema = z.object({
 
 export const BookingWithSessionResponseSchema = z.object({
   id: z.string(),
-  sessionId: z.string(),
   session: z.object({
     id: z.string(),
     title: z.string(),
@@ -127,7 +126,7 @@ export const BookingWithSessionResponseSchema = z.object({
   createdAt: z.string().datetime(),
 }).transform((data) => ({
   ...data,
-  sessionId: data.sessionId || data.session.id,
+  sessionId: data.session.id,
 }));
 
 export const PaymentStatusSchema = z.enum(['REQUIRES_ACTION', 'PENDING', 'SUCCEEDED', 'FAILED', 'CANCELED']);

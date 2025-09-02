@@ -1,87 +1,95 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { EmptyListStub, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
+import { useUserBookings, type BookingWithSessionResponse } from '@/shared/api'
+import { formatTourDates, formatEventDate, formatTime } from '@/shared/lib/date-utils'
+import { formatDuration } from '@/shared/lib/format-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
 
 type BookingsByDay = Array<{ day: string; items: BookingCardProps['data'][]}>;
 
-const trainings: BookingsByDay = [
-  {
-    day: '3 июля • четверг',
-    items: [
-      {
-        type: 'surfingTraining',
-        eventTitle: 'Общая группаа',
-        eventLocation: 'Flow Moscow Ставропольская, ул. 43, Москва',
-        rightTopInner: '21:30',
-        rightBottomInner: '1 ч 30 мин'
-      },
-      {
-        type: 'surfingTraining',
-        eventTitle: 'Общая группаа',
-        eventLocation: 'Flow Moscow Ставропольская, ул. 43, Москва',
-        rightTopInner: '21:30',
-        rightBottomInner: '1 ч 30 мин'
-      }
-    ]
-  },
-      {
-    day: '4 июля • пятница',
-    items: [
-      {
-        type: 'surfskateTraining',
-        eventTitle: 'Общая группаа',
-        eventLocation: 'Flow Moscow Ставропольская, ул. 43, Москва',
-        rightTopInner: '21:30',
-        rightBottomInner: '1 ч 30 мин'
-      },
-      {
-        type: 'surfskateTraining',
-        eventTitle: 'Общая группаа',
-        eventLocation: 'Flow Moscow Ставропольская, ул. 43, Москва',
-        rightTopInner: '21:30',
-        rightBottomInner: '1 ч 30 мин'
-      }
-    ]
+const transformBookingToCardData = (booking: BookingWithSessionResponse): BookingCardProps['data'] => {
+  const { session } = booking;
+  
+  let rightTopInner: string | undefined;
+  let rightBottomInner: string | undefined;
+  
+  if (session.type === 'tour') {
+    const tourDates = formatTourDates(session.start, session.end);
+    rightTopInner = tourDates.dates;
+    rightBottomInner = tourDates.year;
+  } else {
+    rightTopInner = formatTime(session.start);
+    rightBottomInner = session.end ? formatDuration(session.start, session.end) : undefined;
   }
-];
+  
+  return {
+    type: session.type,
+    eventTitle: session.title,
+    eventLocation: session.location,
+    rightTopInner,
+    rightBottomInner
+  };
+};
 
-const events: BookingsByDay = [
-  {
-    day: '3 июля • четверг',
-    items: [
-      {
-        type: 'other',
-        eventTitle: 'SurfSkate Встреча',
-        eventLocation: 'Flow Moscow Ставропольская, ул. 43, Москва',
-        rightTopInner: '21:30'
-      }
-    ]
-  },
-      {
-    day: '4 июля • пятница',
-    items: [
-      {
-        type: 'tour',
-        eventTitle: 'ProSurf Camp / Bali',
-        eventLocation: 'Бали, Индонезия',
-        rightTopInner: '1 мая – 6 июня',
-        rightBottomInner: '2025 г'
-      },
-      {
-        type: 'other',
-        eventTitle: 'SurfSkate Встреча',
-        eventLocation: 'Flow Moscow Ставропольская, ул. 43, Москва',
-        rightTopInner: '21:30'
-      }
-    ]
-  }
-];
+const groupBookingsByDate = (bookings: BookingWithSessionResponse[]): BookingsByDay => {
+  const grouped = bookings.reduce((acc, booking) => {
+    const dateKey = formatEventDate(booking.session.start);
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(transformBookingToCardData(booking));
+    return acc;
+  }, {} as Record<string, BookingCardProps['data'][]>);
+
+  return Object.entries(grouped).map(([day, items]) => ({ day, items }));
+};
 
 export function MyBookings() {
   const [selectedTab, setSelectedTab] = useState<'trainings' | 'events'>('trainings');
+  
+  const sessionStartFrom = useMemo(() => new Date().toISOString(), []);
+  
+  const { data: bookings = [], isLoading, error } = useUserBookings(undefined, {
+    status: ['CONFIRMED'],
+    sessionStartFrom,
+    sortBy: 'sessionStart',
+    sortOrder: 'asc'
+  });
+  
+  const trainingBookings = bookings.filter(booking => 
+    booking.session.type === 'surfingTraining' || booking.session.type === 'surfskateTraining'
+  );
+  
+  const eventBookings = bookings.filter(booking => 
+    booking.session.type === 'tour' || booking.session.type === 'other'
+  );
+  
+  const trainings = groupBookingsByDate(trainingBookings);
+  const events = groupBookingsByDate(eventBookings);
+  
   const items = selectedTab === 'trainings' ? trainings : events;
+  
+  if (isLoading) {
+    return (
+      <PageLayout title="Мои записи">
+        <div className={styles.wrapper}>
+          <div className={styles.loading}>Загрузка...</div>
+        </div>
+      </PageLayout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <PageLayout title="Мои записи">
+        <div className={styles.wrapper}>
+          <div className={styles.error}>Ошибка загрузки записей. Попробуйте позже.</div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout title="Мои записи">
