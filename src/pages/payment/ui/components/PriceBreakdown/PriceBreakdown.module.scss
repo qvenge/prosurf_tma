@@ -1,0 +1,65 @@
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.description {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .productName {
+    @include ds.typo('Roboto/Text/Bold');
+  }
+
+  .productPurpose {
+    @include ds.typo('Roboto/Caption 1/Regular');
+    color: ds.color('Text/Secondary');
+  }
+
+  .price {
+    @include ds.typo('Roboto/Subheadline 2/Semibold');
+    color: ds.color('Text/Brand');
+    white-space: nowrap;
+  }
+}
+
+.settingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settingItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settingItemName {
+  @include ds.typo('Roboto/Subheadline 2/Semibold Caps');
+  color: ds.color('Text/Brand');
+}
+
+.settingItemDescription {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.settingItemControl {
+  flex-shrink: 0;
+}
+
+.divider {
+  background: ds.color('Border/Primary');
+  height: .5px;
+}
