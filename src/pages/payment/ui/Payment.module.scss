@@ -1,9 +1,9 @@
 .wrapper {
-  padding: 24px 16px 0;
   color: ds.color('Text/Primary');
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding-top: 32px;
 }
 
 .top {
@@ -36,6 +36,7 @@
   .price {
     @include ds.typo('Roboto/Subheadline 2/Semibold');
     color: ds.color('Text/Brand');
+    white-space: nowrap;
   }
 }
 

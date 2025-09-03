@@ -10,7 +10,7 @@ export interface PageLayoutProps extends HTMLAttributes<HTMLDivElement> {
 
 export function PageLayout({children, heroImages, title, className}: PageLayoutProps) {
   return (
-    <div className={clsx(styles.wrapper, className)}>
+    <div className={styles.wrapper}>
       <div className={styles.header}>
         {heroImages && heroImages.length > 0 && <ImageSlider 
           images={heroImages}
@@ -18,7 +18,7 @@ export function PageLayout({children, heroImages, title, className}: PageLayoutP
         />}
         {title && <h1 className={styles.title}>{title}</h1>}
       </div>
-      <div className={styles.body}>
+      <div className={clsx(styles.body, className)}>
         {children}
       </div>
     </div>

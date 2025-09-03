@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import clsx from 'clsx';
 import { SegmentedControl, Button, Switch } from '@/shared/ui';
+import { PageLayout } from '@/widgets/page-layout';
 import { 
   useEventSession, 
   useSubscriptionPlans,
@@ -222,126 +223,127 @@ export function PaymentPage() {
   }
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.top}>
-        <h1 className={styles.title}>Оплатить</h1>
-        <SegmentedControl className={styles.select}>
-          <SegmentedControl.Item
-            selected={product === 'subscription'}
-            onClick={() => setProduct('subscription')}
-          >
-            Абонемент
-          </SegmentedControl.Item>
-          <SegmentedControl.Item
-            selected={product === 'single_session'}
-            onClick={() => setProduct('single_session')}
-          >
-            Разовая тренировка
-          </SegmentedControl.Item>
-        </SegmentedControl>
+    <PageLayout title={session.title}>
+      <div className={styles.wrapper}>
+        <div className={styles.top}>
+          <SegmentedControl className={styles.select}>
+            <SegmentedControl.Item
+              selected={product === 'subscription'}
+              onClick={() => setProduct('subscription')}
+            >
+              Абонемент
+            </SegmentedControl.Item>
+            <SegmentedControl.Item
+              selected={product === 'single_session'}
+              onClick={() => setProduct('single_session')}
+            >
+              Разовая тренировка
+            </SegmentedControl.Item>
+          </SegmentedControl>
 
-        {product === 'subscription' ? (<>
-          <div className={styles.description}>
-            <div className={styles.info}>
-              <div className={styles.productName}>
-                {selectedPlan ? selectedPlan.name : 'Абонемент'}
-              </div>
-              <div className={styles.productPurpose}>
-                {session.type === 'surfingTraining' ? 'Серфинг' : 
-                 session.type === 'surfskateTraining' ? 'Серфскейт' : 
-                 session.type === 'tour' ? 'Тур' : 'Другое'}
-              </div>
-            </div>
-            <div className={styles.price}>
-              {`${formatPrice(subscriptionPrice)} ₽`}
-            </div>
-          </div>
-          <div className={styles.productSettings}>
-            <div className={styles.amountList}>
-              {subscriptionPlans?.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={clsx(styles.amountItem, plan.id === selectedPlanId && styles['amountItem--active'])}
-                  onClick={() => setSelectedPlanId(plan.id)}
-                >
-                  <div className={styles.amountNumber}>{plan.sessionsTotal}</div>
-                  <div className={styles.amountText}>Занятий</div>
+          {product === 'subscription' ? (<>
+            <div className={styles.description}>
+              <div className={styles.info}>
+                <div className={styles.productName}>
+                  {selectedPlan ? selectedPlan.name : 'Абонемент'}
                 </div>
-              ))}
-            </div>
-          </div>
-        </>) : (
-          <div className={styles.description}>
-            <div className={styles.info}>
-              <div className={styles.productName}>{session.title}</div>
-              <div className={styles.productPurpose}>
-                {session.type === 'surfingTraining' ? 'Серфинг' : 
-                 session.type === 'surfskateTraining' ? 'Серфскейт' : 
-                 session.type === 'tour' ? 'Тур' : 'Другое'}
+                <div className={styles.productPurpose}>
+                  {session.type === 'surfingTraining' ? 'Серфинг' : 
+                  session.type === 'surfskateTraining' ? 'Серфскейт' : 
+                  session.type === 'tour' ? 'Тур' : 'Другое'}
+                </div>
+              </div>
+              <div className={styles.price}>
+                {`${formatPrice(subscriptionPrice)} ₽`}
               </div>
             </div>
-            <div className={styles.price}>
-              {`${formatPrice(sessionPrice)} ₽`}
+            <div className={styles.productSettings}>
+              <div className={styles.amountList}>
+                {subscriptionPlans?.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className={clsx(styles.amountItem, plan.id === selectedPlanId && styles['amountItem--active'])}
+                    onClick={() => setSelectedPlanId(plan.id)}
+                  >
+                    <div className={styles.amountNumber}>{plan.sessionsTotal}</div>
+                    <div className={styles.amountText}>Занятий</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          </>) : (
+            <div className={styles.description}>
+              <div className={styles.info}>
+                <div className={styles.productName}>{session.title}</div>
+                <div className={styles.productPurpose}>
+                  {session.type === 'surfingTraining' ? 'Серфинг' : 
+                  session.type === 'surfskateTraining' ? 'Серфскейт' : 
+                  session.type === 'tour' ? 'Тур' : 'Другое'}
+                </div>
+              </div>
+              <div className={styles.price}>
+                {`${formatPrice(sessionPrice)} ₽`}
+              </div>
+            </div>
+          )}
 
-        <div className={styles.divider} />
+          <div className={styles.divider} />
 
-        {/* Списание кэшбека */}
-        {cashbackValue > 0 && (<>
+          {/* Списание кэшбека */}
+          {cashbackValue > 0 && (<>
+            <div className={styles.settingItem}>
+              <div className={styles.settingItemInfo}>
+                <div className={styles.settingItemName}>Кэшбек: {formatPrice(cashbackValue)} ₽</div>
+                <div className={styles.settingItemDescription}>Списать {formatPrice(cashbackValue)} ₽ бонусов?</div>
+              </div>
+              <div className={styles.settingItemControl}>
+                <Switch checked={activeCashback} onChange={({currentTarget}) => setActiveCashback(currentTarget.checked)}/>
+              </div>
+            </div>
+
+            <div className={styles.divider} />
+          </>)}
+
+          {/* Списание сертификата */}
           <div className={styles.settingItem}>
             <div className={styles.settingItemInfo}>
-              <div className={styles.settingItemName}>Кэшбек: {formatPrice(cashbackValue)} ₽</div>
-              <div className={styles.settingItemDescription}>Списать {formatPrice(cashbackValue)} ₽ бонусов?</div>
+              <div className={styles.settingItemName}>сертификат: 15 000 ₽</div>
+              <div className={styles.settingItemDescription}>Cписать 7 900 ₽?</div>
             </div>
             <div className={styles.settingItemControl}>
-              <Switch checked={activeCashback} onChange={({currentTarget}) => setActiveCashback(currentTarget.checked)}/>
+              <Switch />
             </div>
           </div>
 
           <div className={styles.divider} />
-        </>)}
-
-        {/* Списание сертификата */}
-        <div className={styles.settingItem}>
-          <div className={styles.settingItemInfo}>
-            <div className={styles.settingItemName}>сертификат: 15 000 ₽</div>
-            <div className={styles.settingItemDescription}>Cписать 7 900 ₽?</div>
-          </div>
-          <div className={styles.settingItemControl}>
-            <Switch />
-          </div>
+          
+          {/* Error message */}
+          {paymentError && (
+            <div className={styles.error}>
+              {paymentError}
+            </div>
+          )}
         </div>
-
-        <div className={styles.divider} />
         
-        {/* Error message */}
-        {paymentError && (
-          <div className={styles.error}>
-            {paymentError}
+        <div className={styles.footer}>
+          <div className={styles.footerTitle}>Итого</div>
+          <div className={styles.totalPriceWrapper}>
+            {price !== totalPrice && <div className={styles.initialPrice}>{formatPrice(price)} ₽</div>}
+            <div className={styles.totalPrice}>{formatPrice(totalPrice)} ₽</div>
           </div>
-        )}
-      </div>
-      
-      <div className={styles.footer}>
-        <div className={styles.footerTitle}>Итого</div>
-        <div className={styles.totalPriceWrapper}>
-          {price !== totalPrice && <div className={styles.initialPrice}>{formatPrice(price)} ₽</div>}
-          <div className={styles.totalPrice}>{formatPrice(totalPrice)} ₽</div>
+          <Button 
+            className={styles.payButton} 
+            size='l' 
+            stretched={true} 
+            mode='primary'
+            onClick={handlePayment}
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Обработка...' : 'Оплатить'}
+          </Button>
+          <div className={styles.cashback}>{`Начислим кэшбек: ${formatPrice(calcCashback(totalPrice))} ₽`}</div>
         </div>
-        <Button 
-          className={styles.payButton} 
-          size='l' 
-          stretched={true} 
-          mode='primary'
-          onClick={handlePayment}
-          disabled={isProcessing}
-        >
-          {isProcessing ? 'Обработка...' : 'Оплатить'}
-        </Button>
-        <div className={styles.cashback}>{`Начислим кэшбек: ${formatPrice(calcCashback(totalPrice))} ₽`}</div>
       </div>
-    </div>
+    </PageLayout>
   )
 }
