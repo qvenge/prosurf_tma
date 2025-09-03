@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import styles from './OtherEventList.module.scss';
 import { OtherEventCard } from './OtherEventCard';
 import { useEventSessionsByType } from '@/shared/api';
@@ -38,7 +39,9 @@ export const OtherEventList = () => {
         <div key={group.date} className={styles.eventsBlock}>
           <div className={styles.day}>{group.date}</div>
           {group.events.map((event) => (
-            <OtherEventCard key={event.id} data={event} />
+            <Link key={event.id} to={`/events/sessions/${event.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <OtherEventCard key={event.id} data={event} />
+            </Link>
           ))}
         </div>
       ))}

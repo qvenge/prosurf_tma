@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import styles from './TourList.module.scss';
 import { TourCard } from './TourCard';
 import { useEventSessionsByType } from '@/shared/api';
@@ -32,7 +33,9 @@ export const TourList = () => {
   return (
     <div className={styles.wrapper}>
       {tours.map((tour) => (
-        <TourCard key={tour.id} data={tour} />
+        <Link key={tour.id} to={`/events/sessions/${tour.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <TourCard key={tour.id} data={tour} />
+        </Link>
       ))}
     </div>
   );

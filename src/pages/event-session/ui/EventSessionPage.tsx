@@ -7,7 +7,7 @@ import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
 import { useCreateBooking, useUserSubscriptions, useRedeemSubscription } from '@/shared/api';
-import styles from './TrainingPage.module.scss';
+import styles from './EventSessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal';
 
@@ -19,15 +19,15 @@ const heroImages = [
 // Assets from Figma
 const imgRectangle3 = "http://localhost:3845/assets/c13e3ca0ccd2db8f8894d5a02d936feb0dea78c3.png";
 
-export const TrainingPage = () => {
+export const EventSessionPage = () => {
   const { setOverride } = useBottomBar();
   const [modalOpen, setModalOpen] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { trainingId } = useParams<{ trainingId: string; }>();
-  const { data: session, isLoading, error } = useEventSession(trainingId!);
+  const { sessionId } = useParams<{ sessionId: string; }>();
+  const { data: session, isLoading, error } = useEventSession(sessionId!);
   const { data: subscriptions = [], isLoading: subscriptionsLoading } = useUserSubscriptions();
   
   const createBookingMutation = useCreateBooking();
@@ -41,12 +41,12 @@ export const TrainingPage = () => {
   }, [session, subscriptionsLoading]);
 
   const handleUseSubscription = useCallback(() => {
-    if (!trainingId) return;
+    if (!sessionId) return;
     
     setBookingError(null);
     
     createBookingMutation.mutate(
-      { sessionId: trainingId },
+      { sessionId },
       {
         onSuccess: (booking) => {
           setPendingBookingId(booking.id);
@@ -55,7 +55,7 @@ export const TrainingPage = () => {
             {
               onSuccess: () => {
                 setModalOpen(false);
-                navigate(`/trainings/sessions/${trainingId}/booked`);
+                navigate(`/trainings/sessions/${sessionId}/booked`);
               },
               onError: (error: any) => {
                 console.error('Subscription redemption error:', error);
@@ -71,14 +71,14 @@ export const TrainingPage = () => {
         }
       }
     );
-  }, [trainingId, createBookingMutation, redeemSubscriptionMutation, navigate]);
+  }, [sessionId, createBookingMutation, redeemSubscriptionMutation, navigate]);
 
   const handleGoToPayment = useCallback(() => {
-    if (!trainingId) return;
+    if (!sessionId) return;
     
     setModalOpen(false);
-    navigate(`/trainings/sessions/${trainingId}/payment`);
-  }, [trainingId, navigate]);
+    navigate(`/trainings/sessions/${sessionId}/payment`);
+  }, [sessionId, navigate]);
 
   const bookingButton = useMemo(() => (
     <div className={styles.bookingButtonWrapper}>

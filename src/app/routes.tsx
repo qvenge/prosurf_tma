@@ -10,6 +10,7 @@ import { PaymentPage } from '@/pages/payment';
 import { BookingPage } from '@/pages/booking';
 import { LoginPage } from '@/pages/login';
 import { EventsPage } from '@/pages/events';
+import { EventSessionPage } from '@/pages/event-session';
 import { MyBookings } from '@/pages/my-bookings';
 import { MyWaitlist } from '@/pages/my-waitlist';
 import { MyPayments } from '@/pages/my-payments';
@@ -22,6 +23,7 @@ const ProtectedTrainingPage = () => <ProtectedRoute><TrainingPage /></ProtectedR
 const ProtectedPaymentPage = () => <ProtectedRoute><PaymentPage /></ProtectedRoute>;
 const ProtectedBookingPage = () => <ProtectedRoute><BookingPage /></ProtectedRoute>;
 const ProtectedEventsPages = () => <ProtectedRoute><EventsPage /></ProtectedRoute>;
+const ProtectedEventSessionPage = () => <ProtectedRoute><EventSessionPage /></ProtectedRoute>;
 
 const ProtectedProfile = () => <ProtectedRoute><Profile /></ProtectedRoute>;
 const ProtectedBookings = () => <ProtectedRoute><MyBookings /></ProtectedRoute>;
@@ -75,8 +77,13 @@ export const router = createBrowserRouter([
         children: [
           { 
             index: true, 
-            Component: ProtectedEventsPages
+            Component: ProtectedEventsPages,
           },
+          {
+            path: 'sessions/:sessionId',
+            Component: ProtectedEventSessionPage,
+            handle: { bottomBar: { visible: true, mode: 'custom' as const } },
+          }
         ]
       },
       { 
