@@ -12,6 +12,7 @@ import {
   ProductSelector,
   SubscriptionPlans,
   PriceBreakdown,
+  PaymentOptions,
   PaymentSummary,
   LoadingState,
   ErrorState
@@ -94,9 +95,6 @@ export function PaymentPage() {
             session={session}
             sessionPrice={sessionPrice}
             subscriptionPrice={subscriptionPrice}
-            cashbackValue={cashbackValue}
-            activeCashback={activeCashback}
-            onCashbackChange={updateActiveCashback}
           />
 
           {product === 'subscription' && subscriptionPlans && (
@@ -106,6 +104,14 @@ export function PaymentPage() {
               onPlanSelect={updateSelectedPlan}
             />
           )}
+
+          <div className={styles.divider} />
+
+          <PaymentOptions
+            cashbackValue={cashbackValue}
+            activeCashback={activeCashback}
+            onCashbackChange={updateActiveCashback}
+          />
         </div>
         
         <PaymentSummary
