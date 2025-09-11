@@ -5,6 +5,11 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    allowedHosts: [
+      'rarely-fervent-amphibian.cloudpub.ru'
+    ],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),

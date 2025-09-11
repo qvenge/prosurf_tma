@@ -3,8 +3,7 @@
 
 import { useState } from 'react';
 import { 
-  useLogin, 
-  useRegister, 
+  useTelegramAuth,
   useLogout,
   useUserProfile,
   useEventSessions,
@@ -15,20 +14,14 @@ import {
 
 // Authentication example
 export const AuthExample = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [initData, setInitData] = useState('');
   
-  const { mutate: login, isPending: isLoggingIn, error: loginError } = useLogin();
-  const { mutate: register, isPending: isRegistering, error: registerError } = useRegister();
+  const { mutate: authenticateWithTelegram, isPending: isAuthenticating, error: authError } = useTelegramAuth();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const { data: user, isLoading: isLoadingProfile } = useUserProfile();
 
-  const handleLogin = () => {
-    login({ email, password });
-  };
-
-  const handleRegister = () => {
-    register({ email, password, name: 'John Doe' });
+  const handleTelegramAuth = () => {
+    authenticateWithTelegram({ initData });
   };
 
   const handleLogout = () => {
@@ -44,36 +37,26 @@ export const AuthExample = () => {
       
       {user ? (
         <div>
-          <p>Welcome, {user.name || user.email}!</p>
+          <p>Welcome, {user.name || user.username || user.telegramId}!</p>
           <button onClick={handleLogout} disabled={isLoggingOut}>
             {isLoggingOut ? 'Logging out...' : 'Logout'}
           </button>
         </div>
       ) : (
         <div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+          <textarea
+            placeholder="Telegram Mini App initData"
+            value={initData}
+            onChange={(e) => setInitData(e.target.value)}
+            rows={4}
+            style={{ width: '100%', marginBottom: '10px' }}
           />
           
-          <button onClick={handleLogin} disabled={isLoggingIn}>
-            {isLoggingIn ? 'Logging in...' : 'Login'}
+          <button onClick={handleTelegramAuth} disabled={isAuthenticating}>
+            {isAuthenticating ? 'Authenticating...' : 'Authenticate with Telegram'}
           </button>
           
-          <button onClick={handleRegister} disabled={isRegistering}>
-            {isRegistering ? 'Registering...' : 'Register'}
-          </button>
-          
-          {loginError && <p>Login error: {loginError.message}</p>}
-          {registerError && <p>Register error: {registerError.message}</p>}
+          {authError && <p>Auth error: {authError.message}</p>}
         </div>
       )}
       

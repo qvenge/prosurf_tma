@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link } from '@/shared/navigation';
 import styles from './OtherEventList.module.scss';
 import { OtherEventCard } from './OtherEventCard';
 import { useEventSessionsByType } from '@/shared/api';

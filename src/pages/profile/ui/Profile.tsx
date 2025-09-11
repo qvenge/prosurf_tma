@@ -12,7 +12,7 @@ import {
 
 import { Icon } from '@/shared/ui';
 import styles from './Profile.module.scss';
-import { Link } from 'react-router';
+import { Link } from '@/shared/navigation';
 
 const menuItems = [
   {

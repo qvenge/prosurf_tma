@@ -2,6 +2,7 @@ import { type PropsWithChildren, StrictMode, useMemo } from 'react';
 import { Navbar, BottomBarProvider } from '@/shared/ui';
 import { AppRoot } from '@/shared/app-root';
 import { ApiProvider } from '@/shared/api';
+import { NavigatorProvider } from '@/shared/navigation';
 import { HouseBold, BarbellBold, ConfettiBold, UserBold } from '@/shared/ds/icons';
 
 const navItems = [
@@ -18,9 +19,11 @@ export function AppProvider({ children }: PropsWithChildren) {
     <StrictMode>
       <ApiProvider>
         <AppRoot>
-          <BottomBarProvider defaultContent={defaultBar}>
-            {children}
-          </BottomBarProvider>
+          <NavigatorProvider>
+            <BottomBarProvider defaultContent={defaultBar}>
+              {children}
+            </BottomBarProvider>
+          </NavigatorProvider>
         </AppRoot>
       </ApiProvider>
     </StrictMode>

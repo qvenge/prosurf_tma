@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link } from '@/shared/navigation';
 import styles from './TourList.module.scss';
 import { TourCard } from './TourCard';
 import { useEventSessionsByType } from '@/shared/api';

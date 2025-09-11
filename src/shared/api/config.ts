@@ -30,8 +30,24 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-export const setAccessToken = (token: string | null) => {
-  accessToken = token;
+export const setAuthTokens = (accessToken: string | null, refreshToken?: string | null) => {
+  accessToken = accessToken;
+
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!accessToken) {
+    localStorage.removeItem('accessToken');
+  } else {
+    localStorage.setItem('accessToken', accessToken);
+  }
+
+  if (refreshToken != null) {
+    localStorage.setItem('refreshToken', refreshToken);
+  } else if (refreshToken === null) {
+    localStorage.removeItem('refreshToken');
+  }
 };
 
 export const getAccessToken = () => accessToken;
@@ -73,28 +89,20 @@ apiClient.interceptors.response.use(
           const { authApi } = await import('./auth');
           const refreshResponse = await authApi.refreshAccessToken(refreshToken);
           
-          setAccessToken(refreshResponse.accessToken);
+          setAuthTokens(refreshResponse.accessToken, refreshResponse.refreshToken);
           processQueue(null, refreshResponse.accessToken);
           
           originalRequest.headers!['Authorization'] = `Bearer ${refreshResponse.accessToken}`;
           return apiClient(originalRequest);
         } catch (refreshError) {
           processQueue(refreshError, null);
-          setAccessToken(null);
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-          }
+          setAuthTokens(null, null);
           return Promise.reject(refreshError);
         } finally {
           isRefreshing = false;
         }
       } else {
-        setAccessToken(null);
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        }
+        setAuthTokens(null, null);
       }
     }
     

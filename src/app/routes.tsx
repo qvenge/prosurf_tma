@@ -8,66 +8,50 @@ import { TrainingPage } from '@/pages/training';
 import { Profile } from '@/pages/profile';
 import { PaymentPage } from '@/pages/payment';
 import { BookingPage } from '@/pages/booking';
-import { LoginPage } from '@/pages/login';
 import { EventsPage } from '@/pages/events';
 import { EventSessionPage } from '@/pages/event-session';
 import { MyBookings } from '@/pages/my-bookings';
 import { MyWaitlist } from '@/pages/my-waitlist';
 import { MyPayments } from '@/pages/my-payments';
-import { ProtectedRoute } from '@/shared/ui/protected-route';
 
-const ProtectedHome = () => <ProtectedRoute><Home /></ProtectedRoute>;
-const ProtectedTrainingCategories = () => <ProtectedRoute><TrainingCategories /></ProtectedRoute>;
-const ProtectedTrainings = () => <ProtectedRoute><Trainings /></ProtectedRoute>;
-const ProtectedTrainingPage = () => <ProtectedRoute><TrainingPage /></ProtectedRoute>;
-const ProtectedPaymentPage = () => <ProtectedRoute><PaymentPage /></ProtectedRoute>;
-const ProtectedBookingPage = () => <ProtectedRoute><BookingPage /></ProtectedRoute>;
-const ProtectedEventsPages = () => <ProtectedRoute><EventsPage /></ProtectedRoute>;
-const ProtectedEventSessionPage = () => <ProtectedRoute><EventSessionPage /></ProtectedRoute>;
+import { AppProvider } from './ui/AppProvider';
 
-const ProtectedProfile = () => <ProtectedRoute><Profile /></ProtectedRoute>;
-const ProtectedBookings = () => <ProtectedRoute><MyBookings /></ProtectedRoute>;
-const ProtectedWaitlist = () => <ProtectedRoute><MyWaitlist /></ProtectedRoute>;
-const ProtectedPayments = () => <ProtectedRoute><MyPayments /></ProtectedRoute>;
+const _App = () => <AppProvider><App /></AppProvider>;
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
-    Component: LoginPage,
-  },
-  {
     path: '/',
-    Component: App,
+    Component: _App,
     handle: { bottomBar: { visible: true, mode: 'nav' as const } },
     children: [
       { 
         index: true, 
-        Component: ProtectedHome
+        Component: Home
       },
       {
         path: 'trainings',
         children: [
           { 
             index: true, 
-            Component: ProtectedTrainingCategories
+            Component: TrainingCategories
           },
           { 
             path: 'categories/:categorySlug', 
-            Component: ProtectedTrainings
+            Component: Trainings
           },
           {
             path: 'sessions/:trainingId',
-            Component: ProtectedTrainingPage,
+            Component: TrainingPage,
             handle: { bottomBar: { visible: true, mode: 'custom' as const } },
           },
           {
             path: 'sessions/:trainingId/payment',
-            Component: ProtectedPaymentPage,
+            Component: PaymentPage,
             handle: { bottomBar: { visible: false } },
           },
           {
             path: 'sessions/:trainingId/booked',
-            Component: ProtectedBookingPage,
+            Component: BookingPage,
             handle: { bottomBar: { visible: false } },
           },
         ],
@@ -77,33 +61,33 @@ export const router = createBrowserRouter([
         children: [
           { 
             index: true, 
-            Component: ProtectedEventsPages,
+            Component: EventsPage,
           },
           {
             path: 'sessions/:sessionId',
-            Component: ProtectedEventSessionPage,
+            Component: EventSessionPage,
             handle: { bottomBar: { visible: true, mode: 'custom' as const } },
           }
         ]
       },
-      { 
+      {
         path: 'profile', 
         children: [
           { 
             index: true, 
-            Component: ProtectedProfile
+            Component: Profile
           },
           { 
             path: 'bookings', 
-            Component: ProtectedBookings
+            Component: MyBookings
           },
           { 
             path: 'waitlist', 
-            Component: ProtectedWaitlist
+            Component: MyWaitlist
           },
           { 
             path: 'payments', 
-            Component: ProtectedPayments
+            Component: MyPayments
           },
         ],
       },

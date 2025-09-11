@@ -1,5 +1,5 @@
 // Configuration and utilities
-export { apiClient, setAccessToken, getAccessToken } from './config';
+export { apiClient, setAuthTokens, getAccessToken } from './config';
 export { createQueryClient } from './query-client';
 export * from './error-handler';
 

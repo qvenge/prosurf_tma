@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from '@/shared/navigation';
 import styles from './SessionCard.module.scss';
 
 export interface SessionCardProps {

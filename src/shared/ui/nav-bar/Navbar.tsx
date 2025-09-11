@@ -1,14 +1,14 @@
 import {type HTMLAttributes,useCallback } from 'react';
 import clsx from 'clsx';
-import { useNavigate, useMatches } from 'react-router';
 import { Tabbar } from '../tabbar';
+
+import { useNavigator, useNavigationState } from '@/shared/navigation';
 
 import { Icon} from '@/shared/ui/icon';
 
 interface Item {
   id: string;
   text: string;
-  path: string;
   icon?: string;
 }
 
@@ -17,34 +17,24 @@ export interface NavbarProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function Navbar({items, className, ...restProps}: NavbarProps) {
-  const navigate = useNavigate();
-  const matches = useMatches().reverse();
+  const navigator = useNavigator();
+  const { tab } = useNavigationState();
 
-  let selected = { id: items[0].id, weight: matches.findIndex(({pathname}) => pathname.startsWith(items[0].path))};
-
-  for (let i = 1; i < items.length; i++) {
-    const weight = matches.findIndex(({pathname}) => pathname.startsWith(items[i].path))
-
-    if (selected.weight <= weight) {
-      selected = {id: items[i].id, weight};
-    }
-  }
-
-  const handleClick = useCallback((path: string) => {
-    navigate(path);
-  }, [navigate]);
+  const handleClick = useCallback((tabName: string) => {
+    navigator.switchTab(tabName as any);
+  }, [navigator]);
 
   return (
     <Tabbar
       className={clsx(className)}
       {...restProps}
     >
-      {items.map(({ id, text, path, icon }) => (
+      {items.map(({ id, text, icon }) => (
         <Tabbar.Item
           key={id}
           text={text}
-          selected={id === selected.id}
-          onClick={() => handleClick(path)}
+          selected={id === tab}
+          onClick={() => handleClick(id)}
         >
           {icon && <Icon src={icon} width={24} height={24} />}
         </Tabbar.Item>

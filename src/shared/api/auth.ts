@@ -1,46 +1,27 @@
-import { apiClient, setAccessToken, getAccessToken } from './config';
+import { apiClient, setAuthTokens, getAccessToken } from './config';
 import { handleApiError } from './error-handler';
 import {
-  LoginCredentialsSchema,
-  RegisterDataSchema,
+  TelegramAuthSchema,
   LoginResponseSchema,
   LogoutRequestSchema,
   LogoutResponseSchema,
   RefreshTokenRequestSchema,
   RefreshTokenResponseSchema,
-  UserSchema,
-  type LoginCredentials,
-  type RegisterData,
+  type TelegramAuth,
   type LoginResponse,
   type LogoutRequest,
   type LogoutResponse,
   type RefreshTokenResponse,
-  type User,
 } from './schemas';
 
 export const authApi = {
-  register: async (data: RegisterData): Promise<User> => {
+  authenticateWithTelegram: async (telegramAuth: TelegramAuth): Promise<LoginResponse> => {
     try {
-      const validatedData = RegisterDataSchema.parse(data);
-      const response = await apiClient.post('/auth/register', validatedData);
-      return UserSchema.parse(response.data);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    try {
-      const validatedCredentials = LoginCredentialsSchema.parse(credentials);
-      const response = await apiClient.post('/auth/login', validatedCredentials);
+      const validatedData = TelegramAuthSchema.parse(telegramAuth);
+      const response = await apiClient.post('/auth/telegram', validatedData);
       const loginResponse = LoginResponseSchema.parse(response.data);
       
-      setAccessToken(loginResponse.accessToken);
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', loginResponse.accessToken);
-        localStorage.setItem('refreshToken', loginResponse.refreshToken);
-      }
+      setAuthTokens(loginResponse.accessToken, loginResponse.refreshToken);
       
       return loginResponse;
     } catch (error) {
@@ -54,13 +35,8 @@ export const authApi = {
       const response = await apiClient.post('/auth/refresh', validatedData);
       const refreshResponse = RefreshTokenResponseSchema.parse(response.data);
       
-      setAccessToken(refreshResponse.accessToken);
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', refreshResponse.accessToken);
-        localStorage.setItem('refreshToken', refreshResponse.refreshToken);
-      }
-      
+      setAuthTokens(refreshResponse.accessToken, refreshResponse.refreshToken);
+
       return refreshResponse;
     } catch (error) {
       throw handleApiError(error);
@@ -73,13 +49,8 @@ export const authApi = {
       const response = await apiClient.post('/auth/logout', validatedData);
       const logoutResponse = LogoutResponseSchema.parse(response.data);
       
-      setAccessToken(null);
-      
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-      }
-      
+      setAuthTokens(null, null);
+
       return logoutResponse;
     } catch (error) {
       throw handleApiError(error);
@@ -91,7 +62,7 @@ export const authApi = {
       const token = localStorage.getItem('accessToken');
       const currentToken = getAccessToken();
       if (token && token !== currentToken) {
-        setAccessToken(token);
+        setAuthTokens(token);
       }
     }
   },
@@ -104,10 +75,6 @@ export const authApi = {
   },
 
   clearAuth: (): void => {
-    setAccessToken(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-    }
+    setAuthTokens(null, null);
   },
 };

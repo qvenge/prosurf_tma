@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from '@/shared/navigation';
 import { 
   useCreateBooking, 
   usePurchaseSubscription, 
@@ -59,7 +59,13 @@ interface Session {
 
 interface User {
   id: string;
-  email: string;
+  telegramId: string;
+  email: string | null;
+  name: string | null;
+  username: string | null;
+  photoUrl: string | null;
+  role: 'USER' | 'ADMIN';
+  createdAt: string;
 }
 
 export const usePaymentProcessing = (

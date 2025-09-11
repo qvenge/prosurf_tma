@@ -18,10 +18,17 @@ export const DescriptionSectionSchema = z.object({
 
 export const UserSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  telegramId: z.string(),
+  email: z.string().email().nullable(),
   name: z.string().nullable(),
+  username: z.string().nullable(),
+  photoUrl: z.string().nullable(),
   role: RoleSchema,
   createdAt: z.string().datetime(),
+});
+
+export const TelegramAuthSchema = z.object({
+  initData: z.string().min(1, 'Telegram initData is required'),
 });
 
 export type RefreshTokenRequest = z.infer<typeof RefreshTokenRequestSchema>;
@@ -39,20 +46,6 @@ export const EventSessionSchema = z.object({
   price: PriceSchema,
   remainingSeats: z.number().int().nonnegative(),
   description: z.array(DescriptionSectionSchema),
-});
-
-export const LoginCredentialsSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-export const RegisterDataSchema = z.object({
-  email: z.string().email('Invalid email format').transform(email => email.toLowerCase().trim()),
-  password: z
-    .string()
-    .min(12, 'Password must be at least 12 characters long')
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)/, 'Password must contain at least one letter and one digit'),
-  name: z.string().min(1).optional(),
 });
 
 export const LoginResponseSchema = z.object({
@@ -247,8 +240,7 @@ export type Price = z.infer<typeof PriceSchema>;
 export type DescriptionSection = z.infer<typeof DescriptionSectionSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type EventSession = z.infer<typeof EventSessionSchema>;
-export type LoginCredentials = z.infer<typeof LoginCredentialsSchema>;
-export type RegisterData = z.infer<typeof RegisterDataSchema>;
+export type TelegramAuth = z.infer<typeof TelegramAuthSchema>;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type LogoutRequest = z.infer<typeof LogoutRequestSchema>;
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;

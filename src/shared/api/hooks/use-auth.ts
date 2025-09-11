@@ -1,36 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../auth';
-import { handleApiError, isAuthError, isConflictError, isRateLimitError } from '../error-handler';
+import { handleApiError, isAuthError, isRateLimitError } from '../error-handler';
 
-export const useRegister = () => {
+export const useTelegramAuth = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: authApi.register,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
-    },
-    onError: (error) => {
-      const apiError = handleApiError(error);
-      
-      if (isConflictError(error)) {
-        return { type: 'conflict', message: 'Email is already registered' };
-      }
-      
-      if (isRateLimitError(error)) {
-        return { type: 'rate-limit', message: 'Too many registration attempts. Please try again later.' };
-      }
-      
-      return { type: 'validation', message: apiError.message };
-    },
-  });
-};
-
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: authApi.login,
+    mutationFn: authApi.authenticateWithTelegram,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
     },
@@ -38,11 +14,11 @@ export const useLogin = () => {
       const apiError = handleApiError(error);
       
       if (isAuthError(error)) {
-        return { type: 'auth', message: 'Invalid email or password' };
+        return { type: 'auth', message: 'Invalid Telegram authentication data' };
       }
       
       if (isRateLimitError(error)) {
-        return { type: 'rate-limit', message: 'Too many login attempts. Please try again later.' };
+        return { type: 'rate-limit', message: 'Too many authentication attempts. Please try again later.' };
       }
       
       return { type: 'validation', message: apiError.message };

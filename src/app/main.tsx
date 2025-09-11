@@ -3,13 +3,13 @@ import { RouterProvider } from 'react-router';
 
 import { router } from './routes';
 
-import { AppProvider } from './ui/AppProvider';
-
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import './index.scss'
 
+import { init } from '@telegram-apps/sdk-react';
+
+init();
+
 createRoot(document.getElementById('root')!).render(
-  <AppProvider>
-    <RouterProvider router={router} />
-  </AppProvider>
+  <RouterProvider router={router} />
 )
