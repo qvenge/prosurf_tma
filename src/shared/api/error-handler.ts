@@ -1,88 +1,224 @@
-import { AxiosError } from 'axios';
-import { ApiErrorSchema } from './schemas';
+import { ApiErrorClass } from './config';
+import type { ApiError } from './types';
 
-export class ProSurfApiError extends Error {
-  public readonly statusCode: number;
-  public readonly apiError: string;
-
-  constructor(statusCode: number, apiError: string, message: string) {
-    super(message);
-    this.name = 'ProSurfApiError';
-    this.statusCode = statusCode;
-    this.apiError = apiError;
-  }
-}
-
-export const handleApiError = (error: unknown): ProSurfApiError => {
-  console.log('REQUEST ERROR:', error);
-
-  if (error instanceof AxiosError) {
-    if (error.response?.data) {
-      try {
-        const apiError = ApiErrorSchema.parse(error.response.data);
-        return new ProSurfApiError(apiError.statusCode, apiError.error, apiError.message);
-      } catch {
-        return new ProSurfApiError(
-          error.response.status,
-          'Unknown API Error',
-          'An unexpected error occurred'
-        );
-      }
-    }
-
-    if (error.code === 'ECONNABORTED') {
-      return new ProSurfApiError(408, 'Timeout', 'Request timeout');
-    }
-
-    if (error.code === 'ERR_NETWORK') {
-      return new ProSurfApiError(0, 'Network Error', 'Network connection failed');
-    }
-
-    return new ProSurfApiError(
-      error.response?.status || 0,
-      'Request Failed',
-      error.message || 'Request failed'
-    );
-  }
-
-  if (error instanceof Error) {
-    return new ProSurfApiError(0, 'Unknown Error', error.message);
-  }
-
-  return new ProSurfApiError(0, 'Unknown Error', 'An unknown error occurred');
-};
-
-export const getErrorMessage = (error: unknown): string => {
-  const apiError = handleApiError(error);
-  return apiError.message;
+// Type guards for different error types
+export const isApiError = (error: unknown): error is ApiErrorClass => {
+  return error instanceof ApiErrorClass;
 };
 
 export const isAuthError = (error: unknown): boolean => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode === 401;
-};
-
-export const isValidationError = (error: unknown): boolean => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode === 400;
-};
-
-export const isConflictError = (error: unknown): boolean => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode === 409;
-};
-
-export const isRateLimitError = (error: unknown): boolean => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode === 429;
-};
-
-export const isNotFoundError = (error: unknown): boolean => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode === 404;
+  return isApiError(error) && error.status === 401;
 };
 
 export const isForbiddenError = (error: unknown): boolean => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode === 403;
+  return isApiError(error) && error.status === 403;
+};
+
+export const isNotFoundError = (error: unknown): boolean => {
+  return isApiError(error) && error.status === 404;
+};
+
+export const isConflictError = (error: unknown): boolean => {
+  return isApiError(error) && error.status === 409;
+};
+
+export const isValidationError = (error: unknown): boolean => {
+  return isApiError(error) && error.status === 422;
+};
+
+export const isNetworkError = (error: unknown): boolean => {
+  return isApiError(error) && error.status === 0;
+};
+
+export const isServerError = (error: unknown): boolean => {
+  return isApiError(error) && error.status >= 500;
+};
+
+// Specific business error type guards
+export const isHoldExpiredError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'HOLD_EXPIRED';
+};
+
+export const isNoSeatsError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'NO_SEATS';
+};
+
+export const isAmountMismatchError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'AMOUNT_MISMATCH';
+};
+
+export const isDuplicatePaymentError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'DUPLICATE_PAYMENT';
+};
+
+export const isProviderUnavailableError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'PROVIDER_UNAVAILABLE';
+};
+
+// Error message extraction
+export const getErrorMessage = (error: unknown): string => {
+  if (isApiError(error)) {
+    return error.error.message;
+  }
+  
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  return 'An unexpected error occurred';
+};
+
+export const getErrorCode = (error: unknown): string | null => {
+  if (isApiError(error)) {
+    return error.error.code;
+  }
+  
+  return null;
+};
+
+export const getErrorDetails = (error: unknown): unknown => {
+  if (isApiError(error)) {
+    return error.error.details;
+  }
+  
+  return null;
+};
+
+// User-friendly error messages
+const ERROR_MESSAGES: Record<ApiError['code'], string> = {
+  HOLD_EXPIRED: 'Время бронирования истекло. Пожалуйста, забронируйте снова.',
+  NO_SEATS: 'К сожалению, места закончились.',
+  AMOUNT_MISMATCH: 'Сумма платежа не совпадает. Попробуйте снова.',
+  DUPLICATE_PAYMENT: 'Этот платеж уже был обработан.',
+  PROVIDER_UNAVAILABLE: 'Сервис временно недоступен. Попробуйте позже.',
+};
+
+export const getUserFriendlyErrorMessage = (error: unknown): string => {
+  if (isApiError(error)) {
+    const friendlyMessage = ERROR_MESSAGES[error.error.code];
+    if (friendlyMessage) {
+      return friendlyMessage;
+    }
+    return error.error.message;
+  }
+  
+  if (isNetworkError(error)) {
+    return 'Проблемы с подключением к интернету. Проверьте соединение и попробуйте снова.';
+  }
+  
+  if (isServerError(error)) {
+    return 'Сервис временно недоступен. Попробуйте позже.';
+  }
+  
+  return getErrorMessage(error);
+};
+
+// Error logging utility
+export const logError = (error: unknown, context?: string): void => {
+  const message = getErrorMessage(error);
+  const code = getErrorCode(error);
+  const details = getErrorDetails(error);
+  
+  console.error('API Error:', {
+    message,
+    code,
+    details,
+    context,
+    timestamp: new Date().toISOString(),
+    ...(isApiError(error) && {
+      status: error.status,
+      statusText: error.statusText,
+    }),
+  });
+};
+
+// Retry utilities
+export const shouldRetry = (error: unknown): boolean => {
+  if (isApiError(error)) {
+    // Retry on server errors and specific provider unavailable errors
+    return isServerError(error) || isProviderUnavailableError(error);
+  }
+  
+  return isNetworkError(error);
+};
+
+export const getRetryDelay = (attemptNumber: number): number => {
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s (max)
+  return Math.min(1000 * Math.pow(2, attemptNumber), 16000);
+};
+
+// Error boundary helpers
+export interface ErrorInfo {
+  message: string;
+  code?: string;
+  status?: number;
+  canRetry: boolean;
+  shouldShowToUser: boolean;
+}
+
+export const getErrorInfo = (error: unknown): ErrorInfo => {
+  if (isApiError(error)) {
+    return {
+      message: getUserFriendlyErrorMessage(error),
+      code: error.error.code,
+      status: error.status,
+      canRetry: shouldRetry(error),
+      shouldShowToUser: !isAuthError(error), // Don't show auth errors to user
+    };
+  }
+  
+  return {
+    message: getUserFriendlyErrorMessage(error),
+    canRetry: shouldRetry(error),
+    shouldShowToUser: true,
+  };
+};
+
+// React error boundary component data
+export const createErrorBoundaryProps = (error: unknown) => ({
+  error: getErrorInfo(error),
+  onRetry: shouldRetry(error) ? () => window.location.reload() : undefined,
+  showContactSupport: isServerError(error),
+});
+
+// Hook for handling errors in components
+export const useErrorHandler = () => {
+  const handleError = (error: unknown, context?: string) => {
+    logError(error, context);
+    
+    const errorInfo = getErrorInfo(error);
+    
+    // Handle specific error types
+    if (isAuthError(error)) {
+      // Auth errors are already handled by axios interceptor
+      return;
+    }
+    
+    if (errorInfo.shouldShowToUser) {
+      // In a real app, this would be connected to a toast/notification system
+      console.warn('Error to show to user:', errorInfo.message);
+    }
+    
+    return errorInfo;
+  };
+  
+  return {
+    handleError,
+    isApiError,
+    isAuthError,
+    isForbiddenError,
+    isNotFoundError,
+    isConflictError,
+    isValidationError,
+    isNetworkError,
+    isServerError,
+    isHoldExpiredError,
+    isNoSeatsError,
+    isAmountMismatchError,
+    isDuplicatePaymentError,
+    isProviderUnavailableError,
+    getErrorMessage,
+    getUserFriendlyErrorMessage,
+    shouldRetry,
+  };
 };

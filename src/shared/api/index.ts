@@ -1,27 +1,90 @@
-// Configuration and utilities
-export { apiClient, setAuthTokens, getAccessToken } from './config';
-export { createQueryClient } from './query-client';
-export * from './error-handler';
+// Main API barrel export file
 
-// API functions
-export { authApi } from './auth';
-export { eventSessionsApi } from './event-sessions';
-export { usersApi } from './users';
-export { bookingsApi } from './bookings';
-export { paymentsApi } from './payments';
-export { subscriptionsApi } from './subscriptions';
+// Types
+export * from './types';
 
-// Types and schemas
+// Schemas (export for validation if needed)
 export * from './schemas';
 
-// Hooks
-export * from './hooks/use-auth';
-export * from './hooks/use-event-sessions';
-export * from './hooks/use-user';
-export * from './hooks/use-bookings';
-export * from './hooks/use-payments';
-export * from './hooks/use-subscriptions';
+// Configuration and utilities
+export { apiClient, tokenStorage, withIdempotency, createQueryString, validateResponse, config } from './config';
+
+// Error handling
+export * from './error-handler';
+
+// Authentication
+export * from './auth';
+
+// API Clients
+export { authClient } from './clients/auth';
+export { usersClient } from './clients/users';
+export { eventsClient } from './clients/events';
+export { sessionsClient } from './clients/sessions';
+export { bookingsClient } from './clients/bookings';
+export { paymentsClient } from './clients/payments';
+export { certificatesClient } from './clients/certificates';
+export { seasonTicketsClient } from './clients/season-tickets';
+export { cashbackClient } from './clients/cashback';
+export { waitlistClient } from './clients/waitlist';
+export { adminClient } from './clients/admin';
+
+// Hooks - Auth
+export * from './hooks/auth';
+
+// Hooks - Users
+export * from './hooks/users';
+
+// Hooks - Events
+export * from './hooks/events';
+
+// Hooks - Sessions
+export * from './hooks/sessions';
+
+// Hooks - Bookings
+export * from './hooks/bookings';
+
+// Hooks - Payments
+export * from './hooks/payments';
+
+// Hooks - Certificates
+export * from './hooks/certificates';
+
+// Hooks - Season Tickets
+export * from './hooks/season-tickets';
+
+// Hooks - Cashback
+export * from './hooks/cashback';
+
+// Hooks - Waitlist
+export * from './hooks/waitlist';
+
+// Hooks - Admin
+export * from './hooks/admin';
 
 // Providers
-export { QueryProvider } from './providers/query-provider';
-export { ApiProvider } from './providers/api-provider';
+export { ApiProvider } from './providers/ApiProvider';
+
+// Query key factories (for advanced usage)
+export { authKeys } from './hooks/auth';
+export { usersKeys } from './hooks/users';
+export { eventsKeys } from './hooks/events';
+export { sessionsKeys } from './hooks/sessions';
+export { bookingsKeys } from './hooks/bookings';
+export { paymentsKeys } from './hooks/payments';
+export { certificatesKeys } from './hooks/certificates';
+export { seasonTicketsKeys } from './hooks/season-tickets';
+export { cashbackKeys } from './hooks/cashback';
+export { waitlistKeys } from './hooks/waitlist';
+export { adminKeys } from './hooks/admin';
+
+// Common utilities and helpers
+export {
+  // Role helpers
+  hasRole,
+  isAdmin,
+  isUser,
+  requireAuth,
+  requireAdmin,
+  // Auth utilities
+  performLogout,
+} from './auth';
