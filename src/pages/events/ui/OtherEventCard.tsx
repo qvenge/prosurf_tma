@@ -2,10 +2,10 @@
 import styles from './OtherEventCard.module.scss';
 import { formatTime } from '@/shared/lib/date-utils';
 import { formatPrice, formatAvailability } from '@/shared/lib/format-utils';
-import type { EventSession } from '@/shared/api/schemas';
+import type { Session } from '@/shared/api';
 
 interface OtherEventCardProps {
-  data: EventSession;
+  data: Session;
 }
 
 export const OtherEventCard = ({

@@ -1,7 +1,7 @@
 import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
-import { useEventSessions, type EventSession } from '@/shared/api';
+import { useEventSessions, type Session } from '@/shared/api';
 import styles from './CategoryItem.module.scss';
 
 const formatUpcomingDate = (dateString: string): string => {

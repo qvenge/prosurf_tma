@@ -11,6 +11,9 @@ export type User = z.infer<typeof schemas.UserSchema>;
 export type UserUpdateDto = z.infer<typeof schemas.UserUpdateDtoSchema>;
 
 // Event types
+export type EventDescription = z.infer<typeof schemas.EventDescriptionSchema>;
+export type TicketPrice = z.infer<typeof schemas.TicketPriceSchema>;
+export type AttributeValue = z.infer<typeof schemas.AttributeValueSchema>;
 export type EventTicket = z.infer<typeof schemas.EventTicketSchema>;
 export type EventTicketCreate = z.infer<typeof schemas.EventTicketCreateSchema>;
 export type Event = z.infer<typeof schemas.EventSchema>;

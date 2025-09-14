@@ -1,20 +1,8 @@
 openapi: 3.1.0
 info:
   title: Surf Booking Telegram Web App API
-  version: 0.3.4
-  description: "API для сервиса бронирования и оплаты тренировок по (серфинг, скейтсерфинг,\
-    \ вейксерфинг)\nи многодневных туров. Включает подарочные сертификаты, абонементы,\
-    \ лист ожидания,\nкэшбэк-кошелёк и админ-аудит. Эта версия (v0.3.2) включает правки\
-    \ из аудита:\n  - унификация названий (tickets), статусов (CANCELLED)\n  - консистентная\
-    \ пагинация {items,next}\n  - идемпотентность через заголовок Idempotency-Key\n\
-    \  - безопасные PATCH DTO, запрет userId в покупках за другого\n  - платежи/рефанды\
-    \ без дублирования валюты, oneOf для метода оплаты\n  - корректные схемы сертификатов\
-    \ (денежный vs passes)\n  - стандартизированные фильтры времени (startsAfter/endsBefore)\n\
-    \n      - добавлены эндпоинты: POST /events/{id}/sessions (bulk create, ADMIN),\
-    \ PATCH /sessions/{id} (ADMIN), DELETE /sessions/{id} (CANCELLED, ADMIN)\n  -\
-    \ добавлены эндпоинты для выполнения административных задач (job endpoints)\n\n\
-    v0.3.4: Telegram webhook + Payment.nextAction/provider + Composite payments +\
-    \ detailed examples."
+  version: 0.4.0
+  description: "API для сервиса бронирования и оплаты тренировок по (серфинг, скейтсерфинг, вейксерфинг)\nи многодневных туров. Включает подарочные сертификаты, абонементы, лист ожидания,\nкэшбэк-кошелёк и админ-аудит"
 servers:
 - url: https://api.example.com
   description: Production
@@ -53,8 +41,7 @@ components:
       name: cursor
       schema:
         type: string
-      description: Курсор пагинации. Передавайте значение из поля 'next' предыдущего
-        ответа.
+      description: Курсор пагинации. Передавайте значение из поля 'next' предыдущего ответа.
     LimitParam:
       in: query
       name: limit
@@ -87,6 +74,137 @@ components:
         minLength: 8
         maxLength: 128
       description: Уникальный ключ идемпотентности запроса.
+    LabelsAnyParam:
+      in: query
+      name: labels.any
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Совпадение ЛЮБОГО из указанных ярлыков (OR).
+    LabelsAllParam:
+      in: query
+      name: labels.all
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Совпадение всех указанных ярлыков (AND).
+    LabelsNoneParam:
+      in: query
+      name: labels.none
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Исключить сессии с любым из указанных ярлыков (NOT).
+    AttrEqParam:
+      in: query
+      name: attr.eq
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties:
+          oneOf:
+          - type: string
+          - type: number
+          - type: integer
+          - type: boolean
+      description: Равенство по ключам атрибутов, напр. attr.eq[city]=istanbul
+    AttrInParam:
+      in: query
+      name: attr.in
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+          minItems: 1
+      description: Вхождение в набор значений, напр. attr.in[level]=[beginner,intermediate]
+    AttrGteParam:
+      in: query
+      name: attr.gte
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties:
+          oneOf:
+          - type: number
+          - type: integer
+      description: Порог ≥ для числовых атрибутов
+    AttrLteParam:
+      in: query
+      name: attr.lte
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties:
+          oneOf:
+          - type: number
+          - type: integer
+      description: Порог ≤ для числовых атрибутов
+    AttrBoolParam:
+      in: query
+      name: attr.bool
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties:
+          type: boolean
+      description: Фильтр по булевым атрибутам
+    AttrExistsParam:
+      in: query
+      name: attr.exists
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties:
+          type: boolean
+      description: Проверка наличия ключа (true/false)
+    MinRemainingSeatsParam:
+      in: query
+      name: minRemainingSeats
+      schema:
+        type: integer
+        minimum: 0
+      description: Минимальное количество оставшихся мест
+    SortByParam:
+      in: query
+      name: sortBy
+      schema:
+        type: string
+        enum:
+        - createdAt
+        - startsAt
+        default: startsAt
+      description: Поле для сортировки
+    SortOrderParam:
+      in: query
+      name: sortOrder
+      schema:
+        type: string
+        enum:
+        - asc
+        - desc
+        default: asc
+      description: Порядок сортировки
   responses:
     Unauthorized:
       description: Unauthorized
@@ -155,9 +273,13 @@ components:
       - id
       - createdAt
       - role
+      - telegramId
       properties:
         id:
           type: string
+        telegramId:
+          type: integer
+          description: Telegram user ID
         phone:
           type: string
           nullable: true
@@ -167,6 +289,17 @@ components:
         lastName:
           type: string
           nullable: true
+        username:
+          type: string
+          nullable: true
+          description: Telegram username
+        email:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+          description: URL фотографии профиля
         role:
           $ref: '#/components/schemas/Role'
         createdAt:
@@ -181,7 +314,19 @@ components:
           type: string
         lastName:
           type: string
+        email:
+          type: string
       additionalProperties: false
+    EventDescription:
+      type: object
+      required:
+      - heading
+      - body
+      properties:
+        heading:
+          type: string
+        body:
+          type: string
     Event:
       type: object
       required:
@@ -194,7 +339,9 @@ components:
         title:
           type: string
         description:
-          type: string
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDescription'
           nullable: true
         location:
           type: string
@@ -206,23 +353,49 @@ components:
         createdAt:
           type: string
           format: date-time
+        labels:
+          type: array
+          items:
+            type: string
+          description: Ярлыки события (фасеты), напр. sport:surf, city:istanbul.
+        attributes:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+              items:
+                type: string
+          description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
+    TicketPrice:
+      type: object
+      required:
+      - price
+      properties:
+        price:
+          $ref: '#/components/schemas/Price'
+        description:
+          type: string
+          nullable: true
     EventTicket:
       type: object
       required:
       - id
       - name
-      - price
-      - capacity
+      - prepayment
+      - full
       properties:
         id:
           type: string
         name:
           type: string
-        price:
-          $ref: '#/components/schemas/Price'
-        capacity:
-          type: integer
-          minimum: 0
+        prepayment:
+          $ref: '#/components/schemas/TicketPrice'
+        full:
+          $ref: '#/components/schemas/TicketPrice'
     EventCreateDto:
       type: object
       required:
@@ -232,7 +405,9 @@ components:
         title:
           type: string
         description:
-          type: string
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDescription'
           nullable: true
         location:
           type: string
@@ -241,34 +416,50 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventTicketCreate'
+        labels:
+          type: array
+          items:
+            type: string
+          description: Ярлыки события.
+        attributes:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+              items:
+                type: string
+          description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
       additionalProperties: false
     EventTicketCreate:
       type: object
       required:
       - name
-      - price
-      - capacity
+      - prepayment
+      - full
       properties:
         name:
           type: string
-        price:
-          $ref: '#/components/schemas/Price'
-        capacity:
-          type: integer
-          minimum: 0
+        prepayment:
+          $ref: '#/components/schemas/TicketPrice'
+        full:
+          $ref: '#/components/schemas/TicketPrice'
     Session:
       type: object
       required:
       - id
-      - eventId
+      - event
       - startsAt
       - capacity
       - remainingSeats
       properties:
         id:
           type: string
-        eventId:
-          type: string
+        event:
+          $ref: '#/components/schemas/Event'
         startsAt:
           type: string
           format: date-time
@@ -290,6 +481,46 @@ components:
           description: Текущий пользователь в листе ожидания
         status:
           $ref: '#/components/schemas/SessionStatus'
+        labels:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Ярлыки сессии (перекрывают/дополняют ярлыки события).
+        attributes:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+              items:
+                type: string
+          description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
+        effectiveLabels:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: Денормализованные ярлыки (Event ⊕ Session).
+        effectiveAttributes:
+          type: object
+          readOnly: true
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+              items:
+                type: string
+          description: Денормализованные атрибуты (Event ⊕ Session).
+        createdAt:
+          type: string
+          format: date-time
     BookingStatus:
       type: string
       enum:
@@ -454,8 +685,7 @@ components:
         reason:
           type: string
           maxLength: 256
-      description: 'Частичный или полный возврат. Если amount не указан — полный возврат
-        в валюте исходного платежа.
+      description: 'Частичный или полный возврат. Если amount не указан — полный возврат в валюте исходного платежа.
 
         '
       additionalProperties: false
@@ -753,6 +983,23 @@ components:
         capacity:
           type: integer
           minimum: 0
+        labels:
+          type: array
+          items:
+            type: string
+          description: Ярлыки сессии.
+        attributes:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+              items:
+                type: string
+          description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
       additionalProperties: false
     SessionUpdateDto:
       type: object
@@ -767,6 +1014,23 @@ components:
         capacity:
           type: integer
           minimum: 0
+        labels:
+          type: array
+          items:
+            type: string
+          description: Ярлыки сессии.
+        attributes:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+              items:
+                type: string
+          description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
       additionalProperties: false
     JobExecutionResult:
       type: object
@@ -1290,8 +1554,20 @@ paths:
           type: string
       - $ref: '#/components/parameters/StartsAfterParam'
       - $ref: '#/components/parameters/EndsBeforeParam'
+      - $ref: '#/components/parameters/MinRemainingSeatsParam'
+      - $ref: '#/components/parameters/SortByParam'
+      - $ref: '#/components/parameters/SortOrderParam'
       - $ref: '#/components/parameters/CursorParam'
       - $ref: '#/components/parameters/LimitParam'
+      - $ref: '#/components/parameters/LabelsAnyParam'
+      - $ref: '#/components/parameters/LabelsAllParam'
+      - $ref: '#/components/parameters/LabelsNoneParam'
+      - $ref: '#/components/parameters/AttrEqParam'
+      - $ref: '#/components/parameters/AttrInParam'
+      - $ref: '#/components/parameters/AttrGteParam'
+      - $ref: '#/components/parameters/AttrLteParam'
+      - $ref: '#/components/parameters/AttrBoolParam'
+      - $ref: '#/components/parameters/AttrExistsParam'
       responses:
         '200':
           description: OK
@@ -1364,8 +1640,20 @@ paths:
           type: string
       - $ref: '#/components/parameters/StartsAfterParam'
       - $ref: '#/components/parameters/EndsBeforeParam'
+      - $ref: '#/components/parameters/MinRemainingSeatsParam'
+      - $ref: '#/components/parameters/SortByParam'
+      - $ref: '#/components/parameters/SortOrderParam'
       - $ref: '#/components/parameters/CursorParam'
       - $ref: '#/components/parameters/LimitParam'
+      - $ref: '#/components/parameters/LabelsAnyParam'
+      - $ref: '#/components/parameters/LabelsAllParam'
+      - $ref: '#/components/parameters/LabelsNoneParam'
+      - $ref: '#/components/parameters/AttrEqParam'
+      - $ref: '#/components/parameters/AttrInParam'
+      - $ref: '#/components/parameters/AttrGteParam'
+      - $ref: '#/components/parameters/AttrLteParam'
+      - $ref: '#/components/parameters/AttrBoolParam'
+      - $ref: '#/components/parameters/AttrExistsParam'
       responses:
         '200':
           description: OK
@@ -1683,30 +1971,8 @@ paths:
                   $ref: '#/components/examples/ErrAmountMismatch'
                 providerUnavailable:
                   $ref: '#/components/examples/ErrProviderUnavailable'
-      description: "Creates or continues a payment for the specified booking (booking\
-        \ must be in HOLD state).\n\nScenarios:\n1) **Telegram invoice (Mini App)**\n\
-        \   Request: `{\"method\":\"card\",\"provider\":\"telegram\"}`\n   Response\
-        \ `201`: `Payment{ status:PENDING, provider:'telegram', nextAction:{ type:'openInvoice',\
-        \ slugOrUrl } }`\n   Client: call `Telegram.WebApp.openInvoice(slugOrUrl)`,\
-        \ then on `invoiceClosed('paid')` or via polling call `GET /payments/{id}`.\n\
-        \   Server: via `/webhooks/telegram/bot` handles `pre_checkout_query` (≤10s)\
-        \ and `successful_payment`, sets `Payment=SUCCEEDED` and `Booking=CONFIRMED`.\n\
-        \n2) **External PSP (redirect or embedded)**\n   Request: `{\"method\":\"\
-        card\",\"provider\":\"stripe\",\"returnUrl\":\"https://...\"}`\n   Response\
-        \ `201`: `Payment{ status:PENDING, provider:'stripe', nextAction:{ type:'redirect',\
-        \ url } }`\n   Client: open `url` inside WebApp; on return to `returnUrl`,\
-        \ poll `GET /payments/{id}`.\n   Server: confirms via `/webhooks/payments/provider`.\n\
-        \n3) **Composite payments (certificate/pass/cashback + card)**\n   Request:\n\
-        \   {\n     \"methods\": [\n       {\"method\":\"certificate\",\"certificateId\"\
-        :\"cert_123\"},\n       {\"method\":\"cashback\",\"amount\": 1500},\n    \
-        \   {\"method\":\"card\",\"provider\":\"telegram\"}\n     ]\n   }\n   Response\
-        \ `201`: \n     - If remainder > 0 → `nextAction.openInvoice` (or `redirect`).\n\
-        \     - If fully covered → `status:SUCCEEDED`, `nextAction:'none'`.\n\nConflicts\
-        \ (409):\n- `HOLD_EXPIRED` — hold TTL elapsed; re-book required.\n- `NO_SEATS`\
-        \ — seats not available anymore.\n- `AMOUNT_MISMATCH` — server-calculated\
-        \ amount differs from invoice amount.\n- `PROVIDER_UNAVAILABLE` — payment\
-        \ provider is temporarily unavailable.\n\nAll create/continue calls SHOULD\
-        \ be sent with `Idempotency-Key`.\n"
+      description: "Creates or continues a payment for the specified booking (booking must be in HOLD state).\n\nScenarios:\n1) **Telegram invoice (Mini App)**\n   Request: `{\"method\":\"card\",\"provider\":\"telegram\"}`\n   Response `201`: `Payment{ status:PENDING, provider:'telegram', nextAction:{ type:'openInvoice', slugOrUrl } }`\n   Client: call `Telegram.WebApp.openInvoice(slugOrUrl)`, then on `invoiceClosed('paid')` or via polling call `GET /payments/{id}`.\n   Server: via `/webhooks/telegram/bot` handles `pre_checkout_query` (≤10s) and `successful_payment`, sets `Payment=SUCCEEDED` and `Booking=CONFIRMED`.\n\n2) **External PSP (redirect or embedded)**\n   Request: `{\"method\":\"card\",\"provider\":\"stripe\",\"returnUrl\":\"https://...\"}`\n   Response `201`: `Payment{ status:PENDING, provider:'stripe', nextAction:{ type:'redirect', url } }`\n   Client: open `url` inside WebApp; on return to `returnUrl`, poll `GET /payments/{id}`.\n   Server: confirms via `/webhooks/payments/provider`.\n\
+        \n3) **Composite payments (certificate/pass/cashback + card)**\n   Request:\n   {\n     \"methods\": [\n       {\"method\":\"certificate\",\"certificateId\":\"cert_123\"},\n       {\"method\":\"cashback\",\"amount\": 1500},\n       {\"method\":\"card\",\"provider\":\"telegram\"}\n     ]\n   }\n   Response `201`: \n     - If remainder > 0 → `nextAction.openInvoice` (or `redirect`).\n     - If fully covered → `status:SUCCEEDED`, `nextAction:'none'`.\n\nConflicts (409):\n- `HOLD_EXPIRED` — hold TTL elapsed; re-book required.\n- `NO_SEATS` — seats not available anymore.\n- `AMOUNT_MISMATCH` — server-calculated amount differs from invoice amount.\n- `PROVIDER_UNAVAILABLE` — payment provider is temporarily unavailable.\n\nAll create/continue calls SHOULD be sent with `Idempotency-Key`.\n"
   /payments/{id}:
     get:
       tags:
@@ -1817,6 +2083,15 @@ paths:
       - SeasonTickets
       summary: Каталог планов абонементов
       parameters:
+      - in: query
+        name: eventIds
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Фильтр по событиям. Вернёт планы, применимые хотя бы к одному из указанных событий (OR).
       - $ref: '#/components/parameters/CursorParam'
       - $ref: '#/components/parameters/LimitParam'
       responses:
@@ -2116,8 +2391,7 @@ paths:
       summary: Telegram Bot webhook for payments
       description: 'Receives Telegram Bot API updates (payments).
 
-        - On `pre_checkout_query`: verify booking hold & amount, then call Bot API
-        `answerPreCheckoutQuery` within 10 seconds.
+        - On `pre_checkout_query`: verify booking hold & amount, then call Bot API `answerPreCheckoutQuery` within 10 seconds.
 
         - On `successful_payment`: set Payment=SUCCEEDED and Booking=CONFIRMED.
 

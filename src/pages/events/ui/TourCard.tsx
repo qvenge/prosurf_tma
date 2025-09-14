@@ -2,10 +2,10 @@
 import styles from './TourCard.module.scss';
 import { formatTourDates } from '@/shared/lib/date-utils';
 import { formatPrice, formatAvailability } from '@/shared/lib/format-utils';
-import type { EventSession } from '@/shared/api/schemas';
+import type { Session } from '@/shared/api';
 
 interface TourCardProps {
-  data: EventSession;
+  data: Session;
 }
 
 export const TourCard = ({

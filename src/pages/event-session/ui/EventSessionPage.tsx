@@ -7,8 +7,7 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useEventSession } from '@/shared/api/hooks/use-event-sessions';
-import { useCreateBooking, useUserSubscriptions, useRedeemSubscription } from '@/shared/api';
+import { useSession, useBookSession, useCurrentUserSeasonTickets } from '@/shared/api';
 import styles from './EventSessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal';
@@ -29,11 +28,11 @@ export const EventSessionPage = () => {
 
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string; }>();
-  const { data: session, isLoading, error } = useEventSession(sessionId!);
-  const { data: subscriptions = [], isLoading: subscriptionsLoading } = useUserSubscriptions();
+  const { data: session, isLoading, error } = useSession(sessionId!);
+  const { data: subscriptions = [], isLoading: subscriptionsLoading } = useCurrentUserSeasonTickets();
   
-  const createBookingMutation = useCreateBooking();
-  const redeemSubscriptionMutation = useRedeemSubscription();
+  const createBookingMutation = useBookSession();
+  // TODO: Implement subscription redemption with new API structure
 
   const handleBookingClick = useCallback(() => {
     if (!session || subscriptionsLoading) return;
@@ -47,25 +46,17 @@ export const EventSessionPage = () => {
     
     setBookingError(null);
     
+    // TODO: Update to use new API structure with season tickets
     createBookingMutation.mutate(
-      { sessionId },
+      { 
+        sessionId, 
+        data: { quantity: 1 },
+        idempotencyKey: crypto.randomUUID()
+      },
       {
         onSuccess: (booking) => {
-          setPendingBookingId(booking.id);
-          redeemSubscriptionMutation.mutate(
-            booking.id,
-            {
-              onSuccess: () => {
-                setModalOpen(false);
-                navigate(`/trainings/sessions/${sessionId}/booked`);
-              },
-              onError: (error: any) => {
-                console.error('Subscription redemption error:', error);
-                setBookingError(error.message || 'Произошла ошибка при использовании абонемента');
-                setPendingBookingId(null);
-              }
-            }
-          );
+          setModalOpen(false);
+          navigate(`/trainings/sessions/${sessionId}/booked`);
         },
         onError: (error: any) => {
           console.error('Booking error:', error);
@@ -73,7 +64,7 @@ export const EventSessionPage = () => {
         }
       }
     );
-  }, [sessionId, createBookingMutation, redeemSubscriptionMutation, navigate]);
+  }, [sessionId, createBookingMutation, navigate]);
 
   const handleGoToPayment = useCallback(() => {
     if (!sessionId) return;
@@ -132,8 +123,8 @@ export const EventSessionPage = () => {
             subscriptions={subscriptions}
             onUseSubscription={handleUseSubscription}
             onGoToPayment={handleGoToPayment}
-            isRedeeming={redeemSubscriptionMutation.isPending}
-            isBooking={createBookingMutation.isPending && !pendingBookingId}
+            isRedeeming={false}
+            isBooking={createBookingMutation.isPending}
           />
         )}
         

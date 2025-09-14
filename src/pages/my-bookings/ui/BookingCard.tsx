@@ -1,18 +1,19 @@
 import { Icon } from '@/shared/ui';
 import { BarbellBold, ConfettiBold, AirplaneTiltBold } from '@/shared/ds/icons';
-import { type EventSession } from '@/shared/api'
+import { type Session } from '@/shared/api'
 import styles from './BookingCard.module.scss';
 
-const eventTypes: Record<EventSession['type'], { icon: string, name: string }> = {
+// TODO: Fix event types with new API structure
+const eventTypes = {
   surfingTraining: { icon: BarbellBold, name: 'Серфинг' },
   surfskateTraining: { icon: BarbellBold, name: 'Серфскейт'},
   tour: { icon: AirplaneTiltBold, name: 'Тур' },
   other: { icon: ConfettiBold, name: 'Ивент' }
-};
+} as const;
 
 export interface BookingCardProps {
   data: {
-    type: EventSession['type'];
+    type: keyof typeof eventTypes;
     eventTitle: string;
     eventLocation: string;
     rightTopInner?: string;

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { type PropsWithChildren, useState, useEffect } from 'react';
 import { authUtils, AuthContext } from '../auth';
 import { logError, getErrorInfo } from '../error-handler';
@@ -64,9 +64,13 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
         if (initialAuth.accessToken && initialAuth.refreshToken && !initialAuth.user) {
           try {
             const refreshResponse = await authClient.refresh({ refreshToken: initialAuth.refreshToken });
-            authUtils.saveAuthData(refreshResponse);
+            // RefreshResponse doesn't include user, so we need to set tokens separately
+            authUtils.tokenStorage.setAccessToken(refreshResponse.accessToken);
+            authUtils.tokenStorage.setRefreshToken(refreshResponse.refreshToken);
+            
+            // TODO: Get user profile after refresh if needed
             setAuthState({
-              user: refreshResponse.user,
+              user: null, // We don't have user from refresh
               accessToken: refreshResponse.accessToken,
               refreshToken: refreshResponse.refreshToken,
               isAuthenticated: true,
@@ -169,12 +173,13 @@ export const ApiProvider = ({ children }: PropsWithChildren) => {
       <AuthProvider>
         {children}
         {/* Only show devtools in development */}
+        {/* TODO: Install @tanstack/react-query-devtools for development
         {import.meta.env.MODE === 'development' && (
           <ReactQueryDevtools 
             initialIsOpen={false} 
             buttonPosition="bottom-left"
           />
-        )}
+        )} */}
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -23,9 +23,13 @@ export const RoleSchema = z.enum(['USER', 'ADMIN']);
 
 export const UserSchema = z.object({
   id: z.string(),
+  telegramId: z.number().int(),
   phone: z.string().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
+  username: z.string().nullable(),
+  email: z.string().nullable(),
+  photoUrl: z.string().nullable(),
   role: RoleSchema,
   createdAt: z.string().datetime(),
 });
@@ -34,36 +38,59 @@ export const UserUpdateDtoSchema = z.object({
   phone: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  email: z.string().optional(),
 });
 
 // Event schemas
+export const EventDescriptionSchema = z.object({
+  heading: z.string(),
+  body: z.string(),
+});
+
+export const TicketPriceSchema = z.object({
+  price: PriceSchema,
+  description: z.string().nullable().optional(),
+});
+
 export const EventTicketSchema = z.object({
   id: z.string(),
   name: z.string(),
-  price: PriceSchema,
-  capacity: z.number().int().min(0),
+  prepayment: TicketPriceSchema,
+  full: TicketPriceSchema,
 });
 
 export const EventTicketCreateSchema = z.object({
   name: z.string(),
-  price: PriceSchema,
-  capacity: z.number().int().min(0),
+  prepayment: TicketPriceSchema,
+  full: TicketPriceSchema,
 });
+
+// Attribute value can be string, number, integer, boolean, or array of strings
+export const AttributeValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.array(z.string()),
+]);
 
 export const EventSchema = z.object({
   id: z.string(),
   title: z.string(),
-  description: z.string().nullable(),
-  location: z.string().nullable(),
+  description: z.array(EventDescriptionSchema).nullable().optional(),
+  location: z.string().nullable().optional(),
   tickets: z.array(EventTicketSchema),
   createdAt: z.string().datetime(),
+  labels: z.array(z.string()).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
 
 export const EventCreateDtoSchema = z.object({
   title: z.string(),
-  description: z.string().nullable().optional(),
+  description: z.array(EventDescriptionSchema).nullable().optional(),
   location: z.string().nullable().optional(),
   tickets: z.array(EventTicketCreateSchema),
+  labels: z.array(z.string()).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
 
 // Session schemas
@@ -71,26 +98,35 @@ export const SessionStatusSchema = z.enum(['SCHEDULED', 'CANCELLED']);
 
 export const SessionSchema = z.object({
   id: z.string(),
-  eventId: z.string(),
+  event: EventSchema,
   startsAt: z.string().datetime(),
-  endsAt: z.string().datetime().nullable(),
+  endsAt: z.string().datetime().nullable().optional(),
   capacity: z.number().int().min(0),
   remainingSeats: z.number().int().min(0),
   hasBooking: z.boolean().optional(),
   onWaitlist: z.boolean().optional(),
   status: SessionStatusSchema.optional(),
+  labels: z.array(z.string()).nullable().optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  effectiveLabels: z.array(z.string()).optional(),
+  effectiveAttributes: z.record(z.string(), AttributeValueSchema).optional(),
+  createdAt: z.string().datetime().optional(),
 });
 
 export const SessionCreateDtoSchema = z.object({
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime().nullable().optional(),
   capacity: z.number().int().min(0),
+  labels: z.array(z.string()).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
 
 export const SessionUpdateDtoSchema = z.object({
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().nullable().optional(),
   capacity: z.number().int().min(0).optional(),
+  labels: z.array(z.string()).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
 
 export const SessionCreationResponseSchema = z.object({
@@ -215,22 +251,30 @@ export const PassesCertDataSchema = z.object({
   passes: z.number().int().min(1),
 });
 
-const CertificateDataSchema = z.union([
-  DenominationCertDataSchema,
-  PassesCertDataSchema,
-]);
+// Note: This schema is defined but not directly used, as we use the union directly in CertificateSchema
+// Keeping it for potential future use
+// const CertificateDataSchema = z.discriminatedUnion('type', [
+//   z.object({ type: z.literal('denomination'), amount: PriceSchema }),
+//   z.object({ type: z.literal('passes'), passes: z.number().int().min(1) }),
+// ]);
 
 export const CertificateSchema = z.object({
   id: z.string(),
   type: CertificateTypeSchema,
-  data: CertificateDataSchema,
-  expiresAt: z.string().datetime().nullable(),
-  ownerUserId: z.string(),
+  data: z.union([
+    DenominationCertDataSchema,
+    PassesCertDataSchema,
+  ]),
+  expiresAt: z.string().datetime().nullable().optional(),
+  ownerUserId: z.string().optional(),
 });
 
 export const CertificateCreateDtoSchema = z.object({
   type: CertificateTypeSchema,
-  data: CertificateDataSchema,
+  data: z.union([
+    DenominationCertDataSchema,
+    PassesCertDataSchema,
+  ]),
   expiresAt: z.string().datetime().nullable().optional(),
   ownerUserId: z.string(),
 });
@@ -239,10 +283,10 @@ export const CertificateCreateDtoSchema = z.object({
 export const SeasonTicketPlanSchema = z.object({
   id: z.string(),
   name: z.string(),
-  description: z.string().nullable(),
+  description: z.string().nullable().optional(),
   price: PriceSchema,
   passes: z.number().int().min(1),
-  eventIds: z.array(z.string()),
+  eventIds: z.array(z.string()).optional(),
 });
 
 export const SeasonTicketPlanCreateDtoSchema = z.object({
@@ -250,7 +294,7 @@ export const SeasonTicketPlanCreateDtoSchema = z.object({
   description: z.string().nullable().optional(),
   price: PriceSchema,
   passes: z.number().int().min(1),
-  eventIds: z.array(z.string()),
+  eventIds: z.array(z.string()).optional(),
 });
 
 export const SeasonTicketPlanUpdateDtoSchema = z.object({
@@ -280,12 +324,12 @@ export const CashbackTransactionSchema = z.object({
   type: CashbackTransactionTypeSchema,
   amount: PriceSchema,
   createdAt: z.string().datetime(),
-  note: z.string().nullable(),
+  note: z.string().nullable().optional(),
 });
 
 export const CashbackWalletSchema = z.object({
   balance: PriceSchema,
-  history: z.array(CashbackTransactionSchema),
+  history: z.array(CashbackTransactionSchema).optional(),
 });
 
 export const CashbackRulesSchema = z.object({
@@ -402,14 +446,35 @@ export const EventFiltersSchema = z.object({
   endsBefore: EndsBeforeParamSchema,
   cursor: CursorParamSchema,
   limit: LimitParamSchema,
+  'labels.any': z.array(z.string()).optional(),
+  'labels.all': z.array(z.string()).optional(),
+  'labels.none': z.array(z.string()).optional(),
+  'attr.eq': z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.gte': z.record(z.string(), z.number()).optional(),
+  'attr.lte': z.record(z.string(), z.number()).optional(),
+  'attr.bool': z.record(z.string(), z.boolean()).optional(),
+  'attr.exists': z.record(z.string(), z.boolean()).optional(),
 });
 
 export const SessionFiltersSchema = z.object({
   eventId: z.string().optional(),
   startsAfter: StartsAfterParamSchema,
   endsBefore: EndsBeforeParamSchema,
+  minRemainingSeats: z.number().int().min(0).optional(),
+  sortBy: z.enum(['createdAt', 'startsAt']).default('startsAt').optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('asc').optional(),
   cursor: CursorParamSchema,
   limit: LimitParamSchema,
+  'labels.any': z.array(z.string()).optional(),
+  'labels.all': z.array(z.string()).optional(),
+  'labels.none': z.array(z.string()).optional(),
+  'attr.eq': z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.gte': z.record(z.string(), z.number()).optional(),
+  'attr.lte': z.record(z.string(), z.number()).optional(),
+  'attr.bool': z.record(z.string(), z.boolean()).optional(),
+  'attr.exists': z.record(z.string(), z.boolean()).optional(),
 });
 
 export const BookingFiltersSchema = z.object({
@@ -446,6 +511,7 @@ export const AuditLogFiltersSchema = z.object({
 });
 
 export const SeasonTicketPlanFiltersSchema = z.object({
+  eventIds: z.array(z.string()).optional(),
   cursor: CursorParamSchema,
   limit: LimitParamSchema,
 });

@@ -47,13 +47,20 @@ export const tokenStorage = {
 
 // Custom error class for API errors
 export class ApiErrorClass extends Error {
+  public error: ApiError;
+  public status: number;
+  public statusText: string;
+
   constructor(
-    public error: ApiError,
-    public status: number,
-    public statusText: string,
+    error: ApiError,
+    status: number,
+    statusText: string,
   ) {
     super(error.message);
     this.name = 'ApiError';
+    this.error = error;
+    this.status = status;
+    this.statusText = statusText;
   }
 }
 

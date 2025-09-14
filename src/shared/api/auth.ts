@@ -159,7 +159,8 @@ export const authUtils = {
   isTelegramWebApp(): boolean {
     return typeof window !== 'undefined' && 
            'Telegram' in window && 
-           'WebApp' in (window as Record<string, unknown>).Telegram;
+           typeof (window as any).Telegram === 'object' &&
+           'WebApp' in (window as any).Telegram;
   },
 
   /**
@@ -167,7 +168,7 @@ export const authUtils = {
    */
   getTelegramWebApp(): { initData?: string } | null {
     if (this.isTelegramWebApp()) {
-      return (window as Record<string, { WebApp: { initData?: string } }>).Telegram.WebApp;
+      return (window as any).Telegram.WebApp || null;
     }
     return null;
   },
@@ -183,6 +184,10 @@ export const authUtils = {
 
     try {
       const webApp = this.getTelegramWebApp();
+      if (!webApp) {
+        throw new Error('Failed to get Telegram WebApp instance');
+      }
+      
       const initData = this.formatTelegramInitData(webApp);
       
       return await authApi.login({ initData });

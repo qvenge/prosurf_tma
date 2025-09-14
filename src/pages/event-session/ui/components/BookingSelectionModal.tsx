@@ -1,12 +1,12 @@
 import { Modal, type ModalProps, Button, type ButtonProps } from '@/shared/ui';
-import type { EventSession, SubscriptionResponse } from '@/shared/api';
+import type { Session, SeasonTicket } from '@/shared/api';
 import styles from './BookingSelectionModal.module.scss';
 
 export interface BookingSelectionModalProps extends ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  session: EventSession;
-  subscriptions: SubscriptionResponse[];
+  session: Session;
+  subscriptions: SeasonTicket[];
   onUseSubscription: () => void;
   onGoToPayment: () => void;
   isRedeeming: boolean;

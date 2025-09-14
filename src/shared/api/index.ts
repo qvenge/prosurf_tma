@@ -27,6 +27,7 @@ export { seasonTicketsClient } from './clients/season-tickets';
 export { cashbackClient } from './clients/cashback';
 export { waitlistClient } from './clients/waitlist';
 export { adminClient } from './clients/admin';
+export { webhooksClient } from './clients/webhooks';
 
 // Hooks - Auth
 export * from './hooks/auth';
@@ -65,7 +66,7 @@ export * from './hooks/admin';
 export { ApiProvider } from './providers/ApiProvider';
 
 // Query key factories (for advanced usage)
-export { authKeys } from './hooks/auth';
+export { authKeys } from './auth';
 export { usersKeys } from './hooks/users';
 export { eventsKeys } from './hooks/events';
 export { sessionsKeys } from './hooks/sessions';

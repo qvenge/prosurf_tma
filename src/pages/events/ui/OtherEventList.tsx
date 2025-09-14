@@ -1,11 +1,15 @@
 import { Link } from '@/shared/navigation';
 import styles from './OtherEventList.module.scss';
 import { OtherEventCard } from './OtherEventCard';
-import { useEventSessionsByType } from '@/shared/api';
+// TODO: Implement with new API structure using useEvents with filters
+// import { useEvents } from '@/shared/api';
 import { groupEventsByDate } from '@/shared/lib/date-utils';
 
 export const OtherEventList = () => {
-  const { data: otherEvents, isLoading, error } = useEventSessionsByType('other');
+  // TODO: Replace with useEvents filtered by type
+  const otherEvents: any[] = [];
+  const isLoading = false;
+  const error = null;
 
   if (isLoading) {
     return (

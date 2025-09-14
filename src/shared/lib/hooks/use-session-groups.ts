@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { formatDuration, formatAvailability, formatPrice } from '../format-utils';
-import type { SessionGroup } from '../../types/session';
+import type { SessionGroupProps } from '../../ui/session-group';
 
 interface EventSession {
   id: string;
@@ -41,7 +41,7 @@ export const useSessionGroups = (eventSessions: EventSession[]) => {
       });
 
       return groups;
-    }, {} as Record<string, SessionGroup['sessions']>);
+    }, {} as Record<string, SessionGroupProps['sessions']>);
 
     return Object.entries(groupedSessions).map(([dateHeader, sessions]) => ({
       dateHeader,

@@ -1,9 +1,8 @@
-import { SessionGroup } from '@/shared/ui/session-group';
-import type { SessionGroup as SessionGroupType } from '@/shared/types/session';
+import { SessionGroup, type SessionGroupProps } from '@/shared/ui/session-group';
 import styles from './SessionsList.module.scss';
 
 interface SessionsListProps {
-  sessionGroups: SessionGroupType[];
+  sessionGroups: SessionGroupProps[];
   isLoading: boolean;
   error: any;
 }

@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { useIsAuthenticated } from '@/shared/api';
+import { useAuthStatus } from '@/shared/api';
 import { Spinner } from '../spinner';
 
 import styles from './ProtectedRoute.module.scss';
@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  const { isAuthenticated, isLoading } = useAuthStatus();
   const location = useLocation();
 
   if (isLoading) {

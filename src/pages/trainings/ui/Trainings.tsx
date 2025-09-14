@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import styles from './Trainings.module.scss';
-import { useEventSessions, type EventSession } from '@/shared/api';
+import { useEventSessions, type Session } from '@/shared/api';
 import { getCurrentAndNextMonth, getMonthDateRange } from '@/shared/lib/date-utils';
 import { useSessionGroups } from '@/shared/lib/hooks/use-session-groups';
 import { HeroSection } from './components/HeroSection';

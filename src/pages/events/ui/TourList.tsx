@@ -1,10 +1,14 @@
 import { Link } from '@/shared/navigation';
 import styles from './TourList.module.scss';
 import { TourCard } from './TourCard';
-import { useEventSessionsByType } from '@/shared/api';
+// TODO: Implement with new API structure using useEvents with filters
+// import { useEvents } from '@/shared/api';
 
 export const TourList = () => {
-  const { data: tours, isLoading, error } = useEventSessionsByType('tour');
+  // TODO: Replace with useEvents filtered by type
+  const tours: any[] = [];
+  const isLoading = false;
+  const error = null;
 
   if (isLoading) {
     return (
