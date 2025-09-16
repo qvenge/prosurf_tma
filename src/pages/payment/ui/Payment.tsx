@@ -1,12 +1,8 @@
 import { useParams } from 'react-router';
 import { PageLayout } from '@/widgets/page-layout';
-import { 
-  useEventSession, 
-  useSubscriptionPlans,
-  useUserProfile
-} from '@/shared/api';
+import { useSession } from '@/shared/api';
 import { usePaymentState, usePaymentProcessing, useInitialPlanSelection } from '../lib/hooks';
-import { priceToMinor, calculatePrices } from '../lib/helpers';
+import { calculatePrices } from '../lib/helpers';
 import { ERROR_MESSAGES } from '../lib/constants';
 import {
   ProductSelector,
@@ -23,11 +19,11 @@ export function PaymentPage() {
   const { trainingId } = useParams<{ trainingId: string }>();
   
   // Fetch data
-  const { data: session, isLoading: sessionLoading, error: sessionError } = useEventSession(trainingId!);
-  const { data: subscriptionPlans, isLoading: plansLoading, error: plansError } = useSubscriptionPlans(
-    session ? { eventType: session.type } : undefined
-  );
-  const { data: user } = useUserProfile();
+  const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(trainingId!);
+  const subscriptionPlans: any[] = []; // TODO: Implement subscription plans API
+  const plansLoading = false;
+  const plansError = null;
+  const user = null; // TODO: Implement user profile API
   
   // State management
   const {
@@ -43,7 +39,7 @@ export function PaymentPage() {
   
   // Payment processing
   const { processPayment, isProcessing } = usePaymentProcessing(
-    session || null,
+    session as any || null, // TODO: Fix type mismatch
     user || null,
     selectedPlanId,
     product
@@ -53,9 +49,11 @@ export function PaymentPage() {
   useInitialPlanSelection(subscriptionPlans || [], selectedPlanId, updateSelectedPlan);
   
   // Calculate prices
-  const selectedPlan = subscriptionPlans?.find(plan => plan.id === selectedPlanId);
+  const selectedPlan = subscriptionPlans?.find((plan: any) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan ? selectedPlan.priceMinor : 0;
-  const sessionPrice = session ? priceToMinor(session.price) : 0;
+  const sessionPrice = session && session.event?.tickets?.[0]?.prepayment?.price 
+    ? session.event.tickets[0].prepayment.price.amountMinor
+    : 0;
   const cashbackValue = 20000; // Mock value - 200 rubles in kopecks
   
   const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
@@ -81,7 +79,7 @@ export function PaymentPage() {
   }
 
   return (
-    <PageLayout title={session.title}>
+    <PageLayout title={session.event.title}>
       <div className={styles.wrapper}>
         <div className={styles.top}>
           <ProductSelector
@@ -92,7 +90,14 @@ export function PaymentPage() {
           <PriceBreakdown
             product={product}
             selectedPlan={selectedPlan}
-            session={session}
+            session={{
+              title: session.event.title,
+              type: 'other' as const, // TODO: Map from event labels
+              price: session.event.tickets[0]?.prepayment?.price ? {
+                amount: String(session.event.tickets[0].prepayment.price.amountMinor / 100),
+                currency: session.event.tickets[0].prepayment.price.currency
+              } : { amount: '0', currency: 'RUB' }
+            }}
             sessionPrice={sessionPrice}
             subscriptionPrice={subscriptionPrice}
           />

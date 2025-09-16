@@ -16,15 +16,16 @@ export function App() {
     setNavbarHeight(val);
   };
 
-  useEffect(() => {
-    (async () => {
-      swipeBehavior.mount();
-      swipeBehavior.disableVertical();
-    })();
-  }, []);
+  // useEffect(() => {
+  //   (async () => {
+  //     swipeBehavior.mount();
+  //     swipeBehavior.disableVertical();
+  //   })();
+  // }, []);
 
 
   useEffect(() => {
+    console.log('rawInitData', rawInitData, status);
     if (rawInitData == null || status !== 'idle') return;
     authenticate();
   }, [rawInitData, authenticate, status])

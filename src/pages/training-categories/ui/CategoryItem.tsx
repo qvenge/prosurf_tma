@@ -1,7 +1,7 @@
 import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
-import { useEventSessions, type Session } from '@/shared/api';
+import { useSessions } from '@/shared/api';
 import styles from './CategoryItem.module.scss';
 
 const formatUpcomingDate = (dateString: string): string => {
@@ -23,32 +23,25 @@ const formatUpcomingDate = (dateString: string): string => {
 interface CategoryItemProps {
   title: string;
   imageUrl: string;
-  trainingType: EventSession['type'];
+  trainingLabel: string;
 }
 
 export const CategoryItem = ({
   title,
   imageUrl,
-  trainingType
+  trainingLabel
 }: CategoryItemProps) => {
   const navigate = useNavigate();
-  const { data: sessions, isLoading, error } = useEventSessions(
-    { 
-      filters: { types: [trainingType] },
-      offset: 0,
-      limit: 1
-    },
-    { 
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnMount: false,
-    }
-  );
+  const { data, isLoading, error } = useSessions({
+    'labels.any': [trainingLabel],
+    limit: 1
+  });
 
-  const nextSession = sessions && sessions.length > 0 ? sessions[0] : null;
+  const nextSession = data && data.items && data.items.length > 0 ? data.items[0] : null;
 
   const handleClick = () => {
     if (nextSession && !isLoading && !error) {
-      const categorySlug = trainingType === 'surfingTraining' ? 'surfing' : 'surfskate';
+      const categorySlug = trainingLabel === 'surfingTraining' ? 'surfing' : 'surfskate';
       navigate(`/trainings/categories/${categorySlug}`);
     }
   };
@@ -71,7 +64,7 @@ export const CategoryItem = ({
             error ? 
               'Ошибка загрузки' :
             nextSession ? 
-              `Ближайшая: ${formatUpcomingDate(nextSession.start)}` : 
+              `Ближайшая: ${formatUpcomingDate(nextSession.startsAt)}` : 
               'Нет доступных тренировок'
           }
         </p>

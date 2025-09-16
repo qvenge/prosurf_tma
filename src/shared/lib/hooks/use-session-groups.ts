@@ -1,23 +1,14 @@
 import { useMemo } from 'react';
 import { formatDuration, formatAvailability, formatPrice } from '../format-utils';
 import type { SessionGroupProps } from '../../ui/session-group';
+import type { Session } from '@/shared/api';
 
-interface EventSession {
-  id: string;
-  start: string;
-  end: string | null;
-  title: string;
-  location: string;
-  price: { amount: string; currency: string };
-  remainingSeats: number;
-}
-
-export const useSessionGroups = (eventSessions: EventSession[]) => {
+export const useSessionGroups = (sessions: Session[]) => {
   return useMemo(() => {
-    if (!eventSessions.length) return [];
+    if (!sessions.length) return [];
 
-    const groupedSessions = eventSessions.reduce((groups, session) => {
-      const sessionDate = new Date(session.start);
+    const groupedSessions = sessions.reduce((groups, session) => {
+      const sessionDate = new Date(session.startsAt);
       const dayName = sessionDate.toLocaleDateString('ru-RU', { weekday: 'long' });
       const day = sessionDate.getDate();
       const monthName = sessionDate.toLocaleDateString('ru-RU', { month: 'long' });
@@ -27,16 +18,20 @@ export const useSessionGroups = (eventSessions: EventSession[]) => {
         groups[dateKey] = [];
       }
 
+      const ticket = session.event.tickets[0];
+      const price = ticket?.prepayment?.price || { amountMinor: 0, currency: 'RUB' };
+      const endsAt = session.endsAt || (new Date(new Date(session.startsAt).getTime() + 90 * 60 * 1000)).toISOString();
+
       groups[dateKey].push({
         id: session.id,
-        time: new Date(session.start).toLocaleTimeString('ru-RU', { 
+        time: new Date(session.startsAt).toLocaleTimeString('ru-RU', { 
           hour: '2-digit', 
           minute: '2-digit' 
         }),
-        duration: formatDuration(session.start, session.end),
-        title: session.title,
-        location: session.location,
-        price: formatPrice(session.price),
+        duration: formatDuration(session.startsAt, endsAt),
+        title: session.event.title,
+        location: session.event.location || 'Не указано',
+        price: formatPrice(price),
         availability: formatAvailability(session.remainingSeats)
       });
 
@@ -47,5 +42,5 @@ export const useSessionGroups = (eventSessions: EventSession[]) => {
       dateHeader,
       sessions
     }));
-  }, [eventSessions]);
+  }, [sessions]);
 };

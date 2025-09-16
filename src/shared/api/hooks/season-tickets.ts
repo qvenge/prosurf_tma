@@ -88,5 +88,6 @@ export const useCurrentUserSeasonTickets = () => {
     queryFn: () => seasonTicketsClient.getSeasonTickets({ userId: userId! }),
     enabled: Boolean(userId),
     staleTime: 5 * 60 * 1000,
+    select: (data) => data.items, // Extract items array from PaginatedResponse
   });
 };

@@ -1,6 +1,5 @@
 import { Icon } from '@/shared/ui';
 import { BarbellBold, ConfettiBold, AirplaneTiltBold } from '@/shared/ds/icons';
-import { type Session } from '@/shared/api'
 import styles from './BookingCard.module.scss';
 
 // TODO: Fix event types with new API structure

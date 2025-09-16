@@ -63,7 +63,7 @@ export const useCreateEventSessions = () => {
       data: SessionCreateDto | SessionCreateDto[];
       idempotencyKey: IdempotencyKey;
     }) => sessionsClient.createEventSessions(eventId, data, idempotencyKey),
-    onSuccess: (newSessions, variables) => {
+    onSuccess: (_, variables) => {
       // Invalidate event sessions queries
       queryClient.invalidateQueries({ 
         queryKey: [eventsKeys.detail(variables.eventId)[0], eventsKeys.detail(variables.eventId)[1], eventsKeys.detail(variables.eventId)[2], 'sessions'] 
@@ -122,7 +122,7 @@ export const useUpdateSession = () => {
       queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
       queryClient.invalidateQueries({ 
         predicate: (query) => 
-          query.queryKey.includes('sessions') && query.queryKey.includes(updatedSession.eventId)
+          query.queryKey.includes('sessions') && query.queryKey.includes(updatedSession.event.id)
       });
     },
     onError: (error) => {
@@ -145,7 +145,7 @@ export const useCancelSession = () => {
       queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
       queryClient.invalidateQueries({ 
         predicate: (query) => 
-          query.queryKey.includes('sessions') && query.queryKey.includes(cancelledSession.eventId)
+          query.queryKey.includes('sessions') && query.queryKey.includes(cancelledSession.event.id)
       });
     },
     onError: (error) => {

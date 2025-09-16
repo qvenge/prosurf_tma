@@ -24,7 +24,7 @@ export const EventSessionPage = () => {
   const { setOverride } = useBottomBar();
   const [modalOpen, setModalOpen] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
-  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  // Removed pendingBookingId - not needed with new API structure
 
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string; }>();
@@ -54,7 +54,7 @@ export const EventSessionPage = () => {
         idempotencyKey: crypto.randomUUID()
       },
       {
-        onSuccess: (booking) => {
+        onSuccess: () => {
           setModalOpen(false);
           navigate(`/trainings/sessions/${sessionId}/booked`);
         },
@@ -96,7 +96,6 @@ export const EventSessionPage = () => {
   useEffect(() => {
     if (modalOpen) {
       setBookingError(null);
-      setPendingBookingId(null);
     }
   }, [modalOpen]);
 
@@ -113,7 +112,7 @@ export const EventSessionPage = () => {
   }
 
   return (
-    <PageLayout title={session.title} heroImages={heroImages}>
+    <PageLayout title={session.event.title} heroImages={heroImages}>
       <div className={styles.wrapper}>
         {session && (
           <BookingSelectionModal 
@@ -138,7 +137,7 @@ export const EventSessionPage = () => {
           <div className={styles.priceInfo}>
             <div className={styles.priceDetails}>
               <div className={styles.priceType}>Разовая тренировка</div>
-              <div className={styles.price}>{session.price.amount} {session.price.currency === 'RUB' ? '₽' : '$'}</div>
+              <div className={styles.price}>{session.event.tickets[0]?.prepayment.price.amountMinor / 100} {session.event.tickets[0]?.prepayment.price.currency === 'RUB' ? '₽' : '$'}</div>
             </div>
             <div className={styles.spotsRemaining}>Осталось {session.remainingSeats} мест</div>
           </div>
@@ -151,7 +150,7 @@ export const EventSessionPage = () => {
               height={16}
             />
             <div className={styles.dateText}>
-              {new Date(session.start).toLocaleDateString('ru-RU', {
+              {new Date(session.startsAt).toLocaleDateString('ru-RU', {
                 day: 'numeric',
                 month: 'long',
                 weekday: 'short'
@@ -174,14 +173,14 @@ export const EventSessionPage = () => {
                   src={MapPinRegular}
                 />
                 <div className={styles.address}>
-                  {session.location}
+                  {session.event.location || 'Местоположение не указано'}
                 </div>
               </div>
             </div>
             <div className={styles.locationTimeRight}>
               <div className={styles.duration}>1 ч 30 мин.</div>
               <div className={styles.time}>
-                {new Date(session.start).toLocaleTimeString('ru-RU', {
+                {new Date(session.startsAt).toLocaleTimeString('ru-RU', {
                   hour: '2-digit',
                   minute: '2-digit'
                 })}
@@ -199,7 +198,7 @@ export const EventSessionPage = () => {
         </div>
 
         {/* Description Sections */}
-        {session.description.map((section, index) => (
+        {session.event.description?.map((section, index: number) => (
           <div key={index} className={clsx(styles.wrapperItem, styles.descriptionSection)}>
             <div className={styles.sectionTitle}>{section.heading}</div>
             <div className={styles.descriptionText}>

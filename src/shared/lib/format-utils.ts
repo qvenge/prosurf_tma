@@ -23,7 +23,7 @@ export const formatAvailability = (remainingSeats: number) => {
   }
 };
 
-export const formatPrice = (price: { amount: string; currency: string }) => {
-  const amount = parseFloat(price.amount).toLocaleString('ru-RU');
+export const formatPrice = (price: { amountMinor: number; currency: string }) => {
+  const amount = (price.amountMinor / 100).toLocaleString('ru-RU');
   return price.currency === 'RUB' ? `${amount} ₽` : `${amount} ${price.currency}`;
 };

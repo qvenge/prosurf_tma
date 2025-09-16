@@ -5,8 +5,8 @@ import styles from './BookingSelectionModal.module.scss';
 export interface BookingSelectionModalProps extends ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  session: EventSession;
-  subscriptions: SubscriptionResponse[];
+  session: Session;
+  subscriptions: SeasonTicket[];
   onUseSubscription: () => void;
   onGoToPayment: () => void;
   isRedeeming: boolean;
@@ -16,7 +16,7 @@ export interface BookingSelectionModalProps extends ModalProps {
 export function BookingSelectionModal({ 
   isOpen, 
   onClose, 
-  session, 
+  session: _session, 
   subscriptions, 
   onUseSubscription, 
   onGoToPayment,
@@ -25,9 +25,9 @@ export function BookingSelectionModal({
 }: BookingSelectionModalProps) {
   const hasActiveSubscription = subscriptions.some(sub => 
     sub.status === 'ACTIVE' && 
-    sub.plan.eventType === session.type && 
-    sub.remaining > 0 &&
-    new Date(sub.expiresAt) > new Date()
+    // TODO: Check if subscription applies to this event type once plan details are available
+    sub.remainingPasses > 0 &&
+    (sub.validUntil ? new Date(sub.validUntil) > new Date() : true)
   );
 
   return (

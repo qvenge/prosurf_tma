@@ -55,6 +55,11 @@ export const authApi = {
 // Auth utilities
 export const authUtils = {
   /**
+   * Token storage utilities
+   */
+  tokenStorage,
+  
+  /**
    * Initialize auth state from localStorage
    */
   initializeAuth(): AuthState {

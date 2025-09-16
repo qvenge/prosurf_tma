@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import styles from './Trainings.module.scss';
-import { useEventSessions, type Session } from '@/shared/api';
+import { useSessions } from '@/shared/api';
 import { getCurrentAndNextMonth, getMonthDateRange } from '@/shared/lib/date-utils';
 import { useSessionGroups } from '@/shared/lib/hooks/use-session-groups';
 import { HeroSection } from './components/HeroSection';
@@ -12,17 +12,17 @@ const getCategoryInfo = (categoryId: string) => {
   switch (categoryId) {
     case 'surfing':
       return {
-        type: 'surfingTraining' as EventSession['type'],
+        label: 'sport:surf',
         title: 'Тренировки по серфингу'
       };
     case 'surfskate':
       return {
-        type: 'surfskateTraining' as EventSession['type'],
+        label: 'sport:surfskate',
         title: 'Тренировки по серфскейту'
       };
     default:
       return {
-        type: 'surfingTraining' as EventSession['type'],
+        label: 'sport:surf',
         title: 'Тренировки'
       };
   }
@@ -36,13 +36,13 @@ export const Trainings = () => {
   
   const categoryInfo = getCategoryInfo(categorySlug || '');
 
-  const { data: eventSessions = [], isLoading, error } = useEventSessions({
-    dateFrom,
-    dateTo,
-    filters: { types: [categoryInfo.type] },
-    offset: 0,
+  const { data, isLoading, error } = useSessions({
+    startsAfter: dateFrom,
+    endsBefore: dateTo,
+    'labels.any': categoryInfo.label ? [categoryInfo.label] : undefined,
     limit: 100
   });
+  const eventSessions = data?.items || [];
 
   const sessionGroups = useSessionGroups(eventSessions);
 

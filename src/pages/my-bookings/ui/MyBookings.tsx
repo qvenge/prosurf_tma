@@ -1,41 +1,28 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { EmptyListStub, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
-import { useUserBookings, type BookingWithSessionResponse } from '@/shared/api'
-import { formatTourDates, formatEventDate, formatTime } from '@/shared/lib/date-utils'
-import { formatDuration } from '@/shared/lib/format-utils'
+import { useBookings, type Booking } from '@/shared/api'
+import { formatEventDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
 
 type BookingsByDay = Array<{ day: string; items: BookingCardProps['data'][]}>;
 
-const transformBookingToCardData = (booking: BookingWithSessionResponse): BookingCardProps['data'] => {
-  const { session } = booking;
-  
-  let rightTopInner: string | undefined;
-  let rightBottomInner: string | undefined;
-  
-  if (session.type === 'tour') {
-    const tourDates = formatTourDates(session.start, session.end);
-    rightTopInner = tourDates.dates;
-    rightBottomInner = tourDates.year;
-  } else {
-    rightTopInner = formatTime(session.start);
-    rightBottomInner = session.end ? formatDuration(session.start, session.end) : undefined;
-  }
-  
+const transformBookingToCardData = (booking: Booking): BookingCardProps['data'] => {
+  // TODO: Need to fetch session data separately to display full information
+  // For now, using placeholder data
   return {
-    type: session.type,
-    eventTitle: session.title,
-    eventLocation: session.location,
-    rightTopInner,
-    rightBottomInner
+    type: 'other',
+    eventTitle: `Booking ${booking.id}`,
+    eventLocation: 'Location TBD',
+    rightTopInner: booking.createdAt ? formatTime(booking.createdAt) : undefined,
+    rightBottomInner: undefined
   };
 };
 
-const groupBookingsByDate = (bookings: BookingWithSessionResponse[]): BookingsByDay => {
+const groupBookingsByDate = (bookings: Booking[]): BookingsByDay => {
   const grouped = bookings.reduce((acc, booking) => {
-    const dateKey = formatEventDate(booking.session.start);
+    const dateKey = formatEventDate(booking.createdAt);
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
@@ -49,21 +36,19 @@ const groupBookingsByDate = (bookings: BookingWithSessionResponse[]): BookingsBy
 export function MyBookings() {
   const [selectedTab, setSelectedTab] = useState<'trainings' | 'events'>('trainings');
   
-  const sessionStartFrom = useMemo(() => new Date().toISOString(), []);
+  // const sessionStartFrom = useMemo(() => new Date().toISOString(), []); // TODO: Use when needed
   
-  const { data: bookings = [], isLoading, error } = useUserBookings(undefined, {
-    status: ['CONFIRMED'],
-    sessionStartFrom,
-    sortBy: 'sessionStart',
-    sortOrder: 'asc'
-  });
+  const { data, isLoading, error } = useBookings();
+  const bookings = data?.items || [];
   
-  const trainingBookings = bookings.filter(booking => 
-    booking.session.type === 'surfingTraining' || booking.session.type === 'surfskateTraining'
+  // TODO: Need to fetch session data to properly filter bookings by type
+  // For now, showing all bookings in both tabs
+  const trainingBookings = bookings.filter((booking: Booking) => 
+    booking.status === 'CONFIRMED'
   );
   
-  const eventBookings = bookings.filter(booking => 
-    booking.session.type === 'tour' || booking.session.type === 'other'
+  const eventBookings = bookings.filter((booking: Booking) => 
+    booking.status === 'CONFIRMED'
   );
   
   const trainings = groupBookingsByDate(trainingBookings);

@@ -70,8 +70,8 @@ export const useCreateRefund = () => {
       paymentId: string; 
       data?: RefundRequest;
       idempotencyKey?: IdempotencyKey;
-    }) => paymentsClient.createRefund(paymentId, data, idempotencyKey),
-    onSuccess: (newRefund, variables) => {
+    }) => paymentsClient.createRefund(paymentId, idempotencyKey || crypto.randomUUID(), data),
+    onSuccess: (_, variables) => {
       // Invalidate payment to show refund status
       queryClient.invalidateQueries({ queryKey: paymentsKeys.detail(variables.paymentId) });
       
@@ -93,9 +93,9 @@ export const usePaymentPolling = (paymentId: string, enabled: boolean = false) =
     queryKey: paymentsKeys.detail(paymentId),
     queryFn: () => paymentsClient.getPaymentById(paymentId),
     enabled,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Stop polling if payment is no longer pending
-      if (data?.status !== 'PENDING') {
+      if (query.state.data?.status !== 'PENDING') {
         return false;
       }
       return 3000; // Poll every 3 seconds
@@ -115,7 +115,7 @@ export const usePaymentActions = () => {
       case 'openInvoice':
         // For Telegram WebApp
         if (typeof window !== 'undefined' && 'Telegram' in window) {
-          const webApp = (window as Record<string, { WebApp: { openInvoice?: (slug: string) => void } }>).Telegram.WebApp;
+          const webApp = (window as any).Telegram?.WebApp;
           if (webApp?.openInvoice) {
             webApp.openInvoice(payment.nextAction.slugOrUrl);
           }

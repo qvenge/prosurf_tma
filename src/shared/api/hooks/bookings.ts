@@ -36,9 +36,9 @@ export const useBookSession = () => {
       data: BookRequest;
       idempotencyKey: IdempotencyKey;
     }) => bookingsClient.bookSession(sessionId, data, idempotencyKey),
-    onSuccess: (newBooking, variables) => {
+    onSuccess: (result, variables) => {
       // Add new booking to cache
-      queryClient.setQueryData(bookingsKeys.detail(newBooking.id), newBooking);
+      queryClient.setQueryData(bookingsKeys.detail(result.booking.id), result.booking);
       
       // Invalidate bookings lists
       queryClient.invalidateQueries({ queryKey: bookingsKeys.lists() });
