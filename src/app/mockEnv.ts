@@ -4,6 +4,7 @@ import { emitEvent, isTMA, mockTelegramEnv } from '@telegram-apps/sdk-react';
 // application, import.meta.env.DEV will become false, and the code inside will be tree-shaken,
 // so you will not see it in your final bundle.
 if (import.meta.env.DEV) {
+  console.log()
   if (!await isTMA('complete')) {
     const themeParams = {
       accent_text_color: '#6ab2f2',

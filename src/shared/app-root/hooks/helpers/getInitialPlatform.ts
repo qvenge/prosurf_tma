@@ -1,14 +1,20 @@
-import { getTelegramData } from '@/shared/lib/telegram';
+import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
 
 export const getInitialPlatform = () => {
-  const telegramData = getTelegramData();
-  if (!telegramData) {
+  try {
+    const params = retrieveLaunchParams();
+    const platform = params?.tgWebAppPlatform;
+
+    if (!platform) {
+      return 'base';
+    }
+
+    if (['ios', 'macos'].includes(platform)) {
+      return 'ios';
+    }
+
+    return 'base';
+  } catch {
     return 'base';
   }
-
-  if (['ios', 'macos'].includes(telegramData.platform)) {
-    return 'ios';
-  }
-
-  return 'base';
 };

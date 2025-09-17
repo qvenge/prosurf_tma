@@ -3,7 +3,7 @@ import styles from './ModalOverlay.module.scss';
 
 import clsx from 'clsx';
 import { hexToRGB } from '@/shared/lib/color';
-import { getTelegramData } from '@/shared/lib/telegram';
+import { useTelegramTheme } from '@/shared/lib/telegram-sdk';
 import { useAppRootContext } from '@/shared/app-root/useAppRootContext';
 
 import { Drawer } from 'vaul';
@@ -20,16 +20,16 @@ export const ModalOverlay = forwardRef<HTMLDivElement, ModalOverlayProps>(({
   ...props
 }, ref) => {
   const context = useAppRootContext();
+  const themeParams = useTelegramTheme();
 
   // We don't use getComputedStyle because overlay renders before the appearance is changing
   const [r, g, b] = useMemo(() => {
-    const telegramData = getTelegramData();
-    if (telegramData && telegramData.themeParams.bg_color) {
-      return hexToRGB(telegramData.themeParams.bg_color);
+    if (themeParams?.bgColor) {
+      return hexToRGB(themeParams.bgColor);
     }
 
     return context.appearance === 'light' ? DEFAULT_LIGHT_OVERLAY_RGB : DEFAULT_DARK_OVERLAY_RGB;
-  }, [context.appearance]);
+  }, [context.appearance, themeParams]);
 
   return (
     <Drawer.Overlay

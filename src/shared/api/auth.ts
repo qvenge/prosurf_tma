@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import { apiClient, tokenStorage, STORAGE_KEYS } from './config';
 import { LoginRequestSchema, LoginResponseSchema, RefreshRequestSchema, RefreshResponseSchema, UserSchema } from './schemas';
 import { validateResponse } from './config';
+import { telegramUtils } from '@/shared/lib/telegram-sdk';
 import type { AuthState, LoginRequest, LoginResponse, RefreshRequest, RefreshResponse, User } from './types';
 
 // Authentication context
@@ -149,52 +150,39 @@ export const authUtils = {
   },
 
   /**
-   * Format init data from Telegram WebApp
+   * Get init data from Telegram SDK
    */
-  formatTelegramInitData(webApp: { initData?: string }): string {
-    if (!webApp?.initData) {
-      throw new Error('Telegram WebApp not initialized or initData not available');
-    }
-    return webApp.initData;
+  getTelegramInitData(): string | null {
+    return telegramUtils.getInitDataRaw();
   },
 
   /**
-   * Validate if running in Telegram WebApp environment
+   * Validate if running in Telegram Mini App environment
    */
-  isTelegramWebApp(): boolean {
-    return typeof window !== 'undefined' && 
-           'Telegram' in window && 
-           typeof (window as any).Telegram === 'object' &&
-           'WebApp' in (window as any).Telegram;
+  async isTelegramMiniApp(): Promise<boolean> {
+    return await telegramUtils.isTelegramEnv();
   },
 
   /**
-   * Get Telegram WebApp instance if available
+   * Get Telegram user data if available
    */
-  getTelegramWebApp(): { initData?: string } | null {
-    if (this.isTelegramWebApp()) {
-      return (window as any).Telegram.WebApp || null;
-    }
-    return null;
+  getTelegramUser() {
+    return telegramUtils.getUser();
   },
 
   /**
-   * Auto-login using Telegram WebApp init data
+   * Auto-login using Telegram Mini App init data
    */
-  async autoLoginWithTelegram(): Promise<LoginResponse | null> {
-    if (!this.isTelegramWebApp()) {
-      console.warn('Not running in Telegram WebApp environment');
-      return null;
-    }
-
+  async autoLoginWithTelegram(initDataString?: string): Promise<LoginResponse | null> {
     try {
-      const webApp = this.getTelegramWebApp();
-      if (!webApp) {
-        throw new Error('Failed to get Telegram WebApp instance');
+      // Use provided init data or try to get it from SDK
+      const initData = initDataString || this.getTelegramInitData();
+
+      if (!initData) {
+        console.warn('No init data available for authentication');
+        return null;
       }
-      
-      const initData = this.formatTelegramInitData(webApp);
-      
+
       return await authApi.login({ initData });
     } catch (error) {
       console.error('Auto-login with Telegram failed:', error);

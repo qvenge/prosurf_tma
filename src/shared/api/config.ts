@@ -139,7 +139,7 @@ const createApiClient = (): AxiosInstance => {
         if (!refreshToken) {
           processQueue(error, null);
           tokenStorage.clearTokens();
-          window.location.href = '/login';
+          // window.location.href = '/login';
           return Promise.reject(error);
         }
 
@@ -165,7 +165,7 @@ const createApiClient = (): AxiosInstance => {
         } catch (refreshError) {
           processQueue(refreshError, null);
           tokenStorage.clearTokens();
-          window.location.href = '/login';
+          // window.location.href = '/login';
           return Promise.reject(refreshError);
         } finally {
           isRefreshing = false;

@@ -75,10 +75,10 @@ export const useLogout = () => {
   });
 };
 
-// Auto-login with Telegram WebApp
+// Auto-login with Telegram Mini App
 export const useTelegramAutoLogin = () => {
   return useMutation({
-    mutationFn: () => authUtils.autoLoginWithTelegram(),
+    mutationFn: (initData?: string) => authUtils.autoLoginWithTelegram(initData),
     onSuccess: (data: LoginResponse | null) => {
       if (data) {
         authUtils.saveAuthData(data);

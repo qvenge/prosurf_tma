@@ -23,7 +23,7 @@ try {
   // Configure all application dependencies.
   await init({
     debug,
-    eruda: debug && ['ios', 'android'].includes(platform),
+    eruda: false,
     mockForMacOS: platform === 'macos',
   })
     .then(() => {

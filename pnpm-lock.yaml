@@ -51,9 +51,6 @@ importers:
       '@feature-sliced/eslint-config':
         specifier: ^0.1.1
         version: 0.1.1(eslint-plugin-boundaries@5.0.1(@typescript-eslint/parser@8.40.0(eslint@9.33.0)(typescript@5.8.3))(eslint@9.33.0))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.40.0(eslint@9.33.0)(typescript@5.8.3))(eslint@9.33.0))
-      '@twa-dev/types':
-        specifier: ^8.0.2
-        version: 8.0.2
       '@types/node':
         specifier: ^24.3.0
         version: 24.3.0
@@ -833,9 +830,6 @@ packages:
 
   '@twa-dev/types@7.10.0':
     resolution: {integrity: sha512-BXHyNLXy+cPbOZ2qQq5ArPKcP4kUfuX3YBSFT0XUxtMNWAzvyMuYAiq59UTfQ8OnELXlfChrAoIT3c2pujBtcQ==}
-
-  '@twa-dev/types@8.0.2':
-    resolution: {integrity: sha512-ICQ6n4NaUPPzV3/GzflVQS6Nnu5QX2vr9OlOG8ZkFf3rSJXzRKazrLAbZlVhCPPWkIW3MMuELPsE6tByrA49qA==}
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -2779,8 +2773,6 @@ snapshots:
   '@telegram-apps/types@2.0.3': {}
 
   '@twa-dev/types@7.10.0': {}
-
-  '@twa-dev/types@8.0.2': {}
 
   '@types/estree@1.0.8': {}
 

@@ -27,7 +27,7 @@ export function App() {
   useEffect(() => {
     console.log('rawInitData', rawInitData, status);
     if (rawInitData == null || status !== 'idle') return;
-    authenticate();
+    authenticate(rawInitData);
   }, [rawInitData, authenticate, status])
 
   return (

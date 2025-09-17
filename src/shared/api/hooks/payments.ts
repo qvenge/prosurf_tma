@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsClient } from '../clients/payments';
 import { bookingsKeys } from './bookings';
-import type { 
-  Payment, 
+import { telegramUtils } from '@/shared/lib/telegram-sdk';
+import type {
+  Payment,
   PaymentMethodRequest,
   CompositePaymentMethodRequest,
   RefundRequest,
-  IdempotencyKey 
+  IdempotencyKey
 } from '../types';
 
 // Query key factory for payments
@@ -106,29 +107,34 @@ export const usePaymentPolling = (paymentId: string, enabled: boolean = false) =
 
 // Hook for handling payment next actions
 export const usePaymentActions = () => {
-  const handlePaymentAction = (payment: Payment) => {
+  const handlePaymentAction = async (payment: Payment): Promise<void> => {
     if (!payment.nextAction) {
       return;
     }
 
     switch (payment.nextAction.type) {
       case 'openInvoice':
-        // For Telegram WebApp
-        if (typeof window !== 'undefined' && 'Telegram' in window) {
-          const webApp = (window as any).Telegram?.WebApp;
-          if (webApp?.openInvoice) {
-            webApp.openInvoice(payment.nextAction.slugOrUrl);
+        // For Telegram Mini App
+        try {
+          const isTelegram = await telegramUtils.isTelegramEnv();
+          if (isTelegram) {
+            const result = await telegramUtils.openInvoice(payment.nextAction.slugOrUrl);
+            console.log('Invoice result:', result);
+          } else {
+            console.warn('Not in Telegram environment, cannot open invoice');
           }
+        } catch (error) {
+          console.error('Failed to open invoice:', error);
         }
         break;
-        
+
       case 'redirect':
         // For external payment providers
         if (typeof window !== 'undefined') {
           window.open(payment.nextAction.url, '_blank');
         }
         break;
-        
+
       case 'none':
         // Payment completed, no action needed
         break;
