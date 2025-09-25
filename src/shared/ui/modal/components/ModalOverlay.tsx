@@ -3,7 +3,7 @@ import styles from './ModalOverlay.module.scss';
 
 import clsx from 'clsx';
 import { hexToRGB } from '@/shared/lib/color';
-import { useTelegramTheme } from '@/shared/lib/telegram-sdk';
+import { useTelegramTheme } from '@/shared/tma/telegram-sdk';
 
 import { Drawer } from 'vaul';
 

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsClient } from '../clients/payments';
 import { bookingsKeys } from './bookings';
-import { telegramUtils } from '@/shared/lib/telegram-sdk';
+import { telegramUtils } from '@/shared/tma';
 import type {
   Payment,
   PaymentMethodRequest,

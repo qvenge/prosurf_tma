@@ -14,16 +14,16 @@
  */
 
 // Re-export everything from telegram-sdk
-export * from '../telegram-sdk';
+export * from './telegram-sdk';
 
 // Re-export advanced hooks
-export * from '../telegram-hooks';
+export * from './telegram-hooks';
 
 // Re-export event utilities
-export * from '../telegram-events';
+export * from './telegram-events';
 
 // Re-export helper utilities
-export * from '../telegram-helpers';
+export * from './telegram-helpers';
 
 // Create convenient grouped exports
 export {
@@ -41,7 +41,7 @@ export {
   useTelegramHapticFeedback,
   parseInitData,
   validateInitData
-} from '../telegram-sdk';
+} from './telegram-sdk';
 
 export {
   // Advanced hooks
@@ -60,7 +60,7 @@ export {
   useTelegramHomeScreen,
   useTelegramClipboard,
   useTelegramContact
-} from '../telegram-hooks';
+} from './telegram-hooks';
 
 export {
   // Event management
@@ -97,7 +97,7 @@ export {
   // Event utilities
   triggerTelegramEvent,
   cleanupTelegramEvents
-} from '../telegram-events';
+} from './telegram-events';
 
 export {
   // Helper utilities grouped by category
@@ -112,7 +112,7 @@ export {
   performanceUtils,
   validationUtils,
   typeGuards
-} from '../telegram-helpers';
+} from './telegram-helpers';
 
 /**
  * Convenience function to initialize Telegram WebApp with all features
@@ -147,8 +147,8 @@ export const initializeTelegramApp = async (options: {
   } = options;
 
   // Import utilities dynamically to avoid circular dependencies
-  const { telegramUtils } = await import('../telegram-sdk');
-  const { colorUtils, debugUtils, typeGuards } = await import('../telegram-helpers');
+  const { telegramUtils } = await import('./telegram-sdk');
+  const { colorUtils, debugUtils, typeGuards } = await import('./telegram-helpers');
 
   // Check if running in Telegram environment
   const isInTelegram = await telegramUtils.isTelegramEnv();

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo, type PropsWithChildren } from 'react';
 import { NavigationState, type NavigationStateEvnetPayload } from '../navigation-state';
 import { useNavigate as useReactRouterNavigate } from 'react-router';
+import { useTelegramBackButton } from '@/shared/tma';
 
 interface Navigator {
   switchTab(tab: Tab): void;
@@ -26,6 +27,7 @@ const NavigatorContext = createContext<Navigator | null>(null);
 
 export function NavigatorProvider({ children }: PropsWithChildren) {
   const navigate = useReactRouterNavigate();
+  const backButton = useTelegramBackButton();
 
   useEffect(() => {
     navigate(state.currentLink);
@@ -64,34 +66,26 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
   }), [navigate]);
 
   useEffect(() => {
-    // if (!backButton.isSupported()) {
-    //   return;
-    // }
+    const handleBackButtonClick = () => {
+      navigator.back();
+    };
 
-    // if (!backButton.isMounted()) {
-    //   backButton.mount();
-    // }
+    const updateBackButtonVisibility = () => {
+      if (state.currentPos === 0 ) {
+        backButton.hide()
+      } else {
+        backButton.show();
+      }
+    };
 
-    // const handleBackButtonClick = () => {
-    //   navigator.back();
-    // };
+    backButton.onClick(handleBackButtonClick);
 
-    // const updateBackButtonVisibility = () => {
-    //   if (state.currentPos === 0 ) {
-    //     backButton.hide()
-    //   } else {
-    //     backButton.show();
-    //   }
-    // };
+    const removeChangeListener = state.on('history:change', updateBackButtonVisibility);
 
-    // backButton.onClick(handleBackButtonClick);
-
-    // const removeChangeListener = state.on('history:change', updateBackButtonVisibility);
-
-    // return () => {
-    //   removeChangeListener();
-    //   backButton.offClick(handleBackButtonClick);
-    // };
+    return () => {
+      removeChangeListener();
+      backButton.offClick(handleBackButtonClick);
+    };
   }, [navigator]);
 
   useEffect(() => {

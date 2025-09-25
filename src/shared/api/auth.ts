@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import { apiClient, tokenStorage, STORAGE_KEYS } from './config';
 import { LoginRequestSchema, LoginResponseSchema, RefreshRequestSchema, RefreshResponseSchema, UserSchema } from './schemas';
 import { validateResponse } from './config';
-import { telegramUtils } from '@/shared/lib/telegram-sdk';
+import { telegramUtils } from '@/shared/tma';
 import type { AuthState, LoginRequest, LoginResponse, RefreshRequest, RefreshResponse, User } from './types';
 
 // Authentication context
