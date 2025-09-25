@@ -29,7 +29,7 @@ export const RoleSchema = z.enum(['USER', 'ADMIN']);
 
 export const UserSchema = z.object({
   id: z.string(),
-  telegramId: z.number().int().nullable(),
+  telegramId: z.string().nullable(),
   phone: z.string().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
@@ -49,6 +49,14 @@ export const UserUpdateDtoSchema = z.object({
 });
 
 // Event schemas
+export const EventTypeSchema = z.enum([
+  'training',
+  'training:surfing',
+  'training:surfskate',
+  'tour',
+  'activity'
+]);
+
 export const EventDescriptionSchema = z.object({
   heading: z.string(),
   body: z.string(),
@@ -88,7 +96,7 @@ export const EventSchema = z.object({
   capacity: z.number().int().min(0).nullable().optional(),
   tickets: z.array(EventTicketSchema),
   createdAt: z.string().datetime(),
-  labels: z.array(z.string()).optional(),
+  labels: z.array(EventTypeSchema).nullable().optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
 

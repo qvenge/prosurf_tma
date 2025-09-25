@@ -3,7 +3,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type PropsWithChildren, useState, useEffect } from 'react';
 import { authUtils, AuthContext } from '../auth';
 import { logError, getErrorInfo } from '../error-handler';
-import type { AuthState, User, LoginRequest, LoginResponse } from '../types';
+import type {
+  AuthState,
+  User,
+  LoginRequest,
+  LoginResponse,
+  TelegramLoginDto,
+  LoginDto,
+  RegisterDto,
+  AuthResponse
+} from '../types';
 import { authClient } from '../clients/auth';
 import { performLogout } from '../auth';
 
@@ -103,7 +112,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
   const login = async (request: LoginRequest): Promise<LoginResponse> => {
     const response = await authClient.login(request);
     authUtils.saveAuthData(response);
-    
+
     setAuthState({
       user: response.user,
       accessToken: response.accessToken,
@@ -111,7 +120,52 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
       isAuthenticated: true,
       isLoading: false,
     });
-    
+
+    return response;
+  };
+
+  const loginWithTelegram = async (request: TelegramLoginDto): Promise<AuthResponse> => {
+    const response = await authClient.loginWithTelegram(request);
+    authUtils.saveAuthData(response);
+
+    setAuthState({
+      user: response.user,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    return response;
+  };
+
+  const loginWithCredentials = async (request: LoginDto): Promise<AuthResponse> => {
+    const response = await authClient.loginWithCredentials(request);
+    authUtils.saveAuthData(response);
+
+    setAuthState({
+      user: response.user,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    return response;
+  };
+
+  const register = async (request: RegisterDto): Promise<AuthResponse> => {
+    const response = await authClient.register(request);
+    authUtils.saveAuthData(response);
+
+    setAuthState({
+      user: response.user,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
     return response;
   };
 
@@ -152,6 +206,9 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
   const contextValue = {
     ...authState,
     login,
+    loginWithTelegram,
+    loginWithCredentials,
+    register,
     logout,
     refreshTokens,
     updateUser,

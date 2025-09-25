@@ -1,28 +1,98 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authClient } from '../clients/auth';
 import { authKeys, authUtils, performLogout } from '../auth';
-import type { LoginRequest, LoginResponse, RefreshRequest, RefreshResponse, User } from '../types';
+import type {
+  TelegramLoginDto,
+  LoginDto,
+  RegisterDto,
+  AuthResponse,
+  LoginRequest,
+  LoginResponse,
+  RefreshRequest,
+  RefreshResponse,
+  User
+} from '../types';
 
 /**
  * Authentication hooks
  */
 
-// Login mutation hook
+// Login mutation hook (legacy - for backward compatibility)
 export const useLogin = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (request: LoginRequest) => authClient.login(request),
     onSuccess: (data: LoginResponse) => {
       // Save auth data to localStorage
       authUtils.saveAuthData(data);
-      
+
       // Update auth-related queries
       queryClient.setQueryData(authKeys.profile(), data.user);
       queryClient.invalidateQueries({ queryKey: authKeys.all });
     },
     onError: (error) => {
       console.error('Login failed:', error);
+    },
+  });
+};
+
+// Telegram login mutation hook
+export const useLoginWithTelegram = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: TelegramLoginDto) => authClient.loginWithTelegram(request),
+    onSuccess: (data: AuthResponse) => {
+      // Save auth data to localStorage
+      authUtils.saveAuthData(data);
+
+      // Update auth-related queries
+      queryClient.setQueryData(authKeys.profile(), data.user);
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
+    },
+    onError: (error) => {
+      console.error('Telegram login failed:', error);
+    },
+  });
+};
+
+// Credentials login mutation hook
+export const useLoginWithCredentials = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: LoginDto) => authClient.loginWithCredentials(request),
+    onSuccess: (data: AuthResponse) => {
+      // Save auth data to localStorage
+      authUtils.saveAuthData(data);
+
+      // Update auth-related queries
+      queryClient.setQueryData(authKeys.profile(), data.user);
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
+    },
+    onError: (error) => {
+      console.error('Credentials login failed:', error);
+    },
+  });
+};
+
+// Registration mutation hook
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: RegisterDto) => authClient.register(request),
+    onSuccess: (data: AuthResponse) => {
+      // Save auth data to localStorage
+      authUtils.saveAuthData(data);
+
+      // Update auth-related queries
+      queryClient.setQueryData(authKeys.profile(), data.user);
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
+    },
+    onError: (error) => {
+      console.error('Registration failed:', error);
     },
   });
 };
@@ -77,11 +147,17 @@ export const useLogout = () => {
 
 // Auto-login with Telegram Mini App
 export const useTelegramAutoLogin = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (initData?: string) => authUtils.autoLoginWithTelegram(initData),
-    onSuccess: (data: LoginResponse | null) => {
+    onSuccess: (data: AuthResponse | null) => {
       if (data) {
         authUtils.saveAuthData(data);
+
+        // Update auth-related queries
+        queryClient.setQueryData(authKeys.profile(), data.user);
+        queryClient.invalidateQueries({ queryKey: authKeys.all });
       }
     },
     onError: (error) => {

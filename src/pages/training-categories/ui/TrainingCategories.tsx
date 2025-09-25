@@ -12,12 +12,12 @@ export const TrainingCategories = () => {
             <CategoryItem
               title="Серфинг"
               imageUrl="/images/surfing1.jpg"
-              trainingLabel="surfingTraining"
+              eventType="training:surfing"
             />
             <CategoryItem
               title="Серфскейт"
               imageUrl="/images/surfskate1.png"
-              trainingLabel="surfskateTraining"
+              eventType="training:surfskate"
             />
           </div>
         </div>

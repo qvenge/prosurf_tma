@@ -1,7 +1,7 @@
 import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
-import { useSessions } from '@/shared/api';
+import { useSessions, type EventType } from '@/shared/api';
 import styles from './CategoryItem.module.scss';
 
 const formatUpcomingDate = (dateString: string): string => {
@@ -23,17 +23,17 @@ const formatUpcomingDate = (dateString: string): string => {
 interface CategoryItemProps {
   title: string;
   imageUrl: string;
-  trainingLabel: string;
+  eventType: EventType;
 }
 
 export const CategoryItem = ({
   title,
   imageUrl,
-  trainingLabel
+  eventType
 }: CategoryItemProps) => {
   const navigate = useNavigate();
   const { data, isLoading, error } = useSessions({
-    'labels.any': [trainingLabel],
+    'labels.any': [eventType],
     limit: 1
   });
 
@@ -41,7 +41,7 @@ export const CategoryItem = ({
 
   const handleClick = () => {
     if (nextSession && !isLoading && !error) {
-      const categorySlug = trainingLabel === 'surfingTraining' ? 'surfing' : 'surfskate';
+      const categorySlug = eventType === 'training:surfing' ? 'surfing' : 'surfskate';
       navigate(`/trainings/categories/${categorySlug}`);
     }
   };
