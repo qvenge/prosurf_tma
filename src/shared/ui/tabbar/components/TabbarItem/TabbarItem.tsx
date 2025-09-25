@@ -5,7 +5,6 @@ import styles from './TabbarItem.module.scss';
 
 import clsx from 'clsx';
 import { hasReactNode } from '@/shared/lib/react/node';
-import { usePlatform } from '@/shared/app-root/usePlatform';
 
 import { Tapable } from '@/shared/ui/tapable';
 import { Caption } from '@/shared/typography';
@@ -33,15 +32,12 @@ export const TabbarItem = ({
   className,
   ...restProps
 }: TabbarItemProps) => {
-  const platform = usePlatform();
-
   return (
     <Tapable
       Component="button"
       interactiveAnimation="opacity"
       className={clsx(
         styles.wrapper,
-        platform === 'ios' && styles['wrapper--ios'],
         selected && styles['wrapper--selected'],
         className,
       )}
@@ -56,7 +52,7 @@ export const TabbarItem = ({
         <Caption
           className={styles.text}
           weight="2"
-          level={platform === 'ios' ? '2' : '1'}
+          level="1"
         >
           {text}
         </Caption>

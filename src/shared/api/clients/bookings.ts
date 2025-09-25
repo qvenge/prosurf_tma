@@ -1,12 +1,16 @@
 import { apiClient, validateResponse, createQueryString, withIdempotency } from '../config';
-import { 
-  BookingSchema, 
+import {
+  BookingSchema,
+  BookingExtendedSchema,
+  BookingCreateDtoSchema,
   BookRequestSchema,
   PaginatedResponseSchema,
   BookingFiltersSchema
 } from '../schemas';
-import type { 
-  Booking, 
+import type {
+  Booking,
+  BookingExtended,
+  BookingCreateDto,
   BookRequest,
   BookingWithHoldTTL,
   PaginatedResponse,
@@ -22,46 +26,48 @@ import type {
  */
 export const bookingsClient = {
   /**
-   * Book seats in a session (create HOLD)
+   * Book seats in a session (supports both user and admin bookings)
    * POST /sessions/{id}/book
-   * 
-   * Creates a booking in HOLD status for the specified session.
-   * The booking must be paid within the hold TTL period or it will expire.
-   * 
+   *
+   * Creates a booking for the specified session. Behavior depends on user role:
+   * - USER: Creates HOLD booking for current user
+   * - ADMIN: Can create bookings for any user or guest, can set status to CONFIRMED
+   *
    * @param sessionId - The ID of the session to book
-   * @param data - Booking request with quantity of seats
+   * @param data - Booking request (BookRequest for users, BookingCreateDto for admins)
    * @param idempotencyKey - Unique key for request idempotency (8-128 chars)
    * @returns Promise resolving to booking data with hold TTL information
-   * 
-   * @example
-   * ```ts
-   * const result = await bookingsClient.bookSession(
-   *   'session-123',
-   *   { quantity: 2 },
-   *   'booking-idempotency-key'
-   * );
-   * console.log(`Hold expires in ${result.holdTtlSeconds} seconds`);
-   * ```
    */
   async bookSession(
-    sessionId: string, 
-    data: BookRequest, 
+    sessionId: string,
+    data: BookRequest | BookingCreateDto,
     idempotencyKey: IdempotencyKey
   ): Promise<BookingWithHoldTTL> {
-    const validatedData = BookRequestSchema.parse(data);
-    
+    // Try to parse as admin DTO first, fallback to simple request
+    let validatedData;
+    let isExtended = false;
+
+    try {
+      validatedData = BookingCreateDtoSchema.parse(data);
+      isExtended = true;
+    } catch {
+      validatedData = BookRequestSchema.parse(data);
+    }
+
     const config = withIdempotency({}, idempotencyKey);
     const response = await apiClient.post(
-      `/sessions/${encodeURIComponent(sessionId)}/book`, 
+      `/sessions/${encodeURIComponent(sessionId)}/book`,
       validatedData,
       config
     );
-    
-    const booking = validateResponse(response.data, BookingSchema);
-    const holdTtlSeconds = response.headers['x-hold-ttl'] 
-      ? parseInt(response.headers['x-hold-ttl'] as string, 10) 
+
+    const booking = isExtended
+      ? validateResponse(response.data, BookingExtendedSchema)
+      : validateResponse(response.data, BookingSchema);
+    const holdTtlSeconds = response.headers['x-hold-ttl']
+      ? parseInt(response.headers['x-hold-ttl'] as string, 10)
       : null;
-    
+
     return {
       booking,
       holdTtlSeconds,
@@ -69,15 +75,47 @@ export const bookingsClient = {
   },
 
   /**
-   * Get list of bookings (self or ADMIN)
+   * Simple booking method for regular users
+   * POST /sessions/{id}/book
+   */
+  async createBooking(
+    sessionId: string,
+    data: BookRequest,
+    idempotencyKey: IdempotencyKey
+  ): Promise<BookingWithHoldTTL> {
+    return this.bookSession(sessionId, data, idempotencyKey);
+  },
+
+  /**
+   * Admin booking method with full capabilities
+   * POST /sessions/{id}/book
+   */
+  async createAdminBooking(
+    sessionId: string,
+    data: BookingCreateDto,
+    idempotencyKey: IdempotencyKey
+  ): Promise<BookingWithHoldTTL> {
+    return this.bookSession(sessionId, data, idempotencyKey);
+  },
+
+  /**
+   * Get list of bookings (self or ADMIN with advanced filtering)
    * GET /bookings
    */
-  async getBookings(filters?: BookingFilters): Promise<PaginatedResponse<Booking>> {
+  async getBookings(filters?: BookingFilters): Promise<PaginatedResponse<Booking | BookingExtended>> {
     const validatedFilters = BookingFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/bookings${queryString}`);
-    return validateResponse(response.data, PaginatedResponseSchema(BookingSchema));
+
+    // If any include flags are set, return BookingExtended
+    const shouldReturnExtended = validatedFilters.includeUser ||
+                                 validatedFilters.includeSession ||
+                                 validatedFilters.includePaymentInfo ||
+                                 validatedFilters.includeGuestContact;
+
+    const schema = shouldReturnExtended ? BookingExtendedSchema : BookingSchema;
+    return validateResponse(response.data, PaginatedResponseSchema(schema));
   },
 
   /**
@@ -87,6 +125,19 @@ export const bookingsClient = {
   async getBookingById(id: string): Promise<Booking> {
     const response = await apiClient.get(`/bookings/${encodeURIComponent(id)}`);
     return validateResponse(response.data, BookingSchema);
+  },
+
+  /**
+   * Update booking (ADMIN only)
+   * PATCH /bookings/{id}
+   */
+  async updateBooking(id: string, data: {
+    quantity?: number;
+    guestContact?: BookingCreateDto['guestContact'];
+    notes?: string;
+  }): Promise<BookingExtended> {
+    const response = await apiClient.patch(`/bookings/${encodeURIComponent(id)}`, data);
+    return validateResponse(response.data, BookingExtendedSchema);
   },
 
   /**

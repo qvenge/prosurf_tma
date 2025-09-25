@@ -4,7 +4,6 @@ import type { ButtonHTMLAttributes } from 'react';
 import styles from './SegmentedControlItem.module.scss';
 
 import clsx from 'clsx';
-import { usePlatform } from '@/shared/app-root/usePlatform';
 
 import { Tapable } from '@/shared/ui/tapable';
 
@@ -23,7 +22,6 @@ export const SegmentedControlItem = ({
   children,
   ...restProps
 }: SegmentedControlItemProps) => {
-  const platform = usePlatform();
   return (
     <Tapable
       role="tab"
@@ -31,7 +29,6 @@ export const SegmentedControlItem = ({
       className={clsx(
         styles.wrapper,
         selected && styles['wrapper--selected'],
-        platform === 'ios' && styles['wrapper--ios'],
         className,
       )}
       {...restProps}

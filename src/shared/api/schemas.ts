@@ -8,6 +8,12 @@ export const ErrorSchema = z.object({
     'HOLD_EXPIRED',
     'NO_SEATS',
     'PROVIDER_UNAVAILABLE',
+    'INVALID_CREDENTIALS',
+    'USER_EXISTS',
+    'WEAK_PASSWORD',
+    'INVALID_EMAIL',
+    'HAS_ACTIVE_BOOKINGS',
+    'HAS_ACTIVE_SESSIONS',
   ]),
   message: z.string(),
   details: z.unknown().nullable(),
@@ -23,7 +29,7 @@ export const RoleSchema = z.enum(['USER', 'ADMIN']);
 
 export const UserSchema = z.object({
   id: z.string(),
-  telegramId: z.number().int(),
+  telegramId: z.number().int().nullable(),
   phone: z.string().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
@@ -32,6 +38,7 @@ export const UserSchema = z.object({
   photoUrl: z.string().nullable(),
   role: RoleSchema,
   createdAt: z.string().datetime(),
+  authMethod: z.enum(['telegram', 'email', 'username']),
 });
 
 export const UserUpdateDtoSchema = z.object({
@@ -78,6 +85,7 @@ export const EventSchema = z.object({
   title: z.string(),
   description: z.array(EventDescriptionSchema).nullable().optional(),
   location: z.string().nullable().optional(),
+  capacity: z.number().int().min(0).nullable().optional(),
   tickets: z.array(EventTicketSchema),
   createdAt: z.string().datetime(),
   labels: z.array(z.string()).optional(),
@@ -88,7 +96,18 @@ export const EventCreateDtoSchema = z.object({
   title: z.string(),
   description: z.array(EventDescriptionSchema).nullable().optional(),
   location: z.string().nullable().optional(),
+  capacity: z.number().int().min(0).nullable().optional(),
   tickets: z.array(EventTicketCreateSchema),
+  labels: z.array(z.string()).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+});
+
+export const EventUpdateDtoSchema = z.object({
+  title: z.string().optional(),
+  description: z.array(EventDescriptionSchema).nullable().optional(),
+  location: z.string().nullable().optional(),
+  capacity: z.number().int().min(0).nullable().optional(),
+  tickets: z.array(EventTicketCreateSchema).optional(),
   labels: z.array(z.string()).optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
@@ -101,7 +120,24 @@ export const SessionSchema = z.object({
   event: EventSchema,
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime().nullable().optional(),
-  capacity: z.number().int().min(0),
+  capacity: z.number().int().min(0).nullable().optional(),
+  remainingSeats: z.number().int().min(0),
+  hasBooking: z.boolean().optional(),
+  onWaitlist: z.boolean().optional(),
+  status: SessionStatusSchema.optional(),
+  labels: z.array(z.string()).nullable().optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  effectiveLabels: z.array(z.string()).optional(),
+  effectiveAttributes: z.record(z.string(), AttributeValueSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+export const SessionCompactSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime().nullable().optional(),
+  capacity: z.number().int().min(0).nullable().optional(),
   remainingSeats: z.number().int().min(0),
   hasBooking: z.boolean().optional(),
   onWaitlist: z.boolean().optional(),
@@ -116,7 +152,7 @@ export const SessionSchema = z.object({
 export const SessionCreateDtoSchema = z.object({
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime().nullable().optional(),
-  capacity: z.number().int().min(0),
+  capacity: z.number().int().min(0).nullable().optional(),
   labels: z.array(z.string()).optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
@@ -124,7 +160,7 @@ export const SessionCreateDtoSchema = z.object({
 export const SessionUpdateDtoSchema = z.object({
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().nullable().optional(),
-  capacity: z.number().int().min(0).optional(),
+  capacity: z.number().int().min(0).nullable().optional(),
   labels: z.array(z.string()).optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
 });
@@ -133,20 +169,65 @@ export const SessionCreationResponseSchema = z.object({
   items: z.array(SessionSchema),
 });
 
+export const SessionBulkUpdateDtoSchema = z.object({
+  id: z.string(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  capacity: z.number().int().min(0).nullable().optional(),
+  labels: z.array(z.string()).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+});
+
+export const SessionBulkDeleteDtoSchema = z.object({
+  ids: z.array(z.string()).min(1).max(100),
+  force: z.boolean().default(false).optional(),
+});
+
 // Booking schemas
 export const BookingStatusSchema = z.enum(['HOLD', 'CONFIRMED', 'CANCELLED', 'EXPIRED']);
+
+export const GuestContactSchema = z.object({
+  phone: z.string().regex(/^\+?[0-9]{7,15}$/),
+  firstName: z.string().max(128).nullable().optional(),
+  lastName: z.string().max(128).nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  note: z.string().max(500).nullable().optional(),
+});
 
 export const BookingSchema = z.object({
   id: z.string(),
   sessionId: z.string(),
-  userId: z.string(),
+  userId: z.string().nullable(),
   quantity: z.number().int().min(1),
   status: BookingStatusSchema,
   hold: z.object({
     expiresAt: z.string().datetime(),
-  }).nullable(),
+  }).nullable().optional(),
   totalPrice: PriceSchema,
+  guestContact: GuestContactSchema.nullable().optional(),
+  notes: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
+  createdBy: z.string().nullable().optional(),
+});
+
+export const BookingExtendedSchema = BookingSchema.extend({
+  user: UserSchema.optional(),
+  session: SessionSchema.optional(),
+  paymentInfo: z.object({
+    method: z.enum(['card', 'certificate', 'pass', 'cashback', 'composite']),
+    paymentId: z.string().nullable().optional(),
+    certificateId: z.string().nullable().optional(),
+    seasonTicketId: z.string().nullable().optional(),
+  }).nullable().optional(),
+});
+
+export const BookingCreateDtoSchema = z.object({
+  quantity: z.number().int().min(1),
+  userId: z.string().nullable().optional(),
+  guestContact: GuestContactSchema.nullable().optional(),
+  status: z.enum(['HOLD', 'CONFIRMED']).default('HOLD').optional(),
+  ticketId: z.string().nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 export const BookRequestSchema = z.object({
@@ -364,11 +445,28 @@ export const JobExecutionResultSchema = z.object({
 });
 
 // Auth schemas
-export const LoginRequestSchema = z.object({
+export const TelegramLoginDtoSchema = z.object({
   initData: z.string(),
 });
 
-export const LoginResponseSchema = z.object({
+export const LoginDtoSchema = z.object({
+  login: z.string(),
+  password: z.string().min(6),
+});
+
+export const RegisterDtoSchema = z.object({
+  email: z.string().email().optional(),
+  username: z.string().regex(/^[a-zA-Z0-9_-]{3,32}$/).optional(),
+  password: z.string().min(6),
+  firstName: z.string().max(128).optional(),
+  lastName: z.string().max(128).optional(),
+  phone: z.string().regex(/^\+?[0-9]{7,15}$/).optional(),
+  role: RoleSchema.optional(),
+}).refine(data => data.email || data.username, {
+  message: "Either email or username must be provided",
+});
+
+export const AuthResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
   user: UserSchema,
@@ -382,6 +480,10 @@ export const RefreshResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
 });
+
+// Legacy - keeping for backward compatibility
+export const LoginRequestSchema = TelegramLoginDtoSchema;
+export const LoginResponseSchema = AuthResponseSchema;
 
 // Telegram webhook schemas
 export const TelegramUserSchema = z.object({
@@ -479,6 +581,13 @@ export const SessionFiltersSchema = z.object({
 
 export const BookingFiltersSchema = z.object({
   userId: z.string().optional(),
+  sessionId: z.string().optional(),
+  status: z.enum(['HOLD', 'CONFIRMED', 'CANCELLED', 'EXPIRED']).optional(),
+  bookingType: z.enum(['registered', 'guest', 'all']).default('all').optional(),
+  includeUser: z.boolean().default(false).optional(),
+  includeSession: z.boolean().default(false).optional(),
+  includePaymentInfo: z.boolean().default(false).optional(),
+  includeGuestContact: z.boolean().default(false).optional(),
   cursor: CursorParamSchema,
   limit: LimitParamSchema,
 });

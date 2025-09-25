@@ -91,6 +91,12 @@ const ERROR_MESSAGES: Record<ApiError['code'], string> = {
   AMOUNT_MISMATCH: 'Сумма платежа не совпадает. Попробуйте снова.',
   DUPLICATE_PAYMENT: 'Этот платеж уже был обработан.',
   PROVIDER_UNAVAILABLE: 'Сервис временно недоступен. Попробуйте позже.',
+  INVALID_CREDENTIALS: 'Неверные учетные данные.',
+  USER_EXISTS: 'Пользователь с такими данными уже существует.',
+  WEAK_PASSWORD: 'Пароль слишком слабый.',
+  INVALID_EMAIL: 'Неверный формат email.',
+  HAS_ACTIVE_BOOKINGS: 'У пользователя есть активные бронирования.',
+  HAS_ACTIVE_SESSIONS: 'У пользователя есть активные сессии.',
 };
 
 export const getUserFriendlyErrorMessage = (error: unknown): string => {

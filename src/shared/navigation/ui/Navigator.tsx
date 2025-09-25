@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, type PropsWithChildren } from 'react';
 import { NavigationState, type NavigationStateEvnetPayload } from '../navigation-state';
 import { useNavigate as useReactRouterNavigate } from 'react-router';
-import { backButton } from '@telegram-apps/sdk-react';
 
 interface Navigator {
   switchTab(tab: Tab): void;
@@ -65,34 +64,34 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
   }), [navigate]);
 
   useEffect(() => {
-    if (!backButton.isSupported()) {
-      return;
-    }
+    // if (!backButton.isSupported()) {
+    //   return;
+    // }
 
-    if (!backButton.isMounted()) {
-      backButton.mount();
-    }
+    // if (!backButton.isMounted()) {
+    //   backButton.mount();
+    // }
 
-    const handleBackButtonClick = () => {
-      navigator.back();
-    };
+    // const handleBackButtonClick = () => {
+    //   navigator.back();
+    // };
 
-    const updateBackButtonVisibility = () => {
-      if (state.currentPos === 0 ) {
-        backButton.hide()
-      } else {
-        backButton.show();
-      }
-    };
+    // const updateBackButtonVisibility = () => {
+    //   if (state.currentPos === 0 ) {
+    //     backButton.hide()
+    //   } else {
+    //     backButton.show();
+    //   }
+    // };
 
-    backButton.onClick(handleBackButtonClick);
+    // backButton.onClick(handleBackButtonClick);
 
-    const removeChangeListener = state.on('history:change', updateBackButtonVisibility);
+    // const removeChangeListener = state.on('history:change', updateBackButtonVisibility);
 
-    return () => {
-      removeChangeListener();
-      backButton.offClick(handleBackButtonClick);
-    };
+    // return () => {
+    //   removeChangeListener();
+    //   backButton.offClick(handleBackButtonClick);
+    // };
   }, [navigator]);
 
   useEffect(() => {

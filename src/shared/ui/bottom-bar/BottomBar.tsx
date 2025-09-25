@@ -2,7 +2,6 @@ import { useCallback, type HTMLAttributes } from 'react';
 import { createPortal } from 'react-dom';
 import { useMatches } from 'react-router';
 import clsx from 'clsx';
-import { usePlatform } from '@/shared/app-root/usePlatform';
 import { useBottomBar } from './BottomBarContext';
 import styles from './BottomBar.module.scss';
 
@@ -13,7 +12,6 @@ export interface BottomBarProps extends HTMLAttributes<HTMLDivElement> {
 export function BottomBar({ className, onHeightChange, ...restProps }: BottomBarProps) {
   const matches = useMatches();
   const { content } = useBottomBar();
-  const platform = usePlatform();
 
   const measuredRef = useCallback((node: HTMLElement | null) => {
     if (!node) return;
@@ -35,7 +33,6 @@ export function BottomBar({ className, onHeightChange, ...restProps }: BottomBar
       ref={measuredRef}
       className={clsx(
         styles.wrapper,
-        platform === 'ios' && styles['wrapper--ios'],
         className,
       )}
       role="contentinfo"

@@ -1,16 +1,22 @@
 import { apiClient, validateResponse, createQueryString, withIdempotency } from '../config';
-import { 
-  SessionSchema, 
+import {
+  SessionSchema,
+  SessionCompactSchema,
   SessionCreateDtoSchema,
   SessionUpdateDtoSchema,
+  SessionBulkUpdateDtoSchema,
+  SessionBulkDeleteDtoSchema,
   SessionCreationResponseSchema,
   PaginatedResponseSchema,
   SessionFiltersSchema
 } from '../schemas';
-import type { 
-  Session, 
+import type {
+  Session,
+  SessionCompact,
   SessionCreateDto,
   SessionUpdateDto,
+  SessionBulkUpdateDto,
+  SessionBulkDeleteDto,
   SessionCreationResponse,
   PaginatedResponse,
   SessionFilters,
@@ -22,15 +28,15 @@ import type {
  */
 export const sessionsClient = {
   /**
-   * Get sessions for an event
+   * Get sessions for an event (returns compact format with eventId instead of full event)
    * GET /events/{id}/sessions
    */
-  async getEventSessions(eventId: string, filters?: SessionFilters): Promise<PaginatedResponse<Session>> {
+  async getEventSessions(eventId: string, filters?: SessionFilters): Promise<PaginatedResponse<SessionCompact>> {
     const validatedFilters = SessionFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/events/${encodeURIComponent(eventId)}/sessions${queryString}`);
-    return validateResponse(response.data, PaginatedResponseSchema(SessionSchema));
+    return validateResponse(response.data, PaginatedResponseSchema(SessionCompactSchema));
   },
 
   /**
@@ -100,5 +106,45 @@ export const sessionsClient = {
   async cancelSession(id: string): Promise<Session> {
     const response = await apiClient.delete(`/sessions/${encodeURIComponent(id)}`);
     return validateResponse(response.data, SessionSchema);
+  },
+
+  /**
+   * Bulk update sessions (ADMIN only)
+   * PATCH /sessions
+   */
+  async bulkUpdateSessions(
+    updates: SessionBulkUpdateDto[],
+    idempotencyKey: IdempotencyKey
+  ): Promise<{
+    items: Session[];
+    updated: number;
+    failed: Array<{ id: string; error: string }>;
+  }> {
+    const validatedUpdates = updates.map(update => SessionBulkUpdateDtoSchema.parse(update));
+    const config = withIdempotency({}, idempotencyKey);
+
+    const response = await apiClient.patch('/sessions', validatedUpdates, config);
+    return response.data;
+  },
+
+  /**
+   * Bulk delete sessions (ADMIN only)
+   * DELETE /sessions
+   */
+  async bulkDeleteSessions(
+    data: SessionBulkDeleteDto,
+    idempotencyKey: IdempotencyKey
+  ): Promise<{
+    deleted: string[];
+    failed: Array<{ id: string; error: string }>;
+  }> {
+    const validatedData = SessionBulkDeleteDtoSchema.parse(data);
+    const config = withIdempotency({}, idempotencyKey);
+
+    const response = await apiClient.delete('/sessions', {
+      ...config,
+      data: validatedData,
+    });
+    return response.data;
   },
 };

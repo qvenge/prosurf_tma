@@ -5,7 +5,6 @@ import { forwardRef } from 'react';
 
 import clsx from 'clsx';
 import { hasReactNode } from '@/shared/lib/react/node';
-import { usePlatform } from '@/shared/app-root/usePlatform';
 
 import { Spinner } from '../spinner';
 import { Tapable } from '../tapable';
@@ -58,8 +57,6 @@ export const Button = forwardRef(({
   Component = 'button',
   ...restProps
 }: ButtonProps, ref) => {
-  const platform = usePlatform();
-
   return (
     <Tapable
       ref={ref}
@@ -69,7 +66,6 @@ export const Button = forwardRef(({
         styles.wrapper,
         mode && modeStyles[mode],
         size && sizeStyles[size],
-        platform === 'ios' && styles['wrapper--ios'],
         stretched && styles['wrapper--stretched'],
         loading && styles['wrapper--loading'],
         className,

@@ -2,7 +2,6 @@ import { Children, type HTMLAttributes, isValidElement, type ReactElement } from
 import styles from './SegmentedControl.module.scss';
 
 import clsx from 'clsx';
-import { usePlatform } from '@/shared/app-root/usePlatform';
 
 import { SegmentedControlItem, type SegmentedControlItemProps } from './components/SegmentedControlItem/SegmentedControlItem';
 
@@ -21,8 +20,6 @@ export const SegmentedControl = ({
   children,
   ...restProps
 }: SegmentedControlProps) => {
-  const platform = usePlatform();
-
   const childrenAsArray = Children.toArray(children);
   const checkedIndex = childrenAsArray.findIndex((option) => {
     return isValidElement(option) && (option as ReactElement<SegmentedControlItemProps>).props.selected;
@@ -34,7 +31,6 @@ export const SegmentedControl = ({
       role="tablist"
       className={clsx(
         styles.wrapper,
-        platform === 'ios' && styles['wrapper--ios'],
         className,
       )}
       {...restProps}

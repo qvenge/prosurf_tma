@@ -18,17 +18,24 @@ export type EventTicket = z.infer<typeof schemas.EventTicketSchema>;
 export type EventTicketCreate = z.infer<typeof schemas.EventTicketCreateSchema>;
 export type Event = z.infer<typeof schemas.EventSchema>;
 export type EventCreateDto = z.infer<typeof schemas.EventCreateDtoSchema>;
+export type EventUpdateDto = z.infer<typeof schemas.EventUpdateDtoSchema>;
 
 // Session types
 export type SessionStatus = z.infer<typeof schemas.SessionStatusSchema>;
 export type Session = z.infer<typeof schemas.SessionSchema>;
+export type SessionCompact = z.infer<typeof schemas.SessionCompactSchema>;
 export type SessionCreateDto = z.infer<typeof schemas.SessionCreateDtoSchema>;
 export type SessionUpdateDto = z.infer<typeof schemas.SessionUpdateDtoSchema>;
 export type SessionCreationResponse = z.infer<typeof schemas.SessionCreationResponseSchema>;
+export type SessionBulkUpdateDto = z.infer<typeof schemas.SessionBulkUpdateDtoSchema>;
+export type SessionBulkDeleteDto = z.infer<typeof schemas.SessionBulkDeleteDtoSchema>;
 
 // Booking types
 export type BookingStatus = z.infer<typeof schemas.BookingStatusSchema>;
+export type GuestContact = z.infer<typeof schemas.GuestContactSchema>;
 export type Booking = z.infer<typeof schemas.BookingSchema>;
+export type BookingExtended = z.infer<typeof schemas.BookingExtendedSchema>;
+export type BookingCreateDto = z.infer<typeof schemas.BookingCreateDtoSchema>;
 export type BookRequest = z.infer<typeof schemas.BookRequestSchema>;
 
 // Booking with hold TTL header
@@ -86,10 +93,16 @@ export type AuditLog = z.infer<typeof schemas.AuditLogSchema>;
 export type JobExecutionResult = z.infer<typeof schemas.JobExecutionResultSchema>;
 
 // Auth types
-export type LoginRequest = z.infer<typeof schemas.LoginRequestSchema>;
-export type LoginResponse = z.infer<typeof schemas.LoginResponseSchema>;
+export type TelegramLoginDto = z.infer<typeof schemas.TelegramLoginDtoSchema>;
+export type LoginDto = z.infer<typeof schemas.LoginDtoSchema>;
+export type RegisterDto = z.infer<typeof schemas.RegisterDtoSchema>;
+export type AuthResponse = z.infer<typeof schemas.AuthResponseSchema>;
 export type RefreshRequest = z.infer<typeof schemas.RefreshRequestSchema>;
 export type RefreshResponse = z.infer<typeof schemas.RefreshResponseSchema>;
+
+// Legacy types for backward compatibility
+export type LoginRequest = z.infer<typeof schemas.LoginRequestSchema>;
+export type LoginResponse = z.infer<typeof schemas.LoginResponseSchema>;
 
 // Telegram webhook types
 export type TelegramUser = z.infer<typeof schemas.TelegramUserSchema>;

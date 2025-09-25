@@ -3,7 +3,6 @@ import type { HTMLAttributes, ReactNode } from 'react';
 import styles from './ModalHeader.module.scss';
 
 import clsx from 'clsx';
-import { usePlatform } from '@/shared/app-root/usePlatform';
 
 import { Text } from '@/shared/typography';
 
@@ -21,8 +20,6 @@ export const ModalHeader = forwardRef<HTMLElement, ModalHeaderProps>(({
   children,
   ...props
 }, ref) => {
-  const platform = usePlatform();
-
   return (
     <header
       ref={ref}
@@ -32,7 +29,7 @@ export const ModalHeader = forwardRef<HTMLElement, ModalHeaderProps>(({
       <div className={styles.before}>
         {before}
       </div>
-      {platform === 'ios' && <Text weight="2" className={styles.children}>{children}</Text>}
+      <Text weight="2" className={styles.children}>{children}</Text>
       <div className={styles.after}>
         {after}
       </div>
