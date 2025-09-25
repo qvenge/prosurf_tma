@@ -14,7 +14,7 @@ export function BookingPage() {
         height={48}
       />
       <div className={styles.content}>
-        <h1 className={styles.title}>Вы записались на серф-тренировку!</h1>
+        <h1 className={styles.title}>Вы записались на серф-тренировку\!</h1>
         <div className={styles.description}>
           Напоминаем что отмена записи возможна не позднее чем за 24 часа
         </div>

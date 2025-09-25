@@ -12,7 +12,7 @@ export interface ModalOverlayProps {
 }
 
 const DEFAULT_LIGHT_OVERLAY_RGB = [255, 255, 255];
-const DEFAULT_DARK_OVERLAY_RGB = [33, 33, 33];
+// const DEFAULT_DARK_OVERLAY_RGB = [33, 33, 33];
 
 export const ModalOverlay = forwardRef<HTMLDivElement, ModalOverlayProps>(({
   className,
@@ -22,8 +22,8 @@ export const ModalOverlay = forwardRef<HTMLDivElement, ModalOverlayProps>(({
 
   // We don't use getComputedStyle because overlay renders before the appearance is changing
   const [r, g, b] = useMemo(() => {
-    if (themeParams?.bgColor) {
-      return hexToRGB(themeParams.bgColor);
+    if (themeParams?.bg_color) {
+      return hexToRGB(themeParams.bg_color);
     }
 
     return DEFAULT_LIGHT_OVERLAY_RGB;
