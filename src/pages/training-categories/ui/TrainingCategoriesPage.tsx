@@ -1,14 +1,14 @@
 import { TrainingCategories } from '@/features/trainings';
+import { PageLayout } from '@/widgets/page-layout';
 import styles from './TrainingCategoriesPage.module.scss';
 
 export const TrainingCategoriesPage = () => {
 
   return (
-    <div className={styles.container}>
-      <div className={styles.section}>
-        <h1 className={styles.title}>Тренировки</h1>
+    <PageLayout title='Тренировки'>
+      <div className={styles.wrapper}>
         <TrainingCategories className={styles.categories} />
       </div>
-    </div>
+    </PageLayout>
   );
 };
