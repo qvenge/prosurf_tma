@@ -7,6 +7,7 @@
 
   width: 100%;
   margin: 0;
+  padding-top: calc(var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top));
 }
 
 .header {

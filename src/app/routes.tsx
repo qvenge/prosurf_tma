@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router';
 import { App } from './ui/App';
 
 import { Home } from '@/pages/home';
-import { TrainingCategories } from '@/pages/training-categories';
+import { TrainingCategoriesPage } from '@/pages/training-categories';
 import { Trainings } from '@/pages/trainings';
 import { TrainingPage } from '@/pages/training';
 import { Profile } from '@/pages/profile';
@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
         children: [
           { 
             index: true, 
-            Component: TrainingCategories
+            Component: TrainingCategoriesPage
           },
           { 
             path: 'categories/:categorySlug', 

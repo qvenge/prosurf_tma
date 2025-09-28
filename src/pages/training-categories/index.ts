@@ -1,1 +1,1 @@
-export { TrainingCategories } from './ui/TrainingCategories';
+export { TrainingCategoriesPage } from './ui/TrainingCategoriesPage';

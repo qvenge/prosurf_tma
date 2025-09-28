@@ -2,7 +2,7 @@ import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
 import { useSessions, type EventType } from '@/shared/api';
-import styles from './CategoryItem.module.scss';
+import styles from './TrainingCategoryItem.module.scss';
 
 const formatUpcomingDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -20,17 +20,17 @@ const formatUpcomingDate = (dateString: string): string => {
   return `${day} ${month} в ${hours}:${minutes}`;
 };
 
-interface CategoryItemProps {
+interface TrainingCategoryItemProps {
   title: string;
   imageUrl: string;
   eventType: EventType;
 }
 
-export const CategoryItem = ({
+export const TrainingCategoryItem = ({
   title,
   imageUrl,
   eventType
-}: CategoryItemProps) => {
+}: TrainingCategoryItemProps) => {
   const navigate = useNavigate();
   const { data, isLoading, error } = useSessions({
     'labels.any': [eventType],
