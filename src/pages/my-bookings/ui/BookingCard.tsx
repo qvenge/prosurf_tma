@@ -4,15 +4,15 @@ import styles from './BookingCard.module.scss';
 
 // TODO: Fix event types with new API structure
 const eventTypes = {
-  surfingTraining: { icon: BarbellBold, name: 'Серфинг' },
-  surfskateTraining: { icon: BarbellBold, name: 'Серфскейт'},
+  'training:surfing': { icon: BarbellBold, name: 'Серфинг' },
+  'training:surfskate': { icon: BarbellBold, name: 'Серфскейт'},
   tour: { icon: AirplaneTiltBold, name: 'Тур' },
-  other: { icon: ConfettiBold, name: 'Ивент' }
+  activity: { icon: ConfettiBold, name: 'Ивент' }
 } as const;
 
 export interface BookingCardProps {
   data: {
-    type: keyof typeof eventTypes;
+    labels?: string[];
     eventTitle: string;
     eventLocation: string;
     rightTopInner?: string;
@@ -20,8 +20,22 @@ export interface BookingCardProps {
   }
 }
 
+function getEventType(labels?: string[]) {
+  if (!labels || labels.length === 0) {
+    return { icon: ConfettiBold, name: 'Другое' };
+  }
+  
+  for (const label of labels) {
+    if (eventTypes[label as keyof typeof eventTypes]) {
+      return eventTypes[label as keyof typeof eventTypes];
+    }
+  }
+  
+  return { icon: ConfettiBold, name: 'Другое' };
+}
+
 export function BookingCard({ data }: BookingCardProps) {
-  const typeData = eventTypes[data.type];
+  const typeData = getEventType(data.labels);
 
   return (
     <div className={styles.wrapper}>

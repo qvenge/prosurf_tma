@@ -9,10 +9,12 @@ export interface PageLayoutProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function PageLayout({children, heroImages, title, className}: PageLayoutProps) {
+  const hasImages = heroImages && heroImages.length > 0;
+
   return (
-    <div className={styles.wrapper}>
+    <div className={clsx(styles.wrapper, hasImages && styles.withImages)}>
       <div className={styles.header}>
-        {heroImages && heroImages.length > 0 && <ImageSlider 
+        {hasImages && <ImageSlider 
           images={heroImages}
           className={styles.imageSlider}
         />}

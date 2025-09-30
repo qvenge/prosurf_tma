@@ -70,17 +70,58 @@ export const usePaymentProcessing = (
   const processPayment = async (setPaymentError: (error: string) => void) => {
     setPaymentError('');
 
+    // Import logging utilities
+    const { paymentLogger } = await import('@/shared/lib/payment-logger');
+    const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
+
     console.log('USER', user)
-    
+
     if (!user) {
       console.log('USER NOT FOUND')
+      paymentLogger.logError({
+        error: 'User not found',
+        context: 'processPayment',
+      });
       return;
     }
 
     if (!session) {
       setPaymentError(ERROR_MESSAGES.SESSION_NOT_FOUND);
+      paymentLogger.logError({
+        error: ERROR_MESSAGES.SESSION_NOT_FOUND,
+        context: 'processPayment',
+      });
       return;
     }
+
+    // Calculate amount for logging
+    const sessionPrice = session.event?.tickets?.[0]?.prepayment?.price?.amountMinor || 0;
+    const amount = product === 'subscription' ? 0 : sessionPrice; // Will be updated with actual subscription price
+
+    // Start payment attempt
+    const attemptId = paymentDebugger.startAttempt({
+      sessionId: session.id,
+      eventId: session.event.id,
+      eventTitle: session.event.title,
+      userId: user.id,
+      userEmail: user.email || undefined,
+      amount,
+      currency: 'RUB',
+      provider: 'telegram',
+      metadata: {
+        product,
+        selectedPlanId,
+        activeCashback,
+        cashbackAmount,
+      },
+    });
+
+    paymentLogger.logPaymentInitiated({
+      sessionId: session.id,
+      amount,
+      currency: 'RUB',
+      provider: 'telegram',
+    });
 
     try {
       if (product === 'subscription') {
@@ -90,6 +131,21 @@ export const usePaymentProcessing = (
       }
     } catch (error: unknown) {
       console.error('Payment processing failed:', error);
+
+      paymentLogger.logPaymentFailed({
+        error: error as Error | string,
+        metadata: {
+          attemptId,
+          product,
+          sessionId: session.id,
+        },
+      });
+
+      paymentDebugger.endAttempt({
+        success: false,
+        error: error as Error | string,
+      });
+
       await handlePaymentError(error, setPaymentError);
     }
   };
@@ -181,22 +237,68 @@ export const usePaymentProcessing = (
 
   // Handle payment next action
   const handlePaymentNextAction = async (payment: Payment) => {
+    const { paymentLogger } = await import('@/shared/lib/payment-logger');
+    const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
+
     if (!payment.nextAction) {
       console.warn('No next action in payment response');
+      paymentLogger.logError({
+        error: 'No next action in payment response',
+        context: 'handlePaymentNextAction',
+        paymentId: payment.id,
+        bookingId: payment.bookingId,
+      });
       return;
     }
 
-    await handlePaymentAction(payment);
+    paymentLogger.log({
+      eventType: 'payment_api_response',
+      paymentId: payment.id,
+      bookingId: payment.bookingId,
+      amount: payment.amount.amountMinor,
+      currency: payment.amount.currency,
+      status: payment.status,
+      metadata: {
+        nextActionType: payment.nextAction.type,
+        provider: payment.provider,
+      },
+    });
 
-    // Navigate to success page after handling action
-    // The actual payment completion will be verified via webhook
-    if (payment.nextAction.type === 'none') {
-      // Payment completed immediately (e.g., full cashback or certificate)
-      navigate('/payment-success');
+    const result = await handlePaymentAction(payment);
+
+    // End payment attempt in debugger
+    paymentDebugger.endAttempt({
+      success: result.success,
+      invoiceStatus: result.status,
+      error: result.error,
+    });
+
+    // Navigate based on result
+    if (result.success) {
+      // Payment completed or successfully initiated
+      if (result.status === 'paid' || result.status === 'none') {
+        paymentLogger.logPaymentCompleted({
+          paymentId: payment.id,
+          bookingId: payment.bookingId,
+          amount: payment.amount.amountMinor,
+          currency: payment.amount.currency,
+        });
+        navigate(`trainings/${payment.bookingId}/payment-success`);
+      } else if (result.status === 'pending') {
+        // For redirect payments, stay on page or navigate to pending page
+        // TODO: Implement payment status polling
+        console.log('Payment pending, implement status polling');
+      }
     } else {
-      // For openInvoice and redirect, user will return after payment
-      // We should poll payment status or handle callback
-      // TODO: Implement payment status polling in Phase 4
+      // Payment failed or cancelled
+      console.error('[Payment Flow] Payment action failed:', {
+        status: result.status,
+        error: result.error,
+        paymentId: payment.id,
+        bookingId: payment.bookingId,
+      });
+
+      // Error will be shown in UI via setPaymentError in parent function
     }
   };
 

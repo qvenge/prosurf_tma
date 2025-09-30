@@ -7,7 +7,7 @@ import { Trainings } from '@/pages/trainings';
 import { TrainingPage } from '@/pages/training';
 import { Profile } from '@/pages/profile';
 import { PaymentPage } from '@/pages/payment';
-import { BookingPage } from '@/pages/booking';
+import { PaymentSuccessPage } from '@/pages/payment-success';
 import { EventsPage } from '@/pages/events';
 import { EventSessionPage } from '@/pages/event-session';
 import { MyBookings } from '@/pages/my-bookings';
@@ -50,8 +50,8 @@ export const router = createBrowserRouter([
             handle: { bottomBar: { visible: false } },
           },
           {
-            path: 'sessions/:trainingId/booked',
-            Component: BookingPage,
+            path: ':bookingId/payment-success',
+            Component: PaymentSuccessPage,
             handle: { bottomBar: { visible: false } },
           },
         ],

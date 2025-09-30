@@ -1,10 +1,9 @@
 import { Link } from '@/shared/navigation';
 import { Icon, Button } from '@/shared/ui';
 import { CheckCircleFill } from '@/shared/ds/icons';
-import styles from './Booking.module.scss';
+import styles from './PaymentSuccessPage.module.scss';
 
-export function BookingPage() {
-
+export function PaymentSuccessPage() {
   return (
     <div className={styles.wrapper}>
       <Icon

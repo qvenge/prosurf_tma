@@ -7,6 +7,10 @@
 
   width: 100%;
   margin: 0;
+  padding-top: calc(var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top));
+}
+
+.withImages {
   padding-top: var(--tg-safe-area-inset-top);
 }
 
@@ -21,12 +25,12 @@
   @include ds.typo('Roboto/Title 1/Bold');
   display: block;
   margin: 0;
-  margin-top: calc(20px + var(--tg-content-safe-area-inset-top));
+  margin-top: 20px;
   padding: 0 var(--outer-horizontal-padding);
   color: ds.color('Text/Primary');
 }
 
-.imageSlider + .title {
+.withImages .title {
   margin-top: 24px;
 }
 

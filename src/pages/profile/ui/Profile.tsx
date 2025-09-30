@@ -19,6 +19,7 @@ import { useCurrentUserSeasonTickets } from '@/shared/api/hooks/season-tickets';
 import { useBookings } from '@/shared/api/hooks/bookings';
 import { useCurrentUserWaitlist } from '@/shared/api/hooks/waitlist';
 import type { BookingExtended } from '@/shared/api/types';
+import { PageLayout } from '@/widgets/page-layout';
 
 export const Profile = () => {
   // Fetch user profile
@@ -157,124 +158,126 @@ export const Profile = () => {
   }
 
   return (
-    <div className={styles.wrapper}>
-      {/* Profile Header */}
-      <div className={styles.header}>
-        <div className={styles.avatar}>
-          {user.photoUrl ? (<img
-            src={user.photoUrl}
-            alt="Profile avatar"
-            className={styles.avatarImage}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              target.parentElement!.style.backgroundColor = '#4A5568';
-            }}
-          />) : (
-          <div className={styles.avatarFallback}>
-            <Icon
-              src={UserBold}
-              width={24}
-              height={24}
-              className={styles.avatarIcon}
-            />
-          </div>
-        )}</div>
-        
-        <div className={styles.userInfo}>
-          <div className={styles.name}>{user.firstName} {user.lastName}</div>
-          <div className={styles.phone}>{user.phone}</div>
-          <div className={styles.email}>{user.email}</div>
-
-          <button className={styles.editButton}>
-            <Icon 
-              src={PencilSimpleBold} 
-              width={24} 
-              height={24} 
-              className={styles.editIcon}
-            />
-          </button>
-        </div>
-
-
-        {/* Status Badge */}
-        <div className={styles.statusBadge}>
-          <Icon 
-            src={StarFill} 
-            width={18} 
-            height={18} 
-            className={styles.starIcon}
-          />
-          Серебряный серфер
-          <Icon 
-            src={CaretRightBold} 
-            width={16} 
-            height={16} 
-            className={styles.chevron}
-          />
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className={styles.statsSection}>
-        {!isCashbackLoading && cashbackData?.balance && cashbackData.balance.amountMinor > 0 && (
-          <div className={styles.statItem}>
-            <div className={styles.statLabel}>Кэшбек</div>
-            <div className={styles.statValue}>{Math.floor(cashbackData.balance.amountMinor / 100)} {cashbackData.balance.currency === 'RUB' ? '₽' : '$'}</div>
-          </div>
-        )}
-        {!isSeasonTicketsLoading && activeSubscriptionCount > 0 && (
-          <div className={styles.statItem}>
-            <div className={styles.statLabel}>Абонемент</div>
-            <div className={styles.statValue}>{activeSubscriptionCount}</div>
-          </div>
-        )}
-        {!isCertificatesLoading && firstCertificate && firstCertificate.type === 'denomination' && (
-          <div className={styles.statItem}>
-            <div className={styles.statLabel}>Сертификат</div>
-            <div className={styles.statValue}>
-              {'amount' in firstCertificate.data ? `${Math.floor(firstCertificate.data.amount.amountMinor / 100)} ${firstCertificate.data.amount.currency === 'RUB' ? '₽' : '$'}` : ''}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Menu Items */}
-      <div className={styles.menuSection}>{menuItems.map((item, index) => (
-        <Link key={index} to={item.href}   style={{textDecoration: 'none', color: 'inherit'}} >
-          <div key={index} className={styles.menuItem}>
-            <span className={styles.menuIcon}>
-              <Icon 
-                src={item.icon} 
-                width={20} 
-                height={20} 
-                className={styles.calendarIcon}
+    <PageLayout>
+      <div className={styles.wrapper}>
+        {/* Profile Header */}
+        <div className={styles.header}>
+          <div className={styles.avatar}>
+            {user.photoUrl ? (<img
+              src={user.photoUrl}
+              alt="Profile avatar"
+              className={styles.avatarImage}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.parentElement!.style.backgroundColor = '#4A5568';
+              }}
+            />) : (
+            <div className={styles.avatarFallback}>
+              <Icon
+                src={UserBold}
+                width={24}
+                height={24}
+                className={styles.avatarIcon}
               />
-            </span>
-            <div className={styles.menuContent}>
-              <div className={styles.menuTitle}>{item.title}</div>
-              <div className={styles.menuSubtitle}>{item.subtitle}</div>
             </div>
+          )}</div>
+          
+          <div className={styles.userInfo}>
+            <div className={styles.name}>{user.firstName} {user.lastName}</div>
+            <div className={styles.phone}>{user.phone}</div>
+            <div className={styles.email}>{user.email}</div>
+
+            <button className={styles.editButton}>
+              <Icon 
+                src={PencilSimpleBold} 
+                width={24} 
+                height={24} 
+                className={styles.editIcon}
+              />
+            </button>
+          </div>
+
+
+          {/* Status Badge */}
+          <div className={styles.statusBadge}>
+            <Icon 
+              src={StarFill} 
+              width={18} 
+              height={18} 
+              className={styles.starIcon}
+            />
+            Серебряный серфер
             <Icon 
               src={CaretRightBold} 
-              width={20} 
-              height={20} 
+              width={16} 
+              height={16} 
               className={styles.chevron}
             />
           </div>
-        </Link>
-      ))}</div>
+        </div>
 
-      {/* Footer Links */}
-      <div className={styles.footerLinks}>
-        <div className={styles.divider} />
-        <div className={styles.footerLink}>Правила оплаты</div>
-        <div className={styles.footerLink}>Правила отмены и возврата</div>
-        <div className={styles.footerLink}>Договор офферта</div>
-        <div className={styles.footerLink}>Техника безопасности</div>
-        <div className={styles.divider} />
-        <div className={styles.footerLink}>Разработка приложения: @yalbakov</div>
+        {/* Stats Section */}
+        <div className={styles.statsSection}>
+          {!isCashbackLoading && cashbackData?.balance && (
+            <div className={styles.statItem}>
+              <div className={styles.statLabel}>Кэшбек</div>
+              <div className={styles.statValue}>{Math.floor(cashbackData.balance.amountMinor / 100)} {cashbackData.balance.currency === 'RUB' ? '₽' : '$'}</div>
+            </div>
+          )}
+          {!isSeasonTicketsLoading && activeSubscriptionCount > 0 && (
+            <div className={styles.statItem}>
+              <div className={styles.statLabel}>Абонемент</div>
+              <div className={styles.statValue}>{activeSubscriptionCount}</div>
+            </div>
+          )}
+          {!isCertificatesLoading && firstCertificate && firstCertificate.type === 'denomination' && (
+            <div className={styles.statItem}>
+              <div className={styles.statLabel}>Сертификат</div>
+              <div className={styles.statValue}>
+                {'amount' in firstCertificate.data ? `${Math.floor(firstCertificate.data.amount.amountMinor / 100)} ${firstCertificate.data.amount.currency === 'RUB' ? '₽' : '$'}` : ''}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Menu Items */}
+        <div className={styles.menuSection}>{menuItems.map((item, index) => (
+          <Link key={index} to={item.href}   style={{textDecoration: 'none', color: 'inherit'}} >
+            <div key={index} className={styles.menuItem}>
+              <span className={styles.menuIcon}>
+                <Icon 
+                  src={item.icon} 
+                  width={20} 
+                  height={20} 
+                  className={styles.calendarIcon}
+                />
+              </span>
+              <div className={styles.menuContent}>
+                <div className={styles.menuTitle}>{item.title}</div>
+                <div className={styles.menuSubtitle}>{item.subtitle}</div>
+              </div>
+              <Icon 
+                src={CaretRightBold} 
+                width={20} 
+                height={20} 
+                className={styles.chevron}
+              />
+            </div>
+          </Link>
+        ))}</div>
+
+        {/* Footer Links */}
+        <div className={styles.footerLinks}>
+          <div className={styles.divider} />
+          <div className={styles.footerLink}>Правила оплаты</div>
+          <div className={styles.footerLink}>Правила отмены и возврата</div>
+          <div className={styles.footerLink}>Договор офферта</div>
+          <div className={styles.footerLink}>Техника безопасности</div>
+          <div className={styles.divider} />
+          <div className={styles.footerLink}>Разработка приложения: @yalbakov</div>
+        </div>
       </div>
-    </div>
+    </PageLayout>
   );
 };

@@ -55,6 +55,31 @@ export const isProviderUnavailableError = (error: unknown): boolean => {
   return isApiError(error) && error.error.code === 'PROVIDER_UNAVAILABLE';
 };
 
+// Payment-specific error type guards
+export const isInvoiceCreationFailedError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'INVOICE_CREATION_FAILED';
+};
+
+export const isInvoicePaymentFailedError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'INVOICE_PAYMENT_FAILED';
+};
+
+export const isInvoiceCancelledError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'INVOICE_CANCELLED';
+};
+
+export const isPaymentProviderError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'PAYMENT_PROVIDER_ERROR';
+};
+
+export const isInvalidCurrencyError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'INVALID_CURRENCY';
+};
+
+export const isPaymentTimeoutError = (error: unknown): boolean => {
+  return isApiError(error) && error.error.code === 'PAYMENT_TIMEOUT';
+};
+
 // Error message extraction
 export const getErrorMessage = (error: unknown): string => {
   if (isApiError(error)) {
@@ -97,6 +122,13 @@ const ERROR_MESSAGES: Record<ApiError['code'], string> = {
   INVALID_EMAIL: 'Неверный формат email.',
   HAS_ACTIVE_BOOKINGS: 'У пользователя есть активные бронирования.',
   HAS_ACTIVE_SESSIONS: 'У пользователя есть активные сессии.',
+  // Payment-specific error messages
+  INVOICE_CREATION_FAILED: 'Не удалось создать счёт для оплаты. Попробуйте позже.',
+  INVOICE_PAYMENT_FAILED: 'Платёж был отклонён. Проверьте данные карты или используйте другой способ оплаты.',
+  INVOICE_CANCELLED: 'Вы отменили платёж. Попробуйте снова, если это было сделано случайно.',
+  PAYMENT_PROVIDER_ERROR: 'Ошибка настройки платёжной системы. Свяжитесь с поддержкой.',
+  INVALID_CURRENCY: 'Выбранный способ оплаты не поддерживает данную валюту. Попробуйте другой способ.',
+  PAYMENT_TIMEOUT: 'Время ожидания платежа истекло. Попробуйте снова.',
 };
 
 export const getUserFriendlyErrorMessage = (error: unknown): string => {
@@ -223,6 +255,13 @@ export const useErrorHandler = () => {
     isAmountMismatchError,
     isDuplicatePaymentError,
     isProviderUnavailableError,
+    // Payment-specific error type guards
+    isInvoiceCreationFailedError,
+    isInvoicePaymentFailedError,
+    isInvoiceCancelledError,
+    isPaymentProviderError,
+    isInvalidCurrencyError,
+    isPaymentTimeoutError,
     getErrorMessage,
     getUserFriendlyErrorMessage,
     shouldRetry,

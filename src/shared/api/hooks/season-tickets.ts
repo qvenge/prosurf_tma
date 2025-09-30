@@ -81,8 +81,8 @@ export const useCurrentUserSeasonTickets = () => {
   const userId = auth.user?.id;
 
   return useQuery({
-    queryKey: seasonTicketsKeys.ticketsList({ userId: userId! }),
-    queryFn: () => seasonTicketsClient.getSeasonTickets({ userId: userId! }),
+    queryKey: seasonTicketsKeys.ticketsList(),
+    queryFn: () => seasonTicketsClient.getSeasonTickets(),
     enabled: Boolean(userId),
     staleTime: 5 * 60 * 1000,
     select: (data) => data.items, // Extract items array from PaginatedResponse

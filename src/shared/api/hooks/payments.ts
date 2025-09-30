@@ -107,37 +107,277 @@ export const usePaymentPolling = (paymentId: string, enabled: boolean = false) =
 
 // Hook for handling payment next actions
 export const usePaymentActions = () => {
-  const handlePaymentAction = async (payment: Payment): Promise<void> => {
+  const handlePaymentAction = async (payment: Payment): Promise<{
+    success: boolean;
+    status: 'paid' | 'cancelled' | 'failed' | 'pending' | 'none' | string;
+    error?: string;
+  }> => {
+    const { paymentLogger } = await import('@/shared/lib/payment-logger');
+    const { paymentDebugger } = await import('../utils/payment-debugger');
+
+    // Log payment response received
+    paymentDebugger.logPaymentResponse(payment);
+
     if (!payment.nextAction) {
-      return;
+      paymentLogger.log({
+        eventType: 'payment_completed',
+        paymentId: payment.id,
+        bookingId: payment.bookingId,
+        amount: payment.amount.amountMinor,
+        currency: payment.amount.currency,
+        metadata: { nextActionType: 'none' },
+      });
+
+      return {
+        success: true,
+        status: 'none',
+      };
     }
 
     switch (payment.nextAction.type) {
-      case 'openInvoice':
+      case 'openInvoice': {
         // For Telegram Mini App
         try {
           const isTelegram = await telegramUtils.isTelegramEnv();
-          if (isTelegram) {
-            const result = await telegramUtils.openInvoice(payment.nextAction.slugOrUrl);
-            console.log('Invoice result:', result);
-          } else {
-            console.warn('Not in Telegram environment, cannot open invoice');
+
+          if (!isTelegram) {
+            const errorMsg = 'Not in Telegram environment, cannot open invoice';
+            console.warn(errorMsg);
+
+            paymentLogger.logError({
+              error: errorMsg,
+              context: 'handlePaymentAction.openInvoice',
+              paymentId: payment.id,
+              bookingId: payment.bookingId,
+            });
+
+            return {
+              success: false,
+              status: 'failed',
+              error: errorMsg,
+            };
+          }
+
+          const slug = payment.nextAction.slugOrUrl;
+
+          paymentLogger.logInvoiceOpening({
+            paymentId: payment.id,
+            bookingId: payment.bookingId,
+            slug,
+          });
+
+          paymentDebugger.updateContext({
+            metadata: { invoiceSlug: slug },
+          });
+
+          const result = await telegramUtils.openInvoice(slug);
+
+          // Log detailed invoice status
+          paymentLogger.logInvoiceStatus({
+            paymentId: payment.id,
+            status: result,
+            metadata: {
+              slug,
+              provider: payment.provider,
+              amount: payment.amount.amountMinor,
+              currency: payment.amount.currency,
+            },
+          });
+
+          paymentDebugger.logInvoiceStatus(result, {
+            slug,
+            provider: payment.provider,
+            amount: payment.amount.amountMinor,
+            currency: payment.amount.currency,
+          });
+
+          // Handle different invoice statuses
+          switch (result) {
+            case 'paid':
+              return {
+                success: true,
+                status: 'paid',
+              };
+
+            case 'cancelled':
+              paymentLogger.logPaymentCancelled({
+                paymentId: payment.id,
+                bookingId: payment.bookingId,
+                reason: 'User cancelled invoice',
+              });
+
+              return {
+                success: false,
+                status: 'cancelled',
+              };
+
+            case 'failed': {
+              const failureMsg = `Invoice payment failed. This usually means:
+1. Payment provider not configured in BotFather
+2. Currency (${payment.amount.currency}) not supported by provider (${payment.provider || 'unknown'})
+3. Invalid payment credentials
+4. Card declined or insufficient funds`;
+
+              paymentLogger.logPaymentFailed({
+                paymentId: payment.id,
+                bookingId: payment.bookingId,
+                error: failureMsg,
+                metadata: {
+                  invoiceStatus: result,
+                  provider: payment.provider,
+                  currency: payment.amount.currency,
+                  amount: payment.amount.amountMinor,
+                  slug,
+                },
+              });
+
+              console.error('[Payment Failed]', {
+                paymentId: payment.id,
+                bookingId: payment.bookingId,
+                status: result,
+                provider: payment.provider,
+                currency: payment.amount.currency,
+                amount: `${payment.amount.amountMinor / 100} ${payment.amount.currency}`,
+                slug,
+                troubleshooting: {
+                  step1: 'Check BotFather payment provider configuration',
+                  step2: `Verify ${payment.amount.currency} is supported by ${payment.provider || 'your provider'}`,
+                  step3: 'Check backend logs for invoice creation errors',
+                  step4: 'Verify payment provider credentials',
+                },
+              });
+
+              return {
+                success: false,
+                status: 'failed',
+                error: failureMsg,
+              };
+            }
+
+            case 'pending':
+              paymentLogger.log({
+                eventType: 'invoice_status_received',
+                paymentId: payment.id,
+                status: 'pending',
+                metadata: { note: 'Payment still in progress' },
+              });
+
+              return {
+                success: false,
+                status: 'pending',
+              };
+
+            default:
+              paymentLogger.logError({
+                error: `Unknown invoice status: ${result}`,
+                context: 'handlePaymentAction.openInvoice',
+                paymentId: payment.id,
+                bookingId: payment.bookingId,
+                metadata: { unknownStatus: result },
+              });
+
+              return {
+                success: false,
+                status: result,
+                error: `Unknown status: ${result}`,
+              };
           }
         } catch (error) {
-          console.error('Failed to open invoice:', error);
+          const errorMsg = error instanceof Error ? error.message : String(error);
+
+          console.error('[Payment Error] Failed to open invoice:', {
+            paymentId: payment.id,
+            bookingId: payment.bookingId,
+            error: errorMsg,
+            provider: payment.provider,
+          });
+
+          paymentLogger.logError({
+            error: error as Error | string,
+            context: 'handlePaymentAction.openInvoice.exception',
+            paymentId: payment.id,
+            bookingId: payment.bookingId,
+          });
+
+          return {
+            success: false,
+            status: 'failed',
+            error: errorMsg,
+          };
         }
-        break;
+      }
 
       case 'redirect':
         // For external payment providers
-        if (typeof window !== 'undefined') {
-          window.open(payment.nextAction.url, '_blank');
+        try {
+          if (typeof window !== 'undefined') {
+            paymentLogger.log({
+              eventType: 'payment_api_response',
+              paymentId: payment.id,
+              bookingId: payment.bookingId,
+              status: 'redirect',
+              amount: payment.amount.amountMinor,
+              currency: payment.amount.currency,
+              metadata: { redirectUrl: payment.nextAction.url },
+            });
+
+            window.open(payment.nextAction.url, '_blank');
+
+            return {
+              success: true,
+              status: 'pending',
+            };
+          }
+
+          return {
+            success: false,
+            status: 'failed',
+            error: 'Window is not available for redirect',
+          };
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+
+          paymentLogger.logError({
+            error: error as Error | string,
+            context: 'handlePaymentAction.redirect',
+            paymentId: payment.id,
+            bookingId: payment.bookingId,
+          });
+
+          return {
+            success: false,
+            status: 'failed',
+            error: errorMsg,
+          };
         }
-        break;
 
       case 'none':
-        // Payment completed, no action needed
-        break;
+        // Payment completed immediately (e.g., full cashback or certificate)
+        paymentLogger.logPaymentCompleted({
+          paymentId: payment.id,
+          bookingId: payment.bookingId,
+          amount: payment.amount.amountMinor,
+          currency: payment.amount.currency,
+        });
+
+        return {
+          success: true,
+          status: 'none',
+        };
+
+      default:
+        paymentLogger.logError({
+          error: `Unknown next action type: ${(payment.nextAction as { type: string }).type}`,
+          context: 'handlePaymentAction',
+          paymentId: payment.id,
+          bookingId: payment.bookingId,
+        });
+
+        return {
+          success: false,
+          status: 'failed',
+          error: 'Unknown payment action type',
+        };
     }
   };
 

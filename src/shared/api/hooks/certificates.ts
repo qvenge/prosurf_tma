@@ -43,8 +43,8 @@ export const useCurrentUserCertificates = () => {
   const userId = auth.user?.id;
 
   return useQuery({
-    queryKey: certificatesKeys.list({ userId: userId! }),
-    queryFn: () => certificatesClient.getCertificates({ userId: userId! }),
+    queryKey: certificatesKeys.list(),
+    queryFn: () => certificatesClient.getCertificates(),
     enabled: Boolean(userId),
     staleTime: 5 * 60 * 1000,
   });

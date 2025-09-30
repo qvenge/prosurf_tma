@@ -72,25 +72,43 @@ export const TrainingPage = () => {
     navigate(`/trainings/sessions/${trainingId}/payment`);
   }, [trainingId, navigate]);
 
-  const bookingButton = useMemo(() => (
-    <div className={styles.bookingButtonWrapper}>
-      <Button
-        size='l'
-        mode='primary'
-        stretched={true}
-        loading={subscriptionsLoading}
-        disabled={!session}
-        onClick={handleBookingClick}
-      >
-        Записаться
-      </Button>
+  const bottomBarContent = useMemo(() => (
+    <div className={styles.bottomBarContent}>
+      {session?.hasBooking ? (
+        <div>Вы уже записаны 🤟</div>
+      ) : (session?.remainingSeats === 0 ? (
+        <>
+          <Button
+            size='l'
+            mode='secondary'
+            stretched={true}
+            loading={false}
+            disabled={true}
+            onClick={() => alert('Функция добавления в лист ожидания пока не реализована.')}
+          >
+            В лист ожидания
+          </Button>
+          <div>Мест нет 😔</div>
+        </>
+      ) : (
+        <Button
+          size='l'
+          mode='primary'
+          stretched={true}
+          loading={subscriptionsLoading}
+          disabled={!session}
+          onClick={handleBookingClick}
+        >
+          Записаться
+        </Button>
+      ))}
     </div>
   ), [subscriptionsLoading, session, handleBookingClick]);
 
   useEffect(() => {
-    setOverride(bookingButton);
+    setOverride(bottomBarContent);
     return () => setOverride(null);
-  }, [setOverride, bookingButton]);
+  }, [setOverride, bottomBarContent]);
 
   useEffect(() => {
     if (modalOpen) {
@@ -205,6 +223,17 @@ export const TrainingPage = () => {
             </div>
           </div>
         ))}
+
+        {session.hasBooking && (
+          <Button
+            style={{ marginTop: -32 }}
+            size='l'
+            mode='secondary'
+            stretched={true}
+          >
+            Отменить запись
+          </Button>
+        )}
       </div>
     </PageLayout>
   );

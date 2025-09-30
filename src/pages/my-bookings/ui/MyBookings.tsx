@@ -1,18 +1,53 @@
 import { useState } from 'react';
 import { EmptyListStub, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
-import { useBookings, type Booking } from '@/shared/api'
+import { useBookings, type BookingExtended } from '@/shared/api'
 import { formatEventDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
 
 type BookingsByDay = Array<{ day: string; items: BookingCardProps['data'][]}>;
 
-const transformBookingToCardData = (booking: Booking): BookingCardProps['data'] => {
-  // TODO: Need to fetch session data separately to display full information
-  // For now, using placeholder data
+const labels = {
+  trainings: ['training:surfing', 'training:wakeboarding', 'training:surfskate'],
+  events: ['tour', 'activity']
+};
+
+const transformBookingToCardData = (booking: BookingExtended): BookingCardProps['data'] => {
+  if ('session' in booking && booking.session) {
+    const formatSessionDurationOrYear = (startsAt?: string, endsAt?: string | null): string | undefined => {
+      if (!startsAt || !endsAt) return undefined;
+      const start = new Date(startsAt);
+      const end = new Date(endsAt);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return undefined;
+      const diff = end.getTime() - start.getTime();
+      if (diff < 0) return undefined;
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      if (diff < DAY_MS) {
+        const hours = Math.floor(diff / (60 * 60 * 1000));
+        const minutes = Math.round((diff % (60 * 60 * 1000)) / (60 * 1000));
+        const parts: string[] = [];
+        if (hours) parts.push(`${hours} ч`);
+        if (minutes) parts.push(`${minutes} мин`);
+        return parts.length ? parts.join(' ') : '0 мин';
+      }
+      return `${start.getFullYear()} г`;
+    };
+
+    const rightBottomInner = formatSessionDurationOrYear(booking.session.startsAt, booking.session.endsAt);
+
+    return {
+      labels: booking.session.labels ?? undefined,
+      eventTitle: booking.session.event.title,
+      eventLocation: booking.session.event.location || 'Локация не указана',
+      rightTopInner: formatTime(booking.session.startsAt),
+      rightBottomInner
+    };
+  }
+  
+  // Fallback for bookings without session data
   return {
-    type: 'other',
+    labels: ['other'],
     eventTitle: `Booking ${booking.id}`,
     eventLocation: 'Location TBD',
     rightTopInner: booking.createdAt ? formatTime(booking.createdAt) : undefined,
@@ -20,7 +55,7 @@ const transformBookingToCardData = (booking: Booking): BookingCardProps['data'] 
   };
 };
 
-const groupBookingsByDate = (bookings: Booking[]): BookingsByDay => {
+const groupBookingsByDate = (bookings: BookingExtended[]): BookingsByDay => {
   const grouped = bookings.reduce((acc, booking) => {
     const dateKey = formatEventDate(booking.createdAt);
     if (!acc[dateKey]) {
@@ -38,24 +73,13 @@ export function MyBookings() {
   
   // const sessionStartFrom = useMemo(() => new Date().toISOString(), []); // TODO: Use when needed
   
-  const { data, isLoading, error } = useBookings();
-  const bookings = data?.items || [];
-  
-  // TODO: Need to fetch session data to properly filter bookings by type
-  // For now, showing all bookings in both tabs
-  const trainingBookings = bookings.filter((booking: Booking) => 
-    booking.status === 'CONFIRMED'
-  );
-  
-  const eventBookings = bookings.filter((booking: Booking) => 
-    booking.status === 'CONFIRMED'
-  );
-  
-  const trainings = groupBookingsByDate(trainingBookings);
-  const events = groupBookingsByDate(eventBookings);
-  
-  const items = selectedTab === 'trainings' ? trainings : events;
-  
+  const { data, isLoading, error } = useBookings({
+    includeSession: true,
+    status: ['CONFIRMED'],
+    'labels.any': labels[selectedTab]
+  });
+  const items = groupBookingsByDate(data?.items || []);
+
   if (isLoading) {
     return (
       <PageLayout title="Мои записи">
