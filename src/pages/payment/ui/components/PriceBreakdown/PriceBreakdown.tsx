@@ -1,3 +1,4 @@
+import type { SeasonTicketPlan } from '@/shared/api';
 import { formatPrice, getEventTypeLabel } from '../../../lib/helpers';
 import { PAYMENT_CONSTANTS } from '../../../lib/constants';
 import type { ProductType, EventType } from '../../../model/types';
@@ -5,11 +6,7 @@ import styles from './PriceBreakdown.module.scss';
 
 interface PriceBreakdownProps {
   product: ProductType;
-  selectedPlan?: {
-    id: string;
-    name: string;
-    priceMinor: number;
-  };
+  selectedPlan?: SeasonTicketPlan;
   session: {
     title: string;
     type: EventType;

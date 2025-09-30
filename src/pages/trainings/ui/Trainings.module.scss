@@ -1,13 +1,12 @@
 .wrapper {
-  --outer-horizontal-padding: 16px;
-
   display: flex;
   flex-direction: column;
   gap: 32px;
   width: 100%;
   margin: 0 auto;
 
-  padding-bottom: 70px;
+  padding-top: 32px;
+  padding-bottom: 50px;
   min-height: 100%;
 }
 

@@ -254,6 +254,8 @@ export interface TelegramWebApp {
   setBackgroundColor(color: 'bg_color' | 'secondary_bg_color' | string): void;
   enableClosingConfirmation(): void;
   disableClosingConfirmation(): void;
+  disableVerticalSwipes(): void;
+  enableVerticalSwipes(): void;
   isVersionAtLeast(version: string): boolean;
   ready(): void;
   expand(): void;
@@ -912,6 +914,26 @@ export const telegramUtils = {
 
       webApp.showPopup(params, (buttonId) => resolve(buttonId));
     });
+  },
+
+  /**
+   * Disable vertical swipes to prevent app closure (requires v7.7+)
+   */
+  disableVerticalSwipes: (): void => {
+    const webApp = window.Telegram?.WebApp;
+    if (webApp?.disableVerticalSwipes && webApp.isVersionAtLeast('7.7')) {
+      webApp.disableVerticalSwipes();
+    }
+  },
+
+  /**
+   * Enable vertical swipes (requires v7.7+)
+   */
+  enableVerticalSwipes: (): void => {
+    const webApp = window.Telegram?.WebApp;
+    if (webApp?.enableVerticalSwipes && webApp.isVersionAtLeast('7.7')) {
+      webApp.enableVerticalSwipes();
+    }
   }
 };
 

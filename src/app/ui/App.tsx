@@ -22,17 +22,10 @@ export function App() {
     enableDebug: process.env.NODE_ENV === 'development',
   });
 
-  useEffect(() => {
 
-    const tg = window.Telegram?.WebApp;
-    tg?.ready(); // на iOS помогает корректно «показать» WebApp
-    console.log('platform:', tg?.platform);
-    console.log('version:', tg?.version);
-    console.log('initData:', tg?.initData);
-    console.log('initDataUnsafe:', tg?.initDataUnsafe);
+  useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('initializeAuth', telegramApp.isInTelegram, telegramApp.isReady, auth.isAuthenticated)
         // Wait for Telegram app to be ready
         if (!telegramApp.isReady) {
           return; // Keep waiting
@@ -54,8 +47,7 @@ export function App() {
         // If not authenticated and auth is not loading, try Telegram auto-login
         if (!auth.isAuthenticated && !auth.isLoading) {
           const initData = telegramUtils.getInitDataRaw();
-          console.log('window.Telegram.WebApp', window.Telegram?.WebApp);
-          // console.log('initData', initData);
+
           if (initData) {
             const result = await telegramAutoLogin.mutateAsync(initData);
             if (result) {
@@ -78,7 +70,21 @@ export function App() {
     };
 
     initializeAuth();
-  }, [telegramApp.isInTelegram, telegramApp.isReady, auth.isAuthenticated, auth.isLoading, telegramApp]);
+  }, [telegramApp.isInTelegram, telegramApp.isReady, auth.isAuthenticated, auth.isLoading, telegramApp, telegramAutoLogin]);
+
+  // Disable vertical swipes to prevent accidental app closure
+  useEffect(() => {
+    if (telegramApp.isReady && telegramApp.isInTelegram && telegramApp.webApp) {
+      const { webApp } = telegramApp;
+      // Check if the disableVerticalSwipes method is available (requires v7.7+)
+      if (webApp.disableVerticalSwipes && webApp.isVersionAtLeast('7.7')) {
+        console.log('Disabling vertical swipes to prevent accidental app closure');
+        webApp.disableVerticalSwipes();
+      } else {
+        console.log('disableVerticalSwipes not available - requires Telegram v7.7+');
+      }
+    }
+  }, [telegramApp.isReady, telegramApp.isInTelegram, telegramApp.webApp]);
 
   const handleNavbarHeightChange = (val: number) => {
     setNavbarHeight(val);

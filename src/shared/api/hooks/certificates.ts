@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { certificatesClient } from '../clients/certificates';
+import { useAuth } from '../auth';
 import type { Certificate, CertificateCreateDto, CertificateFilters, PaginatedResponse } from '../types';
 
 export const certificatesKeys = {
@@ -38,13 +39,9 @@ export const useCreateCertificate = () => {
 };
 
 export const useCurrentUserCertificates = () => {
-  const queryClient = useQueryClient();
-  const getCurrentUserId = (): string | null => {
-    const authData = queryClient.getQueryData(['auth', 'user', 'profile']) as { id?: string } | undefined;
-    return authData?.id || null;
-  };
+  const auth = useAuth();
+  const userId = auth.user?.id;
 
-  const userId = getCurrentUserId();
   return useQuery({
     queryKey: certificatesKeys.list({ userId: userId! }),
     queryFn: () => certificatesClient.getCertificates({ userId: userId! }),

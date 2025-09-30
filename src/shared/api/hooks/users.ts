@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { usersClient } from '../clients/users';
+import { useAuth } from '../auth';
 import type { User, UserUpdateDto, UserFilters, PaginatedResponse } from '../types';
 
 // Query key factory for users
@@ -76,35 +77,28 @@ export const useUserCashback = (userId: string) => {
 
 // Hook for current user profile management
 export const useCurrentUserProfile = () => {
+  const auth = useAuth();
   const queryClient = useQueryClient();
-  
-  // Get current user from auth context
-  const getCurrentUserId = (): string | null => {
-    // This would typically come from auth context
-    const authData = queryClient.getQueryData(['auth', 'user', 'profile']) as { id?: string } | undefined;
-    return authData?.id || null;
-  };
 
-  const userId = getCurrentUserId();
-  
-  const userQuery = useQuery({
-    queryKey: usersKeys.detail(userId!),
-    queryFn: () => usersClient.getUserById(userId!),
-    enabled: Boolean(userId),
-    staleTime: 5 * 60 * 1000,
-  });
+  // Get user directly from AuthContext (loaded from localStorage on init)
+  const userId = auth.user?.id;
 
   const updateMutation = useMutation({
-    mutationFn: (data: UserUpdateDto) => usersClient.updateUser(userId!, data),
+    mutationFn: (data: UserUpdateDto) => {
+      if (!userId) throw new Error('User not authenticated');
+      return usersClient.updateUser(userId, data);
+    },
     onSuccess: (updatedUser) => {
+      // Update both AuthContext and query cache
+      auth.updateUser(updatedUser);
       queryClient.setQueryData(usersKeys.detail(userId!), updatedUser);
     },
   });
 
   return {
-    user: userQuery.data,
-    isLoading: userQuery.isLoading,
-    error: userQuery.error,
+    user: auth.user,
+    isLoading: auth.isLoading,
+    error: null,
     updateUser: updateMutation.mutate,
     isUpdating: updateMutation.isPending,
     updateError: updateMutation.error,
@@ -113,15 +107,9 @@ export const useCurrentUserProfile = () => {
 
 // Hook for current user's cashback
 export const useCurrentUserCashback = () => {
-  const queryClient = useQueryClient();
-  
-  const getCurrentUserId = (): string | null => {
-    const authData = queryClient.getQueryData(['auth', 'user', 'profile']) as { id?: string } | undefined;
-    return authData?.id || null;
-  };
+  const auth = useAuth();
+  const userId = auth.user?.id;
 
-  const userId = getCurrentUserId();
-  
   return useQuery({
     queryKey: usersKeys.cashback(userId!),
     queryFn: () => usersClient.getUserCashback(userId!),

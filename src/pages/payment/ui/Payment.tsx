@@ -1,6 +1,11 @@
 import { useParams } from 'react-router';
 import { PageLayout } from '@/widgets/page-layout';
-import { useSession } from '@/shared/api';
+import {
+  useSession,
+  useCurrentUserProfile,
+  useCurrentUserCashback,
+  useSeasonTicketPlans
+} from '@/shared/api';
 import { usePaymentState, usePaymentProcessing, useInitialPlanSelection } from '../lib/hooks';
 import { calculatePrices } from '../lib/helpers';
 import { ERROR_MESSAGES } from '../lib/constants';
@@ -17,13 +22,19 @@ import styles from './Payment.module.scss';
 
 export function PaymentPage() {
   const { trainingId } = useParams<{ trainingId: string }>();
-  
+
   // Fetch data
   const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(trainingId!);
-  const subscriptionPlans: any[] = []; // TODO: Implement subscription plans API
-  const plansLoading = false;
-  const plansError = null;
-  const user = null; // TODO: Implement user profile API
+
+  // Fetch user profile
+  const { user, isLoading: userLoading } = useCurrentUserProfile();
+
+  // Fetch cashback balance
+  const { data: cashbackWallet, isLoading: cashbackLoading } = useCurrentUserCashback();
+
+  // Fetch season ticket plans
+  const { data: plansData, isLoading: plansLoading, error: plansError } = useSeasonTicketPlans();
+  const subscriptionPlans = plansData?.items || [];
   
   // State management
   const {
@@ -37,34 +48,37 @@ export function PaymentPage() {
     setPaymentError,
   } = usePaymentState();
   
+  // Calculate cashback value from wallet
+  const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
+
   // Payment processing
   const { processPayment, isProcessing } = usePaymentProcessing(
-    session as any || null, // TODO: Fix type mismatch
+    session || null,
     user || null,
     selectedPlanId,
-    product
+    product,
+    activeCashback,
+    cashbackValue
   );
   
   // Auto-select first plan when available
   useInitialPlanSelection(subscriptionPlans || [], selectedPlanId, updateSelectedPlan);
   
   // Calculate prices
-  const selectedPlan = subscriptionPlans?.find((plan: any) => plan.id === selectedPlanId);
-  const subscriptionPrice = selectedPlan ? selectedPlan.priceMinor : 0;
-  const sessionPrice = session && session.event?.tickets?.[0]?.prepayment?.price 
-    ? session.event.tickets[0].prepayment.price.amountMinor
-    : 0;
-  const cashbackValue = 20000; // Mock value - 200 rubles in kopecks
-  
+  const selectedPlan = subscriptionPlans.find((plan) => plan.id === selectedPlanId);
+  const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
+  const sessionPrice = session?.event?.tickets?.[0]?.prepayment?.price?.amountMinor || 0;
+
   const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
   const { finalPrice } = calculatePrices(originalPrice, cashbackValue, activeCashback);
   
   const handlePayment = () => {
+    console.log('BEFORE processPayment');
     processPayment(setPaymentError);
   };
 
   // Loading state
-  if (sessionLoading || plansLoading) {
+  if (sessionLoading || userLoading || cashbackLoading || plansLoading) {
     return <LoadingState />;
   }
 
@@ -102,7 +116,7 @@ export function PaymentPage() {
             subscriptionPrice={subscriptionPrice}
           />
 
-          {product === 'subscription' && subscriptionPlans && (
+          {product === 'subscription' && subscriptionPlans.length > 0 && (
             <SubscriptionPlans
               plans={subscriptionPlans}
               selectedPlanId={selectedPlanId}

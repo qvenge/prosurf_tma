@@ -1,15 +1,9 @@
 import clsx from 'clsx';
+import type { SeasonTicketPlan } from '@/shared/api';
 import styles from './SubscriptionPlans.module.scss';
 
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  sessionsTotal: number;
-  priceMinor: number;
-}
-
 interface SubscriptionPlansProps {
-  plans: SubscriptionPlan[];
+  plans: SeasonTicketPlan[];
   selectedPlanId: string;
   onPlanSelect: (planId: string) => void;
 }
@@ -24,7 +18,7 @@ export function SubscriptionPlans({ plans, selectedPlanId, onPlanSelect }: Subsc
             className={clsx(styles.amountItem, plan.id === selectedPlanId && styles['amountItem--active'])}
             onClick={() => onPlanSelect(plan.id)}
           >
-            <div className={styles.amountNumber}>{plan.sessionsTotal}</div>
+            <div className={styles.amountNumber}>{plan.passes}</div>
             <div className={styles.amountText}>Занятий</div>
           </div>
         ))}

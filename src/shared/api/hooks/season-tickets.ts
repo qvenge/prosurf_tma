@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { seasonTicketsClient } from '../clients/season-tickets';
-import type { 
-  SeasonTicketPlan, 
+import { useAuth } from '../auth';
+import type {
+  SeasonTicketPlan,
   SeasonTicketPlanUpdateDto,
   PaymentMethodRequest,
   SeasonTicketPlanFilters,
   SeasonTicketFilters,
-  IdempotencyKey 
+  IdempotencyKey
 } from '../types';
 
 export const seasonTicketsKeys = {
@@ -76,13 +77,9 @@ export const useSeasonTickets = (filters?: SeasonTicketFilters) => {
 };
 
 export const useCurrentUserSeasonTickets = () => {
-  const queryClient = useQueryClient();
-  const getCurrentUserId = (): string | null => {
-    const authData = queryClient.getQueryData(['auth', 'user', 'profile']) as { id?: string } | undefined;
-    return authData?.id || null;
-  };
+  const auth = useAuth();
+  const userId = auth.user?.id;
 
-  const userId = getCurrentUserId();
   return useQuery({
     queryKey: seasonTicketsKeys.ticketsList({ userId: userId! }),
     queryFn: () => seasonTicketsClient.getSeasonTickets({ userId: userId! }),

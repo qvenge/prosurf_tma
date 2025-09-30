@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { bookingsClient } from '../clients/bookings';
 import { sessionsKeys } from './sessions';
-import type { 
-  Booking, 
-  BookRequest, 
-  BookingFilters, 
+import { useAuth } from '../auth';
+import type {
+  Booking,
+  BookRequest,
+  BookingFilters,
   PaginatedResponse,
-  IdempotencyKey 
+  IdempotencyKey
 } from '../types';
 
 // Query key factory for bookings
@@ -128,18 +129,12 @@ export const useConfirmBooking = () => {
 
 // Hook for current user's bookings
 export const useCurrentUserBookings = () => {
-  const queryClient = useQueryClient();
-  
-  const getCurrentUserId = (): string | null => {
-    const authData = queryClient.getQueryData(['auth', 'user', 'profile']) as { id?: string } | undefined;
-    return authData?.id || null;
-  };
+  const auth = useAuth();
+  const userId = auth.user?.id;
 
-  const userId = getCurrentUserId();
-  
   return useQuery({
-    queryKey: bookingsKeys.list({ userId: userId! }),
-    queryFn: () => bookingsClient.getBookings({ userId: userId! }),
+    queryKey: bookingsKeys.list(),
+    queryFn: () => bookingsClient.getBookings(),
     enabled: Boolean(userId),
     staleTime: 1 * 60 * 1000,
   });

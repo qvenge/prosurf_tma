@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from '@/shared/navigation';
+import {
+  useBookSession,
+  useCreatePayment,
+  usePurchaseSeasonTicket,
+  useCurrentUserBookings,
+  usePaymentActions,
+  type Session,
+  type User,
+  type PaymentMethodRequest,
+  type Payment
+} from '@/shared/api';
 import { ERROR_MESSAGES } from './constants';
 import { createIdempotencyKey } from './helpers';
 import type { PaymentState, ProductType } from '../model/types';
@@ -37,48 +48,32 @@ export const usePaymentState = () => {
   };
 };
 
-interface Session {
-  id: string;
-  title: string;
-  type: 'surfingTraining' | 'surfskateTraining' | 'tour' | 'other';
-  location: string;
-  capacity: number;
-  start: string;
-  end: string | null;
-  price: { currency: 'RUB' | 'USD'; amount: string };
-  remainingSeats: number;
-  description: Array<{ heading: string; body: string }>;
-  bookingPrice?: { currency: 'RUB' | 'USD'; amount: string } | null;
-}
-
-interface User {
-  id: string;
-  telegramId: string;
-  email: string | null;
-  name: string | null;
-  username: string | null;
-  photoUrl: string | null;
-  role: 'USER' | 'ADMIN';
-  createdAt: string;
-}
-
 export const usePaymentProcessing = (
   session: Session | null,
   user: User | null,
   selectedPlanId: string,
-  product: ProductType
+  product: ProductType,
+  activeCashback: boolean,
+  cashbackAmount: number
 ) => {
   const navigate = useNavigate();
-  const createBooking = { mutateAsync: async (_params: any) => ({ id: 'mock-booking-id' }), isPending: false }; // TODO: Implement booking API
-  const purchaseSubscription = { mutateAsync: async (_params: any) => ({ checkoutUrl: 'mock-url' }), isPending: false }; // TODO: Implement subscription purchase API
-  const createPaymentIntent = { mutateAsync: async (_params: any) => ({ checkoutUrl: 'mock-url' }), isPending: false }; // TODO: Implement payment intent API
-  const userBookings: any[] = []; // TODO: Implement user bookings API
+
+  // Real API hooks
+  const bookSession = useBookSession();
+  const createPayment = useCreatePayment();
+  const purchaseSeasonTicket = usePurchaseSeasonTicket();
+  const { data: userBookingsData } = useCurrentUserBookings();
+  const { handlePaymentAction } = usePaymentActions();
+
+  const userBookings = userBookingsData?.items || [];
 
   const processPayment = async (setPaymentError: (error: string) => void) => {
     setPaymentError('');
+
+    console.log('USER', user)
     
     if (!user) {
-      navigate('/auth/login');
+      console.log('USER NOT FOUND')
       return;
     }
 
@@ -105,11 +100,18 @@ export const usePaymentProcessing = (
       return;
     }
 
-    const result = await purchaseSubscription.mutateAsync({
-      planId: selectedPlanId
+    // Build payment method request
+    const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest();
+
+    // Purchase season ticket with payment
+    const payment = await purchaseSeasonTicket.mutateAsync({
+      planId: selectedPlanId,
+      paymentMethod,
+      idempotencyKey: createIdempotencyKey(`plan-${selectedPlanId}`)
     });
 
-    await redirectToPayment(result, setPaymentError);
+    // Handle next action
+    await handlePaymentNextAction(payment);
   };
 
   const handleSessionPayment = async (setPaymentError: (error: string) => void) => {
@@ -118,8 +120,9 @@ export const usePaymentProcessing = (
       return;
     }
 
-    const existingBooking = userBookings?.find(
-      (booking: any) => booking.sessionId === session.id && booking.status === 'HOLD'
+    // Check for existing HOLD booking
+    const existingBooking = userBookings.find(
+      (booking) => booking.sessionId === session.id && booking.status === 'HOLD'
     );
 
     let bookingId: string;
@@ -128,41 +131,89 @@ export const usePaymentProcessing = (
       bookingId = existingBooking.id;
       console.log('Using existing booking:', bookingId);
     } else {
-      const booking = await createBooking.mutateAsync({
+      // Create new booking
+      const result = await bookSession.mutateAsync({
         sessionId: session.id,
+        data: { quantity: 1 }, // BookRequest: just quantity
         idempotencyKey: createIdempotencyKey(session.id)
       });
-      bookingId = booking.id;
+      bookingId = result.booking.id;
       console.log('Created new booking:', bookingId);
+
+      // TODO: Display hold TTL to user (result.holdTtlSeconds)
     }
 
-    const paymentResult = await createPaymentIntent.mutateAsync({
-      bookingId: bookingId,
-      method: 'PAYMENT'
+    // Build payment method request
+    const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest();
+
+    // Create payment for booking
+    const payment = await createPayment.mutateAsync({
+      bookingId,
+      data: paymentMethod,
+      idempotencyKey: createIdempotencyKey(`payment-${bookingId}`)
     });
 
-    await redirectToPayment(paymentResult, setPaymentError);
+    // Handle next action
+    await handlePaymentNextAction(payment);
   };
 
-  const redirectToPayment = async (result: { checkoutUrl?: string | null; clientSecret?: string | null }, setPaymentError: (error: string) => void) => {
-    if (result.checkoutUrl) {
-      window.location.href = result.checkoutUrl;
-    } else if (result.clientSecret) {
-      window.location.href = result.clientSecret;
+  // Build payment method request based on selected options
+  const buildPaymentMethodRequest = (): PaymentMethodRequest => {
+    // For now, support card with optional cashback
+    // TODO: Add certificate support in Phase 3
+
+    if (activeCashback && cashbackAmount > 0) {
+      // Use composite payment: cashback + card
+      // This will be refactored in Phase 3 to support CompositePaymentMethodRequest
+      // For now, just use card as the API will handle partial cashback
+      return {
+        method: 'card',
+        provider: 'telegram'
+      };
+    }
+
+    // Simple card payment
+    return {
+      method: 'card',
+      provider: 'telegram'
+    };
+  };
+
+  // Handle payment next action
+  const handlePaymentNextAction = async (payment: Payment) => {
+    if (!payment.nextAction) {
+      console.warn('No next action in payment response');
+      return;
+    }
+
+    await handlePaymentAction(payment);
+
+    // Navigate to success page after handling action
+    // The actual payment completion will be verified via webhook
+    if (payment.nextAction.type === 'none') {
+      // Payment completed immediately (e.g., full cashback or certificate)
+      navigate('/payment-success');
     } else {
-      setPaymentError(ERROR_MESSAGES.PAYMENT_CREATION_FAILED);
+      // For openInvoice and redirect, user will return after payment
+      // We should poll payment status or handle callback
+      // TODO: Implement payment status polling in Phase 4
     }
   };
 
   const handlePaymentError = async (error: unknown, setPaymentError: (error: string) => void) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
+
     if (errorMessage.includes('Authentication required')) {
-      navigate('/auth/login');
-    } else if (errorMessage.includes('already have an active booking')) {
-      await handleExistingBookingError(setPaymentError);
-    } else if (errorMessage.includes('no seats available')) {
+      console.log('Authentication required');
+      return;
+    } else if (errorMessage.includes('HOLD_EXPIRED')) {
+      setPaymentError('Время бронирования истекло. Пожалуйста, создайте новое бронирование.');
+    } else if (errorMessage.includes('NO_SEATS')) {
       setPaymentError(ERROR_MESSAGES.NO_SEATS_AVAILABLE);
+    } else if (errorMessage.includes('AMOUNT_MISMATCH')) {
+      setPaymentError('Несоответствие суммы платежа. Попробуйте снова.');
+    } else if (errorMessage.includes('PROVIDER_UNAVAILABLE')) {
+      setPaymentError('Платежная система временно недоступна. Попробуйте позже.');
     } else if (errorMessage.includes('not found')) {
       setPaymentError(ERROR_MESSAGES.TRAINING_NOT_FOUND);
     } else {
@@ -170,41 +221,16 @@ export const usePaymentProcessing = (
     }
   };
 
-  const handleExistingBookingError = async (setPaymentError: (error: string) => void) => {
-    const existingBooking = userBookings?.find(
-      (booking: any) => booking.sessionId === session?.id && booking.status === 'HOLD'
-    );
-    
-    if (existingBooking) {
-      try {
-        const paymentResult = await createPaymentIntent.mutateAsync({
-          bookingId: existingBooking.id,
-          method: 'PAYMENT'
-        });
-
-        await redirectToPayment(paymentResult, setPaymentError);
-        return;
-      } catch (paymentError) {
-        console.error('Failed to create payment for existing booking:', paymentError);
-      }
-    }
-    
-    setPaymentError(ERROR_MESSAGES.EXISTING_BOOKING);
-  };
-
-  const isProcessing = createBooking.isPending || purchaseSubscription.isPending || createPaymentIntent.isPending;
+  const isProcessing = bookSession.isPending || purchaseSeasonTicket.isPending || createPayment.isPending;
 
   return { processPayment, isProcessing };
 };
 
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  sessionsTotal: number;
-  priceMinor: number;
-}
-
-export const useInitialPlanSelection = (subscriptionPlans: SubscriptionPlan[], selectedPlanId: string, updateSelectedPlan: (id: string) => void) => {
+export const useInitialPlanSelection = (
+  subscriptionPlans: Array<{ id: string }>,
+  selectedPlanId: string,
+  updateSelectedPlan: (id: string) => void
+) => {
   useEffect(() => {
     if (subscriptionPlans && subscriptionPlans.length > 0 && !selectedPlanId) {
       updateSelectedPlan(subscriptionPlans[0].id);

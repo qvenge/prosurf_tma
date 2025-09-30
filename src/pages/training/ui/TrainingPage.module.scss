@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 65px;
   width: 100%;
-  padding-top: 16px;
+  padding: 16px var(--outer-horizontal-padding, 16px) 50px;
 }
 
 .wrapperItem + .wrapperItem {

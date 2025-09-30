@@ -128,7 +128,8 @@ export {
  *   applyTheme: true,
  *   enableDebug: true,
  *   autoExpand: true,
- *   enableHaptics: true
+ *   enableHaptics: true,
+ *   disableVerticalSwipes: true
  * });
  */
 export const initializeTelegramApp = async (options: {
@@ -136,6 +137,7 @@ export const initializeTelegramApp = async (options: {
   enableDebug?: boolean;
   autoExpand?: boolean;
   enableHaptics?: boolean;
+  disableVerticalSwipes?: boolean;
   readyCallback?: () => void;
 } = {}) => {
   const {
@@ -143,6 +145,7 @@ export const initializeTelegramApp = async (options: {
     enableDebug = false,
     autoExpand = false,
     // enableHaptics = false, // TODO: Implement haptics initialization
+    disableVerticalSwipes = false,
     readyCallback
   } = options;
 
@@ -183,6 +186,16 @@ export const initializeTelegramApp = async (options: {
     // Auto-expand if requested
     if (autoExpand) {
       webApp.expand();
+    }
+
+    // Disable vertical swipes if requested to prevent accidental app closure
+    if (disableVerticalSwipes && webApp.disableVerticalSwipes && webApp.isVersionAtLeast('7.7')) {
+      webApp.disableVerticalSwipes();
+      if (enableDebug) {
+        debugUtils.log('Vertical swipes disabled to prevent accidental app closure');
+      }
+    } else if (disableVerticalSwipes && enableDebug) {
+      debugUtils.warn('disableVerticalSwipes not available - requires Telegram v7.7+');
     }
 
     // Apply theme if requested
@@ -235,7 +248,8 @@ export const initializeTelegramApp = async (options: {
  * function MyApp() {
  *   const { webApp, isReady, isInTelegram, user } = useTelegramAppInit({
  *     applyTheme: true,
- *     autoExpand: true
+ *     autoExpand: true,
+ *     disableVerticalSwipes: true
  *   });
  *
  *   if (!isInTelegram) {

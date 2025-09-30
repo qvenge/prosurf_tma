@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
-  SecondaryButton
+  SecondaryButton,
+  TelegramWebApp
 } from './telegram-sdk';
 
 /**
@@ -497,31 +498,36 @@ export const useTelegramSecondaryButton = () => {
  */
 export const useTelegramSwipeBehavior = () => {
   const [isVerticalSwipesEnabled, setIsVerticalSwipesEnabled] = useState(true);
-  const webApp = useMemo(() => window.Telegram?.WebApp, []);
-  const swipeBehavior = useMemo(() => webApp?.SwipeBehavior, [webApp]);
+  const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
 
   useEffect(() => {
-    if (webApp) {
-      setIsVerticalSwipesEnabled(webApp.isVerticalSwipesEnabled);
+    const app = window.Telegram?.WebApp;
+    if (app) {
+      setWebApp(app);
+      setIsVerticalSwipesEnabled(app.isVerticalSwipesEnabled);
+    }
+  }, []);
+
+  const disableVerticalSwipe = useCallback(() => {
+    if (webApp?.disableVerticalSwipes && webApp.isVersionAtLeast('7.7')) {
+      webApp.disableVerticalSwipes();
+      setIsVerticalSwipesEnabled(false);
     }
   }, [webApp]);
 
-  const disableVerticalSwipe = useCallback(() => {
-    swipeBehavior?.disableVerticalSwipe();
-    setIsVerticalSwipesEnabled(false);
-  }, [swipeBehavior]);
-
   const enableVerticalSwipe = useCallback(() => {
-    swipeBehavior?.enableVerticalSwipe();
-    setIsVerticalSwipesEnabled(true);
-  }, [swipeBehavior]);
+    if (webApp?.enableVerticalSwipes && webApp.isVersionAtLeast('7.7')) {
+      webApp.enableVerticalSwipes();
+      setIsVerticalSwipesEnabled(true);
+    }
+  }, [webApp]);
 
   return {
-    swipeBehavior,
+    webApp,
     isVerticalSwipesEnabled,
     disableVerticalSwipe,
     enableVerticalSwipe,
-    isAvailable: !!swipeBehavior
+    isAvailable: !!(webApp?.disableVerticalSwipes && webApp.isVersionAtLeast('7.7'))
   };
 };
 

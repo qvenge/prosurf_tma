@@ -35,7 +35,7 @@ export function BookingSelectionModal({
       open={isOpen}
       onOpenChange={onClose}
       overlayComponent={<Modal.Overlay />}
-      header={<Modal.Header>Выберите способ оплаты</Modal.Header>}
+      header={<Modal.Header />} 
     >
       <div className={styles.modalContent}>
         {hasActiveSubscription && (
