@@ -13,70 +13,142 @@ import {
 import { Icon } from '@/shared/ui';
 import styles from './Profile.module.scss';
 import { Link } from '@/shared/navigation';
-
-const menuItems = [
-  {
-    icon: CalendarBlankBold,
-    title: 'Мои записи',
-    subtitle: 'Ближайшее: 4 июля в 21:30',
-    href: '/profile/bookings',
-  },
-  {
-    icon: ClockBold,
-    title: 'Лист ожиданий',
-    subtitle: 'Доступно: 2/10',
-    href: '/profile/waitlist',
-  },
-  {
-    icon: ListChecksBold,
-    title: 'Аттестация ProSurf',
-    subtitle: 'Что это?',
-    href: '/profile/prosurf-validation-info',
-  },
-  {
-    icon: ArrowsLeftRightBold,
-    title: 'История покупок',
-    subtitle: '5 транзакций',
-    href: '/profile/payments',
-  },
-  {
-    icon: ChatCircleTextBold,
-    title: 'Поддержка',
-    subtitle: 'Написать в ТГ',
-    href: '/profile',
-  }
-];
+import { useCurrentUserProfile, useCurrentUserCashback } from '@/shared/api/hooks/users';
+import { useCurrentUserCertificates } from '@/shared/api/hooks/certificates';
+import { useCurrentUserSeasonTickets } from '@/shared/api/hooks/season-tickets';
+import { useBookings } from '@/shared/api/hooks/bookings';
+import { useCurrentUserWaitlist } from '@/shared/api/hooks/waitlist';
+import type { BookingExtended } from '@/shared/api/types';
 
 export const Profile = () => {
-  // const { data: user, isLoading, error } = useUserProfile();
-  const { data: user, isLoading, error } = {
-    data: {
-      email: 'coovenbm@gmail.com',
-      firstName: 'Birzhan',
-      lastName: 'Utegenov',
-      phone: '+ 7 983 582 6345',
-      // avatarSrc: '/images/qvenge.jpeg',
-      cashback: {
-        value: 2500,
-        currency: 'RUB'
-      },
-      certificates: [
-        {
-          value: 5000,
-          currency: 'RUB',
-        }
-      ],
-      subscriptionCount: 10
-    },
-    isLoading: false,
-    error: null
-  }
+  // Fetch user profile
+  const { user, isLoading: isUserLoading, error: userError } = useCurrentUserProfile();
 
-  if (isLoading) {
+  // Fetch cashback data
+  const { data: cashbackData, isLoading: isCashbackLoading } = useCurrentUserCashback();
+
+  // Fetch certificates
+  const { data: certificatesData, isLoading: isCertificatesLoading } = useCurrentUserCertificates();
+
+  // Fetch season tickets
+  const { data: seasonTicketsData, isLoading: isSeasonTicketsLoading } = useCurrentUserSeasonTickets();
+
+  // Fetch bookings with session data for next booking
+  const { data: bookingsData, isLoading: isBookingsLoading } = useBookings({ includeSession: true });
+
+  // Fetch waitlist entries
+  const { data: waitlistData, isLoading: isWaitlistLoading } = useCurrentUserWaitlist();
+
+  // Helper: Get next upcoming booking
+  const getNextBooking = (): BookingExtended | null => {
+    if (!bookingsData?.items) return null;
+
+    const activeBookings = bookingsData.items.filter(
+      (booking): booking is BookingExtended =>
+        (booking.status === 'HOLD' || booking.status === 'CONFIRMED') &&
+        'session' in booking &&
+        booking.session !== undefined
+    );
+
+    if (activeBookings.length === 0) return null;
+
+    // Sort by session start time to find the next upcoming booking
+    const sortedBookings = activeBookings.sort((a, b) => {
+      const aTime = new Date(a.session!.startsAt).getTime();
+      const bTime = new Date(b.session!.startsAt).getTime();
+      return aTime - bTime;
+    });
+
+    // Filter for future bookings only
+    const now = new Date().getTime();
+    const futureBookings = sortedBookings.filter(
+      booking => new Date(booking.session!.startsAt).getTime() > now
+    );
+
+    return futureBookings[0] || null;
+  };
+
+  // Helper: Format date for next booking subtitle
+  const formatBookingDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day} ${month} в ${hours}:${minutes}`;
+  };
+
+  // Helper: Get active season tickets count
+  const getActiveSubscriptionCount = (): number => {
+    if (!seasonTicketsData) return 0;
+    return seasonTicketsData.filter(ticket => ticket.status === 'ACTIVE').length;
+  };
+
+  // Helper: Get first denomination certificate
+  const getFirstCertificate = () => {
+    if (!certificatesData?.items) return null;
+    return certificatesData.items.find(cert => cert.type === 'denomination') || null;
+  };
+
+  // Compute derived data
+  const nextBooking = getNextBooking();
+  const activeSubscriptionCount = getActiveSubscriptionCount();
+  const firstCertificate = getFirstCertificate();
+  const waitlistCount = waitlistData?.items?.length || 0;
+
+  // Compute menu subtitles
+  const bookingsSubtitle = isBookingsLoading
+    ? 'Загрузка...'
+    : nextBooking
+      ? `Ближайшее: ${formatBookingDate(nextBooking.session!.startsAt)}`
+      : 'Нет записей';
+
+  const waitlistSubtitle = isWaitlistLoading
+    ? 'Загрузка...'
+    : waitlistCount > 0
+      ? `Активных: ${waitlistCount}`
+      : 'Нет записей';
+
+  // Define menu items with dynamic subtitles
+  const menuItems = [
+    {
+      icon: CalendarBlankBold,
+      title: 'Мои записи',
+      subtitle: bookingsSubtitle,
+      href: '/profile/bookings',
+    },
+    {
+      icon: ClockBold,
+      title: 'Лист ожиданий',
+      subtitle: waitlistSubtitle,
+      href: '/profile/waitlist',
+    },
+    {
+      icon: ListChecksBold,
+      title: 'Аттестация ProSurf',
+      subtitle: 'Что это?',
+      href: '/profile/prosurf-validation-info',
+    },
+    {
+      icon: ArrowsLeftRightBold,
+      title: 'История покупок',
+      subtitle: 'Просмотреть историю',
+      href: '/profile/payments',
+    },
+    {
+      icon: ChatCircleTextBold,
+      title: 'Поддержка',
+      subtitle: 'Написать в ТГ',
+      href: '/profile',
+    }
+  ];
+
+  if (isUserLoading) {
     return <div className={styles.wrapper}>Loading...</div>;
   }
 
-  if (error) {
+  if (userError) {
     return <div className={styles.wrapper}>Error loading profile</div>;
   }
 
@@ -89,8 +161,8 @@ export const Profile = () => {
       {/* Profile Header */}
       <div className={styles.header}>
         <div className={styles.avatar}>
-          {(user as any).avatarSrc ? (<img 
-            src={(user as any).avatarSrc} 
+          {user.photoUrl ? (<img
+            src={user.photoUrl}
             alt="Profile avatar"
             className={styles.avatarImage}
             onError={(e) => {
@@ -100,10 +172,10 @@ export const Profile = () => {
             }}
           />) : (
           <div className={styles.avatarFallback}>
-            <Icon 
-              src={UserBold} 
-              width={24} 
-              height={24} 
+            <Icon
+              src={UserBold}
+              width={24}
+              height={24}
               className={styles.avatarIcon}
             />
           </div>
@@ -145,22 +217,24 @@ export const Profile = () => {
 
       {/* Stats Section */}
       <div className={styles.statsSection}>
-        {user.cashback && (
+        {!isCashbackLoading && cashbackData?.balance && cashbackData.balance.amountMinor > 0 && (
           <div className={styles.statItem}>
             <div className={styles.statLabel}>Кэшбек</div>
-            <div className={styles.statValue}>{user.cashback.value} {user.cashback.currency === 'RUB' ? '₽' : '$'}</div>
+            <div className={styles.statValue}>{Math.floor(cashbackData.balance.amountMinor / 100)} {cashbackData.balance.currency === 'RUB' ? '₽' : '$'}</div>
           </div>
         )}
-        {user.subscriptionCount && user.subscriptionCount > 0 &&  (
+        {!isSeasonTicketsLoading && activeSubscriptionCount > 0 && (
           <div className={styles.statItem}>
             <div className={styles.statLabel}>Абонемент</div>
-            <div className={styles.statValue}>{user.subscriptionCount}</div>
+            <div className={styles.statValue}>{activeSubscriptionCount}</div>
           </div>
         )}
-        {user.certificates.length > 0 &&  (
+        {!isCertificatesLoading && firstCertificate && firstCertificate.type === 'denomination' && (
           <div className={styles.statItem}>
             <div className={styles.statLabel}>Сертификат</div>
-            <div className={styles.statValue}>{user.certificates[0].value} {user.certificates[0].currency === 'RUB' ? '₽' : '$'}</div>
+            <div className={styles.statValue}>
+              {'amount' in firstCertificate.data ? `${Math.floor(firstCertificate.data.amount.amountMinor / 100)} ${firstCertificate.data.amount.currency === 'RUB' ? '₽' : '$'}` : ''}
+            </div>
           </div>
         )}
       </div>
