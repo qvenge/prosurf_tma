@@ -125,11 +125,11 @@ export function PaymentPage() {
 
           <div className={styles.divider} />
 
-          {/* <PaymentOptions
+          <PaymentOptions
             cashbackValue={cashbackValue}
             activeCashback={activeCashback}
             onCashbackChange={updateActiveCashback}
-          /> */}
+          />
         </div>
         
         <PaymentSummary

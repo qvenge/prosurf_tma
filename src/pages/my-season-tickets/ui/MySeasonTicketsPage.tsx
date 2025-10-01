@@ -1,28 +1,15 @@
 import styles from './MySeasonTicketsPage.module.scss';
 import { PageLayout } from '@/widgets/page-layout';
-import { type SeasonTicket, type SeasonTicketPlan } from '@/shared/api';
+import { useCurrentUserSeasonTickets, useSeasonTicketPlans } from '@/shared/api';
 import { Button } from '@/shared/ui';
 import { pluralize } from '@/shared/lib/string';
 import { formatPrice } from '@/shared/lib/format-utils';
 import { EmptyListStub } from '@/shared/ui';
 
 export function MySeasonTicketsPage() {
-  const seasonTickets: SeasonTicket[] = [{
-    id: '123456789',
-    userId: 'user_001',
-    status: 'ACTIVE',
-    remainingPasses: 5,
-    validUntil: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-    planId: 'plan_001',
-  }];
-
-  const plans: SeasonTicketPlan[] = [{
-    id: 'plan_001',
-    name: 'Абонемент на 1 месяц',
-    description: 'Серфинг',
-    price: { amountMinor: 500000, currency: 'RUB' },
-    passes: 10,
-  }];
+  const { data: seasonTickets = [] } = useCurrentUserSeasonTickets();
+  const { data: plansResponse } = useSeasonTicketPlans();
+  const plans = plansResponse?.items ?? [];
 
   return (
     <PageLayout title="Абонемент">
