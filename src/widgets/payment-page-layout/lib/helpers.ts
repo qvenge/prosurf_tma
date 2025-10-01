@@ -24,15 +24,11 @@ export const calculatePrices = (
 ): PriceCalculation => {
   const finalPrice = activeCashback ? Math.max(0, originalPrice - cashbackValue) : originalPrice;
   const earnedCashback = calculateCashback(finalPrice);
-  
+
   return {
     originalPrice,
     finalPrice,
     cashbackAmount: activeCashback ? Math.min(cashbackValue, originalPrice) : 0,
     earnedCashback,
   };
-};
-
-export const createIdempotencyKey = (sessionId: string): string => {
-  return `booking-${sessionId}-${Date.now()}`;
 };

@@ -1,0 +1,45 @@
+.wrapper {
+  color: ds.color('Text/Primary');
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 32px var(--outer-horizontal-padding, 16px) 0;
+}
+
+.top {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.tabSelector {
+  // Additional styling can be added if needed
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.divider {
+  background: ds.color('Border/Primary');
+  height: .5px;
+}
+
+.summary {
+  // Footer section - styles will be inherited from child component
+}
+
+.error {
+  padding: 16px;
+  color: ds.color('Text/Error');
+  text-align: center;
+}
+
+.loading {
+  padding: 16px;
+  text-align: center;
+  color: ds.color('Text/Secondary');
+}

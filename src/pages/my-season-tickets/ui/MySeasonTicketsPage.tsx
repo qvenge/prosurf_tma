@@ -5,10 +5,12 @@ import { Button } from '@/shared/ui';
 import { pluralize } from '@/shared/lib/string';
 import { formatPrice } from '@/shared/lib/format-utils';
 import { EmptyListStub } from '@/shared/ui';
+import { useNavigate } from '@/shared/navigation';
 
 export function MySeasonTicketsPage() {
   const { data: seasonTickets = [] } = useCurrentUserSeasonTickets();
   const { data: plansResponse } = useSeasonTicketPlans();
+  const navigate = useNavigate();
   const plans = plansResponse?.items ?? [];
 
   return (
@@ -57,6 +59,7 @@ export function MySeasonTicketsPage() {
                   mode='secondary'
                   size='m'
                   stretched={true}
+                  onClick={() => navigate(`/season-tickets/${plan.id}/payment`)}
                 >
                   Купить
                 </Button>

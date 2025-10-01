@@ -22,7 +22,7 @@ import { ERROR_MESSAGES } from '../lib/constants';
 import { LoadingState, ErrorState } from './components';
 import { PriceBreakdown, SubscriptionPlans } from '@/widgets/payment-page-layout/ui/components';
 
-export function PaymentPage() {
+export function SeasonTicketPaymentPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
 
   // Fetch data
