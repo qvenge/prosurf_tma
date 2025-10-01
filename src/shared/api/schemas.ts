@@ -375,6 +375,29 @@ export const CertificateCreateDtoSchema = z.object({
   ownerUserId: z.string(),
 });
 
+// Event filter schemas (for season ticket matching)
+export const EventFilterLabelsSchema = z.object({
+  any: z.array(z.string()).optional(),
+  all: z.array(z.string()).optional(),
+  none: z.array(z.string()).optional(),
+}).nullable().optional();
+
+export const EventFilterAttributesSchema = z.object({
+  eq: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  in: z.record(z.string(), z.array(z.union([z.string(), z.number()])).min(1)).optional(),
+  gte: z.record(z.string(), z.number()).optional(),
+  lte: z.record(z.string(), z.number()).optional(),
+  bool: z.record(z.string(), z.boolean()).optional(),
+  exists: z.record(z.string(), z.boolean()).optional(),
+}).nullable().optional();
+
+export const EventFilterSchema = z.object({
+  labels: EventFilterLabelsSchema,
+  attributes: EventFilterAttributesSchema,
+}).nullable().optional();
+
+export const SeasonTicketMatchModeSchema = z.enum(['IDS_ONLY', 'FILTER_ONLY', 'ANY', 'ALL']);
+
 // Season ticket schemas
 export const SeasonTicketPlanSchema = z.object({
   id: z.string(),
@@ -382,7 +405,10 @@ export const SeasonTicketPlanSchema = z.object({
   description: z.string().nullable().optional(),
   price: PriceSchema,
   passes: z.number().int().min(1),
-  eventIds: z.array(z.string()).optional(),
+  expiresIn: z.number().int().min(1),
+  matchMode: SeasonTicketMatchModeSchema.default('ALL').optional(),
+  eventIds: z.array(z.string()).nullable().optional(),
+  eventFilter: EventFilterSchema,
 });
 
 export const SeasonTicketPlanCreateDtoSchema = z.object({
@@ -390,7 +416,10 @@ export const SeasonTicketPlanCreateDtoSchema = z.object({
   description: z.string().nullable().optional(),
   price: PriceSchema,
   passes: z.number().int().min(1),
-  eventIds: z.array(z.string()).optional(),
+  expiresIn: z.number().int().min(1),
+  matchMode: SeasonTicketMatchModeSchema.default('ALL').optional(),
+  eventIds: z.array(z.string()).nullable().optional(),
+  eventFilter: EventFilterSchema,
 });
 
 export const SeasonTicketPlanUpdateDtoSchema = z.object({
@@ -398,7 +427,10 @@ export const SeasonTicketPlanUpdateDtoSchema = z.object({
   description: z.string().nullable().optional(),
   price: PriceSchema.optional(),
   passes: z.number().int().min(1).optional(),
-  eventIds: z.array(z.string()).optional(),
+  expiresIn: z.number().int().min(1).optional(),
+  matchMode: SeasonTicketMatchModeSchema.optional(),
+  eventIds: z.array(z.string()).nullable().optional(),
+  eventFilter: EventFilterSchema,
 });
 
 export const SeasonTicketStatusSchema = z.enum(['ACTIVE', 'EXPIRED', 'CANCELLED']);
@@ -409,7 +441,7 @@ export const SeasonTicketSchema = z.object({
   userId: z.string(),
   status: SeasonTicketStatusSchema,
   remainingPasses: z.number().int().min(0),
-  validUntil: z.string().datetime().nullable(),
+  validUntil: z.string().datetime(),
 });
 
 // Cashback schemas

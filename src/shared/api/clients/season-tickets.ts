@@ -1,6 +1,6 @@
 import { apiClient, validateResponse, createQueryString, withIdempotency } from '../config';
-import { 
-  SeasonTicketPlanSchema, 
+import {
+  SeasonTicketPlanSchema,
   SeasonTicketPlanCreateDtoSchema,
   SeasonTicketPlanUpdateDtoSchema,
   SeasonTicketSchema,
@@ -8,10 +8,11 @@ import {
   PaymentMethodRequestSchema,
   PaginatedResponseSchema,
   SeasonTicketPlanFiltersSchema,
-  SeasonTicketFiltersSchema
+  SeasonTicketFiltersSchema,
+  EventSchema
 } from '../schemas';
-import type { 
-  SeasonTicketPlan, 
+import type {
+  SeasonTicketPlan,
   SeasonTicketPlanCreateDto,
   SeasonTicketPlanUpdateDto,
   SeasonTicket,
@@ -20,7 +21,10 @@ import type {
   PaginatedResponse,
   SeasonTicketPlanFilters,
   SeasonTicketFilters,
-  IdempotencyKey
+  IdempotencyKey,
+  Event,
+  CursorParam,
+  LimitParam
 } from '../types';
 
 /**
@@ -51,17 +55,49 @@ export const seasonTicketsClient = {
   },
 
   /**
+   * Get single season ticket plan
+   * GET /season-ticket-plans/{id}
+   */
+  async getSeasonTicketPlan(id: string): Promise<SeasonTicketPlan> {
+    const response = await apiClient.get(`/season-ticket-plans/${encodeURIComponent(id)}`);
+    return validateResponse(response.data, SeasonTicketPlanSchema);
+  },
+
+  /**
    * Update season ticket plan (ADMIN only)
    * PATCH /season-ticket-plans/{id}
    */
   async updateSeasonTicketPlan(id: string, data: SeasonTicketPlanUpdateDto): Promise<SeasonTicketPlan> {
     const validatedData = SeasonTicketPlanUpdateDtoSchema.parse(data);
-    
+
     const response = await apiClient.patch(
-      `/season-ticket-plans/${encodeURIComponent(id)}`, 
+      `/season-ticket-plans/${encodeURIComponent(id)}`,
       validatedData
     );
     return validateResponse(response.data, SeasonTicketPlanSchema);
+  },
+
+  /**
+   * Delete season ticket plan (ADMIN only)
+   * DELETE /season-ticket-plans/{id}
+   */
+  async deleteSeasonTicketPlan(id: string): Promise<void> {
+    await apiClient.delete(`/season-ticket-plans/${encodeURIComponent(id)}`);
+  },
+
+  /**
+   * Get events applicable to a season ticket plan
+   * GET /season-ticket-plans/{id}/applicable-events
+   */
+  async getApplicableEvents(
+    planId: string,
+    filters?: { cursor?: CursorParam; limit?: LimitParam }
+  ): Promise<PaginatedResponse<Event>> {
+    const queryString = createQueryString(filters || {});
+    const response = await apiClient.get(
+      `/season-ticket-plans/${encodeURIComponent(planId)}/applicable-events${queryString}`
+    );
+    return validateResponse(response.data, PaginatedResponseSchema(EventSchema));
   },
 
   /**

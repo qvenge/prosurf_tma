@@ -13,6 +13,7 @@ import { SessionPage } from '@/pages/session';
 import { MyBookings } from '@/pages/my-bookings';
 import { MyWaitlist } from '@/pages/my-waitlist';
 import { MyPayments } from '@/pages/my-payments';
+import { MySeasonTicketsPage } from '@/pages/my-season-tickets';
 
 import { AppProvider } from './ui/AppProvider';
 
@@ -99,6 +100,10 @@ export const router = createBrowserRouter([
             path: 'payments', 
             Component: MyPayments
           },
+          {
+            path: 'season-tickets',
+            Component: MySeasonTicketsPage
+          }
         ],
       },
     ],

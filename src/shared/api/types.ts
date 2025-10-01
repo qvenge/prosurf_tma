@@ -73,6 +73,12 @@ export type PassesCertData = z.infer<typeof schemas.PassesCertDataSchema>;
 export type Certificate = z.infer<typeof schemas.CertificateSchema>;
 export type CertificateCreateDto = z.infer<typeof schemas.CertificateCreateDtoSchema>;
 
+// Event filter types (for season ticket matching)
+export type EventFilterLabels = z.infer<typeof schemas.EventFilterLabelsSchema>;
+export type EventFilterAttributes = z.infer<typeof schemas.EventFilterAttributesSchema>;
+export type EventFilter = z.infer<typeof schemas.EventFilterSchema>;
+export type SeasonTicketMatchMode = z.infer<typeof schemas.SeasonTicketMatchModeSchema>;
+
 // Season ticket types
 export type SeasonTicketPlan = z.infer<typeof schemas.SeasonTicketPlanSchema>;
 export type SeasonTicketPlanCreateDto = z.infer<typeof schemas.SeasonTicketPlanCreateDtoSchema>;

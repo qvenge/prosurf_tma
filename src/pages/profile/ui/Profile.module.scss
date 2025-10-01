@@ -113,6 +113,10 @@
 }
 
 .statItem {
+  flex: 1;
+}
+
+.statItemContent {
   display: flex;
   flex-direction: column;
   align-items: center;

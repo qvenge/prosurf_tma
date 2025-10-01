@@ -1,0 +1,96 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px var(--outer-horizontal-padding, 16px);
+}
+
+.stub {
+  padding-top: 120px;
+}
+
+.card {
+  display: flex;
+  padding: 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+
+  border-radius: 16px;
+  background: ds.color('Background/Secondary');
+}
+
+.ticketHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardDivider {
+  height: .5px;
+  background: ds.color('Border/Primary');
+}
+
+.ticketTitle {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Primary');
+}
+
+.ticketPasses {
+  @include ds.typo('Roboto/Title 1/Semibold');
+  color: ds.color('Text/Brand');
+}
+
+.ticketFooter,
+.planHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.ticketExpirationDate {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Brand');
+}
+
+.ticketExpirationHint,
+.ticketId {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.planName {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Primary');
+}
+
+.plans {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.plansTitle {
+  margin: 0;
+  padding: 0;
+  @include ds.typo('Roboto/Caption 1/Bold Caps');
+  color: ds.color('Text/Secondary');
+}
+
+.planDescription,
+.planPricePerPass {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.planPrice {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Brand');
+}
+
+.planDetails {
+  text-align: right;
+}
