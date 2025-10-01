@@ -1,16 +1,3 @@
-export const formatDuration = (start: string, end: string | null) => {
-  if (!end) return undefined;
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const diffMs = endDate.getTime() - startDate.getTime();
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (hours === 0) return `${minutes} мин.`;
-  if (minutes === 0) return `${hours} ч`;
-  return `${hours} ч ${minutes} мин.`;
-};
-
 export const formatAvailability = (remainingSeats: number) => {
   if (remainingSeats === 0) {
     return { hasSeats: false, text: 'нет мест' };
@@ -24,6 +11,11 @@ export const formatAvailability = (remainingSeats: number) => {
 };
 
 export const formatPrice = (price: { amountMinor: number; currency: string }) => {
-  const amount = (price.amountMinor / 100).toLocaleString('ru-RU');
-  return price.currency === 'RUB' ? `${amount} ₽` : `${amount} ${price.currency}`;
+  if (price.amountMinor == null || price.amountMinor === 0) {
+    return 'Бесплатно';
+  }
+  return new Intl.NumberFormat(
+    'ru-RU',
+    { style: 'currency', currency: price.currency || 'RUB', minimumFractionDigits: 0 }
+  ).format(Number(price.amountMinor / 100));
 };

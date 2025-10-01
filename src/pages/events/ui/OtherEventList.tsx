@@ -1,41 +1,46 @@
 import { Link } from '@/shared/navigation';
 import styles from './OtherEventList.module.scss';
 import { OtherEventCard } from './OtherEventCard';
-// TODO: Implement with new API structure using useEvents with filters
-// import { useEvents } from '@/shared/api';
-import { groupEventsByDate } from '@/shared/lib/date-utils';
+import { useSessions } from '@/shared/api';
+import { groupSessionsByDate } from '@/shared/lib/date-utils';
+import { EmptyListStub, Spinner } from '@/shared/ui';
+import { useMemo } from 'react';
 
 export const OtherEventList = () => {
-  // TODO: Replace with useEvents filtered by type
-  const otherEvents: any[] = [];
-  const isLoading = false;
-  const error = null;
+  const filters = useMemo(() => ({
+    'labels.any': ['activity'],
+    startsAfter: new Date().toISOString(),
+  }), []);
+
+  const { data, isLoading, error } = useSessions(filters);
+
+  const otherEvents = data?.items || [];
 
   if (isLoading) {
     return (
-      <div className={styles.wrapper}>
-        <div>Загрузка событий...</div>
+      <div className={styles.stub}>
+        <Spinner size="l" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={styles.wrapper}>
+      <div className={styles.stub}>
         <div>Ошибка загрузки событий</div>
       </div>
     );
   }
 
-  if (!otherEvents || otherEvents.length === 0) {
+  if (otherEvents.length === 0) {
     return (
-      <div className={styles.wrapper}>
-        <div>Событий пока нет</div>
+      <div className={styles.stub}>
+        <EmptyListStub message='Пока нет доступных событий' />
       </div>
     );
   }
 
-  const groupedEvents = groupEventsByDate(otherEvents);
+  const groupedEvents = groupSessionsByDate(otherEvents);
 
   return (
     <div className={styles.wrapper}>
@@ -44,7 +49,7 @@ export const OtherEventList = () => {
           <div className={styles.day}>{group.date}</div>
           {group.events.map((event) => (
             <Link key={event.id} to={`/events/sessions/${event.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <OtherEventCard key={event.id} data={event} />
+              <OtherEventCard data={event} />
             </Link>
           ))}
         </div>

@@ -4,6 +4,17 @@
   gap: 32px;
 }
 
+.stub {
+  padding-top: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Secondary');
+  margin: 0;
+}
+
 .eventsBlock {
   display: flex;
   flex-direction: column;

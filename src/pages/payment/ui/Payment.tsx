@@ -21,10 +21,10 @@ import {
 import styles from './Payment.module.scss';
 
 export function PaymentPage() {
-  const { trainingId } = useParams<{ trainingId: string }>();
+  const { sessionId } = useParams<{ sessionId: string }>();
 
   // Fetch data
-  const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(trainingId!);
+  const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(sessionId!);
 
   // Fetch user profile
   const { user, isLoading: userLoading } = useCurrentUserProfile();
@@ -73,7 +73,6 @@ export function PaymentPage() {
   const { finalPrice } = calculatePrices(originalPrice, cashbackValue, activeCashback);
   
   const handlePayment = () => {
-    console.log('BEFORE processPayment');
     processPayment(setPaymentError);
   };
 
@@ -93,7 +92,7 @@ export function PaymentPage() {
   }
 
   return (
-    <PageLayout title={session.event.title}>
+    <PageLayout title="Оплата">
       <div className={styles.wrapper}>
         <div className={styles.top}>
           <ProductSelector
@@ -126,11 +125,11 @@ export function PaymentPage() {
 
           <div className={styles.divider} />
 
-          <PaymentOptions
+          {/* <PaymentOptions
             cashbackValue={cashbackValue}
             activeCashback={activeCashback}
             onCashbackChange={updateActiveCashback}
-          />
+          /> */}
         </div>
         
         <PaymentSummary

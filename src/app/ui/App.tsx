@@ -86,6 +86,14 @@ export function App() {
     }
   }, [telegramApp.isReady, telegramApp.isInTelegram, telegramApp.webApp]);
 
+  useEffect(() => {
+    if (telegramApp.isReady && telegramApp.isInTelegram && telegramApp.webApp) {
+      const { webApp } = telegramApp;
+      webApp.setBackgroundColor('#0F0F0F');
+      webApp.setHeaderColor('#0F0F0F');
+    }
+  }, [telegramApp.isReady, telegramApp.isInTelegram, telegramApp.webApp]);
+
   const handleNavbarHeightChange = (val: number) => {
     setNavbarHeight(val);
   };

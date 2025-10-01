@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { EmptyListStub, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
 import { useBookings, type BookingExtended } from '@/shared/api'
-import { formatEventDate, formatTime } from '@/shared/lib/date-utils'
+import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
 
@@ -57,7 +57,7 @@ const transformBookingToCardData = (booking: BookingExtended): BookingCardProps[
 
 const groupBookingsByDate = (bookings: BookingExtended[]): BookingsByDay => {
   const grouped = bookings.reduce((acc, booking) => {
-    const dateKey = formatEventDate(booking.createdAt);
+    const dateKey = formatSessionDate(booking.session!.startsAt);
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
@@ -78,7 +78,12 @@ export function MyBookings() {
     status: ['CONFIRMED'],
     'labels.any': labels[selectedTab]
   });
-  const items = groupBookingsByDate(data?.items || []);
+  
+  const items = groupBookingsByDate(data?.items.sort((a: BookingExtended, b: BookingExtended) => {
+    const aDate = new Date(a.session!.startsAt).getTime();
+    const bDate = new Date(b.session!.startsAt).getTime();
+    return aDate - bDate;
+  }) || []);
 
   if (isLoading) {
     return (

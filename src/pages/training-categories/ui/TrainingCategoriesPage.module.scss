@@ -1,4 +1,4 @@
 .wrapper {
-  padding-top: 32px;
   flex-grow: 1;
+  padding: 32px var(--outer-horizontal-padding, 16px);
 }

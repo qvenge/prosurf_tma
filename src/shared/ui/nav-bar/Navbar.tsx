@@ -1,6 +1,7 @@
 import {type HTMLAttributes,useCallback } from 'react';
 import clsx from 'clsx';
 import { Tabbar } from '../tabbar';
+import { useTelegramHapticFeedback } from '@/shared/tma'
 
 import { useNavigator, useNavigationState } from '@/shared/navigation';
 
@@ -19,10 +20,12 @@ export interface NavbarProps extends HTMLAttributes<HTMLDivElement> {
 export function Navbar({items, className, ...restProps}: NavbarProps) {
   const navigator = useNavigator();
   const { tab } = useNavigationState();
+  const { selectionChanged } = useTelegramHapticFeedback();
 
   const handleClick = useCallback((tabName: string) => {
+    selectionChanged();
     navigator.switchTab(tabName as any);
-  }, [navigator]);
+  }, [navigator, selectionChanged]);
 
   return (
     <Tabbar

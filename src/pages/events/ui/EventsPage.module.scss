@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  padding: 24px 16px;
+  padding: 32px var(--outer-horizontal-padding, 16px);
 }
 
 .title {

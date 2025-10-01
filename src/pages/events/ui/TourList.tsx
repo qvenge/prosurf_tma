@@ -1,35 +1,40 @@
 import { Link } from '@/shared/navigation';
 import styles from './TourList.module.scss';
 import { TourCard } from './TourCard';
-// TODO: Implement with new API structure using useEvents with filters
-// import { useEvents } from '@/shared/api';
+import { useSessions } from '@/shared/api';
+import { EmptyListStub, Spinner } from '@/shared/ui';
+import { useMemo } from 'react';
 
 export const TourList = () => {
-  // TODO: Replace with useEvents filtered by type
-  const tours: any[] = [];
-  const isLoading = false;
-  const error = null;
+  const filters = useMemo(() => ({
+    'labels.any': ['tour'],
+    startsAfter: new Date().toISOString(),
+  }), []);
+
+  const { data, isLoading, error } = useSessions(filters);
+
+  const tours = data?.items || [];
 
   if (isLoading) {
     return (
-      <div className={styles.wrapper}>
-        <div>Загрузка туров...</div>
+      <div className={styles.stub}>
+        <Spinner size="l" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={styles.wrapper}>
+      <div className={styles.stub}>
         <div>Ошибка загрузки туров</div>
       </div>
     );
   }
 
-  if (!tours || tours.length === 0) {
+  if (tours.length === 0) {
     return (
-      <div className={styles.wrapper}>
-        <div>Туров пока нет</div>
+      <div className={styles.stub}>
+        <EmptyListStub message='Пока нет доступных туров' />
       </div>
     );
   }
@@ -38,7 +43,7 @@ export const TourList = () => {
     <div className={styles.wrapper}>
       {tours.map((tour) => (
         <Link key={tour.id} to={`/events/sessions/${tour.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <TourCard key={tour.id} data={tour} />
+          <TourCard data={tour} />
         </Link>
       ))}
     </div>

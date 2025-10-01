@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { formatDuration, formatAvailability, formatPrice } from '../format-utils';
+import { formatAvailability, formatPrice } from '../format-utils';
+import { formatDuration } from '../date-utils'
 import type { SessionGroupProps } from '../../ui/session-group';
 import type { Session } from '@/shared/api';
 

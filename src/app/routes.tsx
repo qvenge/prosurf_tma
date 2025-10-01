@@ -9,7 +9,7 @@ import { Profile } from '@/pages/profile';
 import { PaymentPage } from '@/pages/payment';
 import { PaymentSuccessPage } from '@/pages/payment-success';
 import { EventsPage } from '@/pages/events';
-import { EventSessionPage } from '@/pages/event-session';
+import { SessionPage } from '@/pages/session';
 import { MyBookings } from '@/pages/my-bookings';
 import { MyWaitlist } from '@/pages/my-waitlist';
 import { MyPayments } from '@/pages/my-payments';
@@ -45,7 +45,7 @@ export const router = createBrowserRouter([
             handle: { bottomBar: { visible: true, mode: 'custom' as const } },
           },
           {
-            path: 'sessions/:trainingId/payment',
+            path: 'sessions/:sessionId/payment',
             Component: PaymentPage,
             handle: { bottomBar: { visible: false } },
           },
@@ -65,9 +65,19 @@ export const router = createBrowserRouter([
           },
           {
             path: 'sessions/:sessionId',
-            Component: EventSessionPage,
+            Component: SessionPage,
             handle: { bottomBar: { visible: true, mode: 'custom' as const } },
-          }
+          },
+          {
+            path: 'sessions/:sessionId/payment',
+            Component: PaymentPage,
+            handle: { bottomBar: { visible: false } },
+          },
+          {
+            path: ':bookingId/payment-success',
+            Component: PaymentSuccessPage,
+            handle: { bottomBar: { visible: false } },
+          },
         ]
       },
       {

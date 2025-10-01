@@ -74,10 +74,7 @@ export const usePaymentProcessing = (
     const { paymentLogger } = await import('@/shared/lib/payment-logger');
     const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
 
-    console.log('USER', user)
-
     if (!user) {
-      console.log('USER NOT FOUND')
       paymentLogger.logError({
         error: 'User not found',
         context: 'processPayment',
