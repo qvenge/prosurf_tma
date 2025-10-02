@@ -13,7 +13,7 @@ export function PaymentSuccessPage() {
 
   const title = type === 'training' ? 'Вы записались на тренировку!' : 'Оплачено';
   const description = type === 'training' ? 'Напоминаем что отмена записи возможна не позднее чем за 24 часа' : null;
-  const primaryButton = type === 'training' ? {text: 'В мои записи', link: '/profile'} : null;
+  const primaryButton = type === 'training' ? {text: 'В мои записи', link: '/profile/bookings'} : null;
   const secondaryButton = {text: 'На главную', link: '/'};
 
   return (
@@ -32,12 +32,12 @@ export function PaymentSuccessPage() {
       </div>
       <div className={styles.controls}>
         {primaryButton && (
-          <Link to={primaryButton.link}>
+          <Link to={primaryButton.link} tab="profile" reset={true}>
             <Button className={styles.primaryButton} size='m' mode='secondary'>{primaryButton.text}</Button>
           </Link>
         )}
         {secondaryButton && (
-          <Link to={secondaryButton.link} tab={{ value: 'home', reset: true }}>
+          <Link to={secondaryButton.link} tab="home" reset={true}>
             <Button className={styles.secondaryButton} size='m' mode='primary'>{secondaryButton.text}</Button>
           </Link>
         )}

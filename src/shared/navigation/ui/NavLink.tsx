@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNavigator, type Tab } from './Navigator';
+import { useNavigator, type Tab } from '../lib/Navigator';
 
 export interface NavLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'> {
   name: Tab;

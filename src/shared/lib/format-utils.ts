@@ -10,8 +10,8 @@ export const formatAvailability = (remainingSeats: number) => {
   }
 };
 
-export const formatPrice = (price: { amountMinor: number; currency: string }) => {
-  if (price.amountMinor == null || price.amountMinor === 0) {
+export const formatPrice = (price?: { amountMinor: number; currency: string }) => {
+  if (!price || price.amountMinor == null || price.amountMinor === 0) {
     return 'Бесплатно';
   }
   return new Intl.NumberFormat(

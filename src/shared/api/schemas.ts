@@ -77,13 +77,13 @@ export const TicketPriceSchema = z.object({
 export const EventTicketSchema = z.object({
   id: z.string(),
   name: z.string(),
-  prepayment: TicketPriceSchema,
+  prepayment: TicketPriceSchema.nullable(),
   full: TicketPriceSchema,
 });
 
 export const EventTicketCreateSchema = z.object({
   name: z.string(),
-  prepayment: TicketPriceSchema,
+  prepayment: TicketPriceSchema.nullable(),
   full: TicketPriceSchema,
 });
 

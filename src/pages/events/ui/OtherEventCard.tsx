@@ -12,7 +12,7 @@ export const OtherEventCard = ({
  data
 }: OtherEventCardProps) => {
   const time = formatTime(data.startsAt);
-  const price = formatPrice(data.event.tickets[0]?.full.price);
+  const price = formatPrice(data.event.tickets[0]?.full?.price);
   const availability = formatAvailability(data.remainingSeats);
 
   return (

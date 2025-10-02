@@ -12,7 +12,7 @@ export const TourCard = ({
  data
 }: TourCardProps) => {
   const { dates, year } = formatTourDates(data.startsAt, data.endsAt || data.startsAt);
-  const price = formatPrice(data.event.tickets[0]?.prepayment.price);
+  const price = formatPrice(data.event.tickets[0]?.prepayment?.price);
   const availability = formatAvailability(data.remainingSeats);
 
   return (

@@ -1,8 +1,25 @@
 import { useMemo } from 'react';
 import { formatAvailability, formatPrice } from '../format-utils';
-import { formatDuration } from '../date-utils'
-import type { SessionGroupProps } from '../../ui/session-group';
+import { formatDuration } from '../date-utils';
 import type { Session } from '@/shared/api';
+
+export interface SessionCard {
+  id: string;
+  time: string;
+  duration?: string;
+  title: string;
+  location: string;
+  price: string;
+  availability: {
+    hasSeats: boolean;
+    text: string;
+  };
+}
+
+export interface SessionGroup {
+  dateHeader: string;
+  sessions: SessionCard[];
+}
 
 export const useSessionGroups = (sessions: Session[]) => {
   return useMemo(() => {
@@ -37,7 +54,7 @@ export const useSessionGroups = (sessions: Session[]) => {
       });
 
       return groups;
-    }, {} as Record<string, SessionGroupProps['sessions']>);
+    }, {} as Record<string, SessionGroup['sessions']>);
 
     return Object.entries(groupedSessions).map(([dateHeader, sessions]) => ({
       dateHeader,

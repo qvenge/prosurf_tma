@@ -6,7 +6,7 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment } from '@/shared/api';
+import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, type EventTicket, type Session } from '@/shared/api';
 import styles from './SessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
@@ -20,7 +20,13 @@ const heroImages = [
   '/images/surfing2.png',
 ];
 
-const hasPrepayment = (session: any): boolean => {
+// const hasPrepayment = (ticket?: EventTicket): ticket is EventTicket & { prepayment: { price: { amountMinor: number } } } => {
+//   const amount = ticket?.prepayment?.price.amountMinor;
+//   return amount != null && amount > 0;
+// };
+
+
+const hasPrepayment = (session?: Session): session is Session & { event: { tickets: (EventTicket & { prepayment: { price: { amountMinor: number } } })[] } } => {
   const amount = session?.event.tickets[0].prepayment?.price.amountMinor;
   return amount != null && amount > 0;
 };
@@ -141,7 +147,7 @@ export const SessionPage = () => {
           </Button>
           {hasPrepayment(session) && (
             <div className={styles.prepaymentNote}>
-              {`Бронь: ${formatPrice(session!.event.tickets[0]?.prepayment.price)}`}
+              {`Бронь: ${formatPrice(session.event.tickets[0].prepayment.price)}`}
             </div>
           )}
         </>
@@ -198,9 +204,9 @@ export const SessionPage = () => {
           <div className={styles.priceInfo}>
             <div className={styles.priceDetails}>
               <div className={styles.priceType}>{
-                hasPrepayment(session) ? `Бронь ${formatPrice(session.event.tickets[0]?.prepayment.price)}` : session.event.tickets[0].name
+                hasPrepayment(session) ? `Бронь ${formatPrice(session.event.tickets[0]?.prepayment?.price)}` : session.event.tickets[0].name
               }</div>
-              <div className={styles.price}>{formatPrice(session.event.tickets[0]?.full.price)}</div>
+              <div className={styles.price}>{formatPrice(session.event.tickets[0]?.full?.price)}</div>
             </div>
             <div className={styles.spotsRemaining}>Осталось {session.remainingSeats} мест</div>
           </div>

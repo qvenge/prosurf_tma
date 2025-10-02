@@ -87,15 +87,24 @@ export class NavigationState<Tab extends string, Link extends string = string> e
     this.activeTab = activeTab ?? getFirstKey(defaulTabLinks) as Tab;
   }
 
-  push(link: Link, tab?: Tab, reset?: boolean) {
+  push(link: Link, {tab, reset}: { tab?: Tab, reset?: boolean } = {}) {
     if (tab && tab !== this.activeTab) {
-      this._switchTab(tab, reset);
+      this._switchTab(tab);
+    }
+
+    if (reset) {
+      this._reset();
     }
 
     const hist = this.history[this.activeTab];
     hist.stack.length = hist.pos + 1;
     hist.stack.push(link);
     hist.pos++;
+
+    if (tab) {
+      this.emit('history:switchTab', { tab, link: this.currentLink });
+    }
+
     this.emit('history:push', { tab: this.activeTab, link });
     this.emit('history:change', { tab: this.activeTab, link });
   }
@@ -138,22 +147,29 @@ export class NavigationState<Tab extends string, Link extends string = string> e
   }
 
   switchTab(tab: Tab, reset?: boolean) {
-    this._switchTab(tab, reset);
+    const prevTab = this.activeTab;
+
+    this._switchTab(tab);
+
+    if (reset || tab === prevTab) {
+      this._reset();
+    }
+
+    this.emit('history:switchTab', { tab, link: this.currentLink });
     this.emit('history:change', { tab, link: this.currentLink });
   }
 
-  private _switchTab(tab: Tab, reset: boolean = false) {
+  private _switchTab(tab: Tab) {
     if (this.defaultTabLinks[tab] === undefined) {
       throw new Error(`Tab "${tab}" does not exist in navigation state`);
     }
 
-    if (reset || this.activeTab === tab) {
-      const hist = this.history[tab];
-      hist.stack = [this.defaultTabLinks[tab]];
-      hist.pos = 0;
-    }
-
     this.activeTab = tab;
-    this.emit('history:switchTab', { tab, link: this.currentLink });
+  }
+
+  private _reset() {
+    const hist = this.history[this.activeTab];
+    hist.stack = [this.defaultTabLinks[this.activeTab]];
+    hist.pos = 0;
   }
 }

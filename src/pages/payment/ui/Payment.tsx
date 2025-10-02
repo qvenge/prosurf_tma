@@ -118,8 +118,8 @@ export function PaymentPage() {
               type: 'other' as const,
               price: session.event.tickets[0]?.prepayment?.price
                 ? {
-                    amount: String(session.event.tickets[0].prepayment.price.amountMinor / 100),
-                    currency: session.event.tickets[0].prepayment.price.currency,
+                    amount: String(session.event.tickets[0].prepayment?.price.amountMinor / 100),
+                    currency: session.event.tickets[0].prepayment?.price.currency,
                   }
                 : { amount: '0', currency: 'RUB' },
             }}
@@ -148,8 +148,8 @@ export function PaymentPage() {
             type: 'other' as const,
             price: session.event.tickets[0]?.prepayment?.price
               ? {
-                  amount: String(session.event.tickets[0].prepayment.price.amountMinor / 100),
-                  currency: session.event.tickets[0].prepayment.price.currency,
+                  amount: String(session.event.tickets[0].prepayment?.price.amountMinor / 100),
+                  currency: session.event.tickets[0].prepayment?.price.currency,
                 }
               : { amount: '0', currency: 'RUB' },
           }}

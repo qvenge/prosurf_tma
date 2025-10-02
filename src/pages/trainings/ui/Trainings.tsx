@@ -5,8 +5,8 @@ import { PageLayout } from '@/widgets/page-layout';
 import { useSessions, type EventType } from '@/shared/api';
 import { getCurrentAndNextMonth, getMonthDateRange } from '@/shared/lib/date-utils';
 import { useSessionGroups } from '@/shared/lib/hooks/use-session-groups';
-import { MonthSelector } from './components/MonthSelector';
-import { SessionsList } from './components/SessionsList';
+import { MonthSelector } from './month-selector';
+import { SessionList } from './session-list';
 
 const heroImages = [
   '/images/surfing1.jpg',
@@ -69,7 +69,7 @@ export const Trainings = () => {
           <div className={styles.divider}></div>
 
           <div className={styles.sessions}>
-            <SessionsList
+            <SessionList
               sessionGroups={sessionGroups}
               isLoading={isLoading}
               error={error}

@@ -1,18 +1,8 @@
 import { useNavigate } from '@/shared/navigation';
 import styles from './SessionCard.module.scss';
+import type { SessionCard as SessionCardProps } from '@/shared/lib/hooks/use-session-groups';
 
-export interface SessionCardProps {
-  id: string;
-  time: string;
-  duration?: string;
-  title: string;
-  location: string;
-  price: string;
-  availability: {
-    hasSeats: boolean;
-    text: string;
-  };
-}
+export type { SessionCardProps };
 
 export const SessionCard = ({ 
   id,

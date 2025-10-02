@@ -5,12 +5,18 @@ import { useTelegramBackButton } from '@/shared/tma';
 
 export type Tab = 'home' | 'trainings' | 'events' | 'profile';
 
+
+interface PushOptions {
+  tab?: Tab;
+  reset?: boolean;
+}
+
 interface Navigator {
   switchTab(tab: Tab, reset?: boolean): void;
   back(): void;
   forward(): void;
   goTo(pos: number): void;
-  push(link: string, tab?: Tab, reset?: boolean): void;
+  push(link: string, opts?: PushOptions): void;
   replace(link: string): void;
 }
 
@@ -54,8 +60,8 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
       navigate(state.currentLink);
     },
 
-    push(link: string, tab?: Tab, reset?: boolean) {
-      state.push(link, tab, reset);
+    push(link: string, opts?: {tab?: Tab, reset?: boolean}) {
+      state.push(link, opts);
       navigate(state.currentLink);
     },
 

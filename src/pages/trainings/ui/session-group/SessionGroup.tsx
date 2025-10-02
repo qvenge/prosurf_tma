@@ -1,10 +1,8 @@
-import { SessionCard, type SessionCardProps } from '../session-card';
+import { SessionCard } from '../session-card';
 import styles from './SessionGroup.module.scss';
+import type { SessionGroup as SessionGroupProps } from '@/shared/lib/hooks/use-session-groups';
 
-export interface SessionGroupProps {
-  dateHeader: string;
-  sessions: SessionCardProps[];
-}
+export type { SessionGroupProps };
 
 export const SessionGroup = ({ dateHeader, sessions }: SessionGroupProps) => {
   return (
