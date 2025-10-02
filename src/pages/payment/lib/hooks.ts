@@ -262,7 +262,7 @@ export const usePaymentProcessing = (
           currency: payment.amount.currency,
         });
 
-        navigate('payment-success?type=training:surfing');
+        navigate('payment-success?type=training');
 
       } else if (result.status === 'pending') {
         // For redirect payments, stay on page or navigate to pending page

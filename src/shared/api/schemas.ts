@@ -430,14 +430,14 @@ export const SeasonTicketPlanUpdateDtoSchema = z.object({
   expiresIn: z.number().int().min(1).optional(),
   matchMode: SeasonTicketMatchModeSchema.optional(),
   eventIds: z.array(z.string()).nullable().optional(),
-  eventFilter: EventFilterSchema,
+  eventFilter: EventFilterSchema.optional(),
 });
 
 export const SeasonTicketStatusSchema = z.enum(['ACTIVE', 'EXPIRED', 'CANCELLED']);
 
 export const SeasonTicketSchema = z.object({
   id: z.string(),
-  planId: z.string(),
+  plan: SeasonTicketPlanSchema,
   userId: z.string(),
   status: SeasonTicketStatusSchema,
   remainingPasses: z.number().int().min(0),
@@ -661,8 +661,10 @@ export const CertificateFiltersSchema = z.object({
 
 export const SeasonTicketFiltersSchema = z.object({
   userId: z.string().optional(),
-  cursor: CursorParamSchema,
-  limit: LimitParamSchema,
+  sessionId: z.string().optional(),
+  eventId: z.string().optional(),
+  status: z.array(SeasonTicketStatusSchema).optional(),
+  hasRemainingPasses: z.boolean().optional(),
 });
 
 export const WaitlistFiltersSchema = z.object({
@@ -677,6 +679,5 @@ export const AuditLogFiltersSchema = z.object({
 
 export const SeasonTicketPlanFiltersSchema = z.object({
   eventIds: z.array(z.string()).optional(),
-  cursor: CursorParamSchema,
-  limit: LimitParamSchema,
+  sessionId: z.string().optional(),
 });

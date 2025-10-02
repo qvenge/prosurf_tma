@@ -87,7 +87,11 @@ export class NavigationState<Tab extends string, Link extends string = string> e
     this.activeTab = activeTab ?? getFirstKey(defaulTabLinks) as Tab;
   }
 
-  push(link: Link) {
+  push(link: Link, tab?: Tab, reset?: boolean) {
+    if (tab && tab !== this.activeTab) {
+      this._switchTab(tab, reset);
+    }
+
     const hist = this.history[this.activeTab];
     hist.stack.length = hist.pos + 1;
     hist.stack.push(link);
@@ -133,16 +137,23 @@ export class NavigationState<Tab extends string, Link extends string = string> e
     this.emit('history:change', { tab: this.activeTab, link: this.currentLink });
   }
 
-  switchTab(tab: Tab) {
-    const hist = this.history[this.activeTab];
+  switchTab(tab: Tab, reset?: boolean) {
+    this._switchTab(tab, reset);
+    this.emit('history:change', { tab, link: this.currentLink });
+  }
 
-    if (this.activeTab === tab) {
+  private _switchTab(tab: Tab, reset: boolean = false) {
+    if (this.defaultTabLinks[tab] === undefined) {
+      throw new Error(`Tab "${tab}" does not exist in navigation state`);
+    }
+
+    if (reset || this.activeTab === tab) {
+      const hist = this.history[tab];
       hist.stack = [this.defaultTabLinks[tab]];
       hist.pos = 0;
     }
 
     this.activeTab = tab;
     this.emit('history:switchTab', { tab, link: this.currentLink });
-    this.emit('history:change', { tab, link: this.currentLink });
   }
 }

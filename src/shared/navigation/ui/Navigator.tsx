@@ -3,16 +3,16 @@ import { NavigationState, type NavigationStateEvnetPayload } from '../navigation
 import { useNavigate as useReactRouterNavigate } from 'react-router';
 import { useTelegramBackButton } from '@/shared/tma';
 
+export type Tab = 'home' | 'trainings' | 'events' | 'profile';
+
 interface Navigator {
-  switchTab(tab: Tab): void;
+  switchTab(tab: Tab, reset?: boolean): void;
   back(): void;
   forward(): void;
   goTo(pos: number): void;
-  push(link: string): void;
+  push(link: string, tab?: Tab, reset?: boolean): void;
   replace(link: string): void;
 }
-
-type Tab = 'home' | 'trainings' | 'events' | 'profile';
 
 const state = new NavigationState<Tab>({
   defaulTabLinks: {
@@ -34,8 +34,8 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
   }, []);
 
   const navigator = useMemo(() => ({
-    switchTab(tab: Tab) {
-      state.switchTab(tab);
+    switchTab(tab: Tab, reset?: boolean) {
+      state.switchTab(tab, reset);
       navigate(state.currentLink);
     },
 
@@ -54,8 +54,8 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
       navigate(state.currentLink);
     },
 
-    push(link: string) {
-      state.push(link);
+    push(link: string, tab?: Tab, reset?: boolean) {
+      state.push(link, tab, reset);
       navigate(state.currentLink);
     },
 

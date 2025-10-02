@@ -1307,7 +1307,7 @@ components:
       type: object
       required:
       - id
-      - planId
+      - plan
       - userId
       - status
       - remainingPasses
@@ -1315,8 +1315,8 @@ components:
       properties:
         id:
           type: string
-        planId:
-          type: string
+        plan:
+          $ref: '#/components/schemas/SeasonTicketPlan'
         userId:
           type: string
         status:
@@ -3119,6 +3119,11 @@ paths:
           items:
             type: string
         description: Фильтр по событиям. Вернёт планы, применимые хотя бы к одному из указанных событий (OR).
+      - in: query
+        name: sessionId
+        schema:
+          type: string
+        description: Фильтр по сессии. Вернёт планы, применимые к данной сессии.
       - $ref: '#/components/parameters/CursorParam'
       - $ref: '#/components/parameters/LimitParam'
       responses:
@@ -3310,6 +3315,34 @@ paths:
         schema:
           type: string
         description: Только ADMIN — фильтр по userId
+      - in: query
+        name: sessionId
+        schema:
+          type: string
+        description: Фильтр по сессии. Вернёт абонементы, применимые к данной сессии.
+      - in: query
+        name: eventId
+        schema:
+          type: string
+        description: Фильтр по событию. Вернёт абонементы, применимые к данному событию.
+      - in: query
+        name: status
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - ACTIVE
+            - EXPIRED
+            - CANCELLED
+        description: Фильтр по статусу абонемента (можно указать несколько).
+      - in: query
+        name: hasRemainingPasses
+        schema:
+          type: boolean
+        description: Фильтр абонементов с оставшимися посещениями (true) или без них (false).
       - $ref: '#/components/parameters/CursorParam'
       - $ref: '#/components/parameters/LimitParam'
       responses:

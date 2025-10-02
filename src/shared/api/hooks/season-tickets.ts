@@ -112,6 +112,15 @@ export const useSeasonTickets = (filters?: SeasonTicketFilters) => {
   });
 };
 
+export const useSeasonTicketsBySessionId = (sessionId?: string, filters?: SeasonTicketFilters) => {
+  return useQuery({
+    queryKey: seasonTicketsKeys.ticketsList({ sessionId, ...filters }),
+    queryFn: () => seasonTicketsClient.getSeasonTickets({ sessionId, ...filters }),
+    staleTime: 5 * 60 * 1000,
+    enabled: Boolean(sessionId),
+  });
+};
+
 export const useCurrentUserSeasonTickets = () => {
   const auth = useAuth();
   const userId = auth.user?.id;

@@ -6,12 +6,14 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useSession, useBookSession, useCurrentUserSeasonTickets } from '@/shared/api';
+import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment } from '@/shared/api';
 import styles from './SessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
 import { formatPrice } from '@/shared/lib/format-utils';
 import { formatDuration, isTheSameDay, formatRangeWithYear, formatSessionDate, formatTime } from '@/shared/lib/date-utils';
+
+// type EnchacedSessionTicket = Omit<SeasonTicket, 'planId'> & { plan?: SeasonTicketPlan };
 
 const heroImages = [
   '/images/surfing1.jpg',
@@ -20,7 +22,7 @@ const heroImages = [
 
 const hasPrepayment = (session: any): boolean => {
   const amount = session?.event.tickets[0].prepayment?.price.amountMinor;
-  return amount && amount > 0;
+  return amount != null && amount > 0;
 };
 
 // Assets from Figma
@@ -30,39 +32,55 @@ export const SessionPage = () => {
   const { setOverride } = useBottomBar();
   const [modalOpen, setModalOpen] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
-  // Removed pendingBookingId - not needed with new API structure
 
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string; }>();
   const { data: session, isLoading, error } = useSession(sessionId!);
-  const { data: subscriptions = [], isLoading: subscriptionsLoading } = useCurrentUserSeasonTickets();
   
+  const { data: seasonTickets, isLoading: seasonTicketsLoading } = useSeasonTicketsBySessionId(
+    sessionId,
+    {status: ['ACTIVE'], hasRemainingPasses: true}
+  );
+
   const createBookingMutation = useBookSession();
-  // TODO: Implement subscription redemption with new API structure
+  const createPaymentMutation = useCreatePayment();
 
-  const handleBookingClick = useCallback(() => {
-    if (!session || subscriptionsLoading) return;
-    
-    setBookingError(null);
-    setModalOpen(true);
-  }, [session, subscriptionsLoading]);
-
-  const handleUseSubscription = useCallback(() => {
+  const handleUseSubscription = useCallback((seasonTicketId: string) => {
     if (!sessionId) return;
-    
+
     setBookingError(null);
-    
-    // TODO: Update to use new API structure with season tickets
+
+    // Step 1: Create booking with HOLD status
     createBookingMutation.mutate(
-      { 
-        sessionId: sessionId, 
+      {
+        sessionId: sessionId,
         data: { quantity: 1 },
         idempotencyKey: crypto.randomUUID()
       },
       {
-        onSuccess: () => {
-          setModalOpen(false);
-          navigate(`/events/sessions/${sessionId}/booked`);
+        onSuccess: (bookingResult) => {
+          // Step 2: Pay for booking using season ticket pass
+          createPaymentMutation.mutate(
+            {
+              bookingId: bookingResult.booking.id,
+              data: {
+                method: 'pass',
+                seasonTicketId: seasonTicketId,
+                passesToSpend: 1
+              },
+              idempotencyKey: crypto.randomUUID()
+            },
+            {
+              onSuccess: () => {
+                setModalOpen(false);
+                navigate('payment-success?type=training');
+              },
+              onError: (error: any) => {
+                console.error('Payment error:', error);
+                setBookingError(error.message || 'Произошла ошибка при применении абонемента');
+              }
+            }
+          );
         },
         onError: (error: any) => {
           console.error('Booking error:', error);
@@ -70,14 +88,26 @@ export const SessionPage = () => {
         }
       }
     );
-  }, [sessionId, createBookingMutation, navigate]);
+  }, [sessionId, createBookingMutation, createPaymentMutation, navigate]);
 
   const handleGoToPayment = useCallback(() => {
     if (!sessionId) return;
     
     setModalOpen(false);
     navigate(`/events/sessions/${sessionId}/payment`);
-  }, [sessionId, navigate]);
+  }, [sessionId, navigate, setModalOpen]);
+
+  const handleBookingClick = useCallback(() => {
+    if (!session || seasonTicketsLoading) return;
+
+    if (seasonTickets?.items.length === 0) {
+      handleGoToPayment();
+      return;
+    }
+
+    setBookingError(null);
+    setModalOpen(true);
+  }, [session, seasonTicketsLoading, seasonTickets, setBookingError, setModalOpen]);
 
   const bottomBarContent = useMemo(() => (
     <div className={styles.bottomBarContent}>
@@ -103,7 +133,7 @@ export const SessionPage = () => {
             size='l'
             mode='primary'
             stretched={true}
-            loading={subscriptionsLoading}
+            loading={seasonTicketsLoading}
             disabled={!session}
             onClick={handleBookingClick}
           >
@@ -117,7 +147,7 @@ export const SessionPage = () => {
         </>
       ))}
     </div>
-  ), [subscriptionsLoading, session, handleBookingClick]);
+  ), [seasonTicketsLoading, session, handleBookingClick]);
 
   useEffect(() => {
     setOverride(bottomBarContent);
@@ -146,14 +176,14 @@ export const SessionPage = () => {
     <PageLayout title={session.event.title} heroImages={heroImages}>
       <div className={styles.wrapper}>
         {session && (
-          <BookingSelectionModal 
-            isOpen={modalOpen} 
+          <BookingSelectionModal
+            isOpen={modalOpen}
             onClose={() => setModalOpen(false)}
             session={session}
-            subscriptions={subscriptions || []}
+            seasonTickets={seasonTickets?.items || []}
             onUseSubscription={handleUseSubscription}
             onGoToPayment={handleGoToPayment}
-            isRedeeming={false}
+            isRedeeming={createBookingMutation.isPending || createPaymentMutation.isPending}
             isBooking={createBookingMutation.isPending}
           />
         )}

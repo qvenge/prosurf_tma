@@ -6,51 +6,57 @@ export interface BookingSelectionModalProps extends ModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: Session;
-  subscriptions: SeasonTicket[];
-  onUseSubscription: () => void;
+  seasonTickets: SeasonTicket[];
+  onUseSubscription: (seasonTicketId: string) => void;
   onGoToPayment: () => void;
   isRedeeming: boolean;
   isBooking: boolean;
 }
 
-export function BookingSelectionModal({ 
-  isOpen, 
-  onClose, 
-  session: _session, 
-  subscriptions, 
-  onUseSubscription, 
+export function BookingSelectionModal({
+  isOpen,
+  onClose,
+  session: _session,
+  seasonTickets,
+  onUseSubscription,
   onGoToPayment,
   isRedeeming,
   isBooking
 }: BookingSelectionModalProps) {
-  const hasActiveSubscription = subscriptions.some(sub => 
-    sub.status === 'ACTIVE' && 
+  const activeSeasonTicket = seasonTickets.find((ticket) =>
+    ticket.status === 'ACTIVE' &&
     // TODO: Check if subscription applies to this event type once plan details are available
-    sub.remainingPasses > 0 &&
-    (sub.validUntil ? new Date(sub.validUntil) > new Date() : true)
+    ticket.remainingPasses > 0 &&
+    (ticket.validUntil ? new Date(ticket.validUntil) > new Date() : true)
   );
+
+  const handleUseSubscription = () => {
+    if (activeSeasonTicket) {
+      onUseSubscription(activeSeasonTicket.id);
+    }
+  };
 
   return (
     <Modal
       open={isOpen}
       onOpenChange={onClose}
       overlayComponent={<Modal.Overlay />}
-      header={<Modal.Header />} 
+      header={<Modal.Header />}
     >
       <div className={styles.modalContent}>
-        {hasActiveSubscription && (
-          <BookingSelectionButon 
-            onClick={onUseSubscription}
+        {activeSeasonTicket && (
+          <BookingSelectionButon
+            onClick={handleUseSubscription}
             disabled={isRedeeming || isBooking}
             loading={isRedeeming}
           >
             Использовать абонемент
           </BookingSelectionButon>
         )}
-        {/* TODO: uncomment when api will be ready 
+        {/* TODO: uncomment when api will be ready
           <BookingSelectionButon>Использовать сертификат</BookingSelectionButon>
         */}
-        <BookingSelectionButon 
+        <BookingSelectionButon
           onClick={onGoToPayment}
           disabled={isRedeeming || isBooking}
           loading={isBooking}

@@ -4,7 +4,6 @@ import { App } from './ui/App';
 import { Home } from '@/pages/home';
 import { TrainingCategoriesPage } from '@/pages/training-categories';
 import { Trainings } from '@/pages/trainings';
-import { TrainingPage } from '@/pages/training';
 import { Profile } from '@/pages/profile';
 import { PaymentPage } from '@/pages/payment';
 import { PaymentSuccessPage } from '@/pages/payment-success';
@@ -52,8 +51,8 @@ export const router = createBrowserRouter([
             Component: Trainings
           },
           {
-            path: 'sessions/:trainingId',
-            Component: TrainingPage,
+            path: 'sessions/:sessionId',
+            Component: SessionPage,
             handle: { bottomBar: { visible: true, mode: 'custom' as const } },
           },
           {

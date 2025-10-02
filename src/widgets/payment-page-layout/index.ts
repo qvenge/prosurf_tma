@@ -12,6 +12,10 @@ export type {
   PriceCalculation,
 } from './model/types';
 
+export { SelectedPlanDisplay } from './ui/components/SeasonTicketPlan';
+export { SubscriptionPlans } from './ui/components/SubscriptionPlans';
+export { PriceBreakdown } from './ui/components/PriceBreakdown';
+
 // Re-export hooks and helpers for external use
 export { usePaymentState, useInitialPlanSelection } from './lib/hooks';
 export { calculatePrices, formatPrice, calculateCashback } from './lib/helpers';

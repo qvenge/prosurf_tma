@@ -1,0 +1,17 @@
+.sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  padding: 20px;
+  text-align: center;
+}
+
+.errorState {
+  color: #ff4444;
+}

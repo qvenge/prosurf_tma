@@ -10,13 +10,14 @@ import {
 } from '@/widgets/payment-page-layout';
 import {
   useCurrentUserCashback,
-  useSeasonTicketPlans
+  useSeasonTicketPlans,
+  type SeasonTicketPlan
 } from '@/shared/api';
 import { usePaymentProcessing } from '../lib/hooks';
 import { ERROR_MESSAGES } from '../lib/constants';
 import { LoadingState, ErrorState } from './components';
-import { SubscriptionPlans } from '@/widgets/payment-page-layout/ui/components';
 import { useState } from 'react';
+import { SelectedPlanDisplay, SubscriptionPlans } from '@/widgets/payment-page-layout';
 
 type SeasonTicketTab = 'season_ticket';
 
@@ -26,26 +27,34 @@ export function SeasonTicketPaymentPage() {
   const { data: cashbackWallet, isLoading: cashbackLoading } = useCurrentUserCashback();
   const { data: plansData, isLoading: plansLoading, error: plansError } = useSeasonTicketPlans();
 
-  const subscriptionPlans = plansData?.items || [];
+  // const subscriptionPlans = plansData?.items || [];
   const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
 
   // Local state for plan selection and payment options
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [plans, setPlans] = useState<SeasonTicketPlan[] | null>(null);
   const [activeCashback, setActiveCashback] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
   // Auto-select first plan when plans load
   useMemo(() => {
-    if (subscriptionPlans.length > 0 && !selectedPlanId) {
-      setSelectedPlanId(subscriptionPlans[0].id);
+    if (plansData?.items && plansData.items.length > 0 && !selectedPlanId) {
+      setSelectedPlanId(planId ?? plansData.items[0].id);
     }
-  }, [subscriptionPlans, selectedPlanId]);
+  }, [plansData, selectedPlanId, planId]);
+
+  useMemo(() => {
+    if (selectedPlanId && plansData?.items) {
+      const selected = plansData.items.find(plan => plan.id === selectedPlanId);
+      setPlans(selected ? plansData.items.filter(plan => plan.description === selected.description) : plansData.items);
+    }
+  }, [plansData, selectedPlanId]);
 
   // Payment processing hook
   const { processPayment, isProcessing } = usePaymentProcessing();
 
   // Calculate prices
-  const selectedPlan = subscriptionPlans.find((plan) => plan.id === selectedPlanId);
+  const selectedPlan = plans?.find((plan) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
   const { finalPrice } = calculatePrices(subscriptionPrice, cashbackValue, activeCashback);
 
@@ -61,6 +70,26 @@ export function SeasonTicketPaymentPage() {
 
   // Combined loading state
   const isLoading = cashbackLoading || plansLoading;
+
+    // Configure single tab for season ticket purchase
+  const tabs: TabConfig<SeasonTicketTab>[] = useMemo(() => [
+    {
+      id: 'season_ticket',
+      label: 'Абонемент',
+      content: (
+        <>
+          {selectedPlan && <SelectedPlanDisplay
+            data={selectedPlan}
+          />}
+          {plans && <SubscriptionPlans
+            plans={plans}
+            selectedPlanId={selectedPlanId}
+            onPlanSelect={setSelectedPlanId}
+          />}
+        </>
+      ),
+    },
+  ], [plans, selectedPlanId, selectedPlan]);
 
   // Error state
   if (plansError) {
@@ -81,28 +110,13 @@ export function SeasonTicketPaymentPage() {
   }
 
   // No plans available
-  if (subscriptionPlans.length === 0) {
+  if (!plans || plans.length === 0) {
     return (
       <PageLayout title="Покупка абонемента">
         <ErrorState message={ERROR_MESSAGES.NO_PLANS_AVAILABLE} />
       </PageLayout>
     );
   }
-
-  // Configure single tab for season ticket purchase
-  const tabs: TabConfig<SeasonTicketTab>[] = useMemo(() => [
-    {
-      id: 'season_ticket',
-      label: 'Абонемент',
-      content: (
-        <SubscriptionPlans
-          plans={subscriptionPlans}
-          selectedPlanId={selectedPlanId}
-          onPlanSelect={setSelectedPlanId}
-        />
-      ),
-    },
-  ], [subscriptionPlans, selectedPlanId]);
 
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {
