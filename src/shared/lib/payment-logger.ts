@@ -114,7 +114,7 @@ class PaymentLogger {
    * Log payment API call
    */
   logPaymentApiCalled(data: {
-    bookingId: string;
+    bookingId?: string; // Optional for season ticket payments
     amount: number;
     currency: string;
     provider: string;
@@ -131,7 +131,7 @@ class PaymentLogger {
    */
   logPaymentApiResponse(data: {
     paymentId: string;
-    bookingId: string;
+    bookingId?: string; // Optional for season ticket payments
     status: string;
     amount: number;
     currency: string;
@@ -177,7 +177,7 @@ class PaymentLogger {
    */
   logPaymentCompleted(data: {
     paymentId: string;
-    bookingId: string;
+    bookingId?: string; // Optional for season ticket payments
     amount: number;
     currency: string;
   }): void {

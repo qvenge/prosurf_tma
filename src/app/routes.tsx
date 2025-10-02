@@ -31,6 +31,16 @@ export const router = createBrowserRouter([
         Component: Home
       },
       {
+        path: 'season-tickets/:planId/payment',
+        Component: SeasonTicketPaymentPage,
+        handle: { bottomBar: { visible: false } },
+      },
+      {
+        path: 'payment-success',
+        Component: PaymentSuccessPage,
+        handle: { bottomBar: { visible: false } },
+      },
+      {
         path: 'trainings',
         children: [
           { 
@@ -74,12 +84,7 @@ export const router = createBrowserRouter([
             path: 'sessions/:sessionId/payment',
             Component: PaymentPage,
             handle: { bottomBar: { visible: false } },
-          },
-          {
-            path: ':bookingId/payment-success',
-            Component: PaymentSuccessPage,
-            handle: { bottomBar: { visible: false } },
-          },
+          }
         ]
       },
       {
@@ -106,10 +111,6 @@ export const router = createBrowserRouter([
             Component: MySeasonTicketsPage
           }
         ],
-      },
-      {
-        path: 'season-tickets/:planId/payment',
-        Component: SeasonTicketPaymentPage
       }
     ],
   },

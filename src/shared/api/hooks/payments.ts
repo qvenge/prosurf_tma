@@ -76,9 +76,9 @@ export const useCreateRefund = () => {
       // Invalidate payment to show refund status
       queryClient.invalidateQueries({ queryKey: paymentsKeys.detail(variables.paymentId) });
       
-      // Invalidate related booking
+      // Invalidate related booking (if payment has booking)
       const payment = queryClient.getQueryData(paymentsKeys.detail(variables.paymentId)) as Payment;
-      if (payment) {
+      if (payment?.bookingId) {
         queryClient.invalidateQueries({ queryKey: bookingsKeys.detail(payment.bookingId) });
       }
     },
@@ -122,7 +122,7 @@ export const usePaymentActions = () => {
       paymentLogger.log({
         eventType: 'payment_completed',
         paymentId: payment.id,
-        bookingId: payment.bookingId,
+        bookingId: payment.bookingId ?? undefined,
         amount: payment.amount.amountMinor,
         currency: payment.amount.currency,
         metadata: { nextActionType: 'none' },
@@ -148,7 +148,7 @@ export const usePaymentActions = () => {
               error: errorMsg,
               context: 'handlePaymentAction.openInvoice',
               paymentId: payment.id,
-              bookingId: payment.bookingId,
+              bookingId: payment.bookingId ?? undefined,
             });
 
             return {
@@ -162,7 +162,7 @@ export const usePaymentActions = () => {
 
           paymentLogger.logInvoiceOpening({
             paymentId: payment.id,
-            bookingId: payment.bookingId,
+            bookingId: payment.bookingId ?? undefined,
             slug,
           });
 
@@ -202,7 +202,7 @@ export const usePaymentActions = () => {
             case 'cancelled':
               paymentLogger.logPaymentCancelled({
                 paymentId: payment.id,
-                bookingId: payment.bookingId,
+                bookingId: payment.bookingId ?? undefined,
                 reason: 'User cancelled invoice',
               });
 
@@ -220,7 +220,7 @@ export const usePaymentActions = () => {
 
               paymentLogger.logPaymentFailed({
                 paymentId: payment.id,
-                bookingId: payment.bookingId,
+                bookingId: payment.bookingId ?? undefined,
                 error: failureMsg,
                 metadata: {
                   invoiceStatus: result,
@@ -233,7 +233,7 @@ export const usePaymentActions = () => {
 
               console.error('[Payment Failed]', {
                 paymentId: payment.id,
-                bookingId: payment.bookingId,
+                bookingId: payment.bookingId ?? undefined,
                 status: result,
                 provider: payment.provider,
                 currency: payment.amount.currency,
@@ -272,7 +272,7 @@ export const usePaymentActions = () => {
                 error: `Unknown invoice status: ${result}`,
                 context: 'handlePaymentAction.openInvoice',
                 paymentId: payment.id,
-                bookingId: payment.bookingId,
+                bookingId: payment.bookingId ?? undefined,
                 metadata: { unknownStatus: result },
               });
 
@@ -287,7 +287,7 @@ export const usePaymentActions = () => {
 
           console.error('[Payment Error] Failed to open invoice:', {
             paymentId: payment.id,
-            bookingId: payment.bookingId,
+            bookingId: payment.bookingId ?? undefined,
             error: errorMsg,
             provider: payment.provider,
           });
@@ -296,7 +296,7 @@ export const usePaymentActions = () => {
             error: error as Error | string,
             context: 'handlePaymentAction.openInvoice.exception',
             paymentId: payment.id,
-            bookingId: payment.bookingId,
+            bookingId: payment.bookingId ?? undefined,
           });
 
           return {
@@ -314,7 +314,7 @@ export const usePaymentActions = () => {
             paymentLogger.log({
               eventType: 'payment_api_response',
               paymentId: payment.id,
-              bookingId: payment.bookingId,
+              bookingId: payment.bookingId ?? undefined,
               status: 'redirect',
               amount: payment.amount.amountMinor,
               currency: payment.amount.currency,
@@ -341,7 +341,7 @@ export const usePaymentActions = () => {
             error: error as Error | string,
             context: 'handlePaymentAction.redirect',
             paymentId: payment.id,
-            bookingId: payment.bookingId,
+            bookingId: payment.bookingId ?? undefined,
           });
 
           return {
@@ -355,7 +355,7 @@ export const usePaymentActions = () => {
         // Payment completed immediately (e.g., full cashback or certificate)
         paymentLogger.logPaymentCompleted({
           paymentId: payment.id,
-          bookingId: payment.bookingId,
+          bookingId: payment.bookingId ?? undefined,
           amount: payment.amount.amountMinor,
           currency: payment.amount.currency,
         });
@@ -370,7 +370,7 @@ export const usePaymentActions = () => {
           error: `Unknown next action type: ${(payment.nextAction as { type: string }).type}`,
           context: 'handlePaymentAction',
           paymentId: payment.id,
-          bookingId: payment.bookingId,
+          bookingId: payment.bookingId ?? undefined,
         });
 
         return {

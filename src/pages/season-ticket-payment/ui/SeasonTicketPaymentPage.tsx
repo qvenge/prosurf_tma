@@ -3,70 +3,56 @@ import { useParams } from 'react-router';
 import { PageLayout } from '@/widgets/page-layout';
 import {
   PaymentPageLayout,
-  usePaymentState,
-  useInitialPlanSelection,
   calculatePrices,
   type TabConfig,
-  type ProductType,
   type PaymentOptionsConfig,
   type PaymentSummaryConfig,
 } from '@/widgets/payment-page-layout';
 import {
-  useSession,
-  useCurrentUserProfile,
   useCurrentUserCashback,
   useSeasonTicketPlans
 } from '@/shared/api';
 import { usePaymentProcessing } from '../lib/hooks';
 import { ERROR_MESSAGES } from '../lib/constants';
 import { LoadingState, ErrorState } from './components';
-import { PriceBreakdown, SubscriptionPlans } from '@/widgets/payment-page-layout/ui/components';
+import { SubscriptionPlans } from '@/widgets/payment-page-layout/ui/components';
+import { useState } from 'react';
+
+type SeasonTicketTab = 'season_ticket';
 
 export function SeasonTicketPaymentPage() {
-  const { sessionId } = useParams<{ sessionId: string }>();
-
+  const { planId } = useParams<{ planId: string }>();
   // Fetch data
-  const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(sessionId!);
-  const { user, isLoading: userLoading } = useCurrentUserProfile();
   const { data: cashbackWallet, isLoading: cashbackLoading } = useCurrentUserCashback();
   const { data: plansData, isLoading: plansLoading, error: plansError } = useSeasonTicketPlans();
 
   const subscriptionPlans = plansData?.items || [];
   const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
 
-  // State management from widget hooks
-  const {
-    product,
-    selectedPlanId,
-    activeCashback,
-    paymentError,
-    updateProduct,
-    updateSelectedPlan,
-    updateActiveCashback,
-    setPaymentError,
-  } = usePaymentState();
+  // Local state for plan selection and payment options
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [activeCashback, setActiveCashback] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
-  // Auto-select first plan
-  useInitialPlanSelection(subscriptionPlans, selectedPlanId, updateSelectedPlan);
+  // Auto-select first plan when plans load
+  useMemo(() => {
+    if (subscriptionPlans.length > 0 && !selectedPlanId) {
+      setSelectedPlanId(subscriptionPlans[0].id);
+    }
+  }, [subscriptionPlans, selectedPlanId]);
 
   // Payment processing hook
-  const { processPayment, isProcessing } = usePaymentProcessing(
-    session || null,
-    user || null
-  );
+  const { processPayment, isProcessing } = usePaymentProcessing();
 
   // Calculate prices
   const selectedPlan = subscriptionPlans.find((plan) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
-  const sessionPrice = session?.event?.tickets?.[0]?.prepayment?.price?.amountMinor || 0;
-  const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
-  const { finalPrice } = calculatePrices(originalPrice, cashbackValue, activeCashback);
+  const { finalPrice } = calculatePrices(subscriptionPrice, cashbackValue, activeCashback);
 
   // Handler for payment
   const handlePayment = () => {
     processPayment(
       selectedPlanId,
-      product,
       activeCashback,
       activeCashback ? cashbackValue : 0,
       setPaymentError
@@ -74,91 +60,49 @@ export function SeasonTicketPaymentPage() {
   };
 
   // Combined loading state
-  const isLoading = sessionLoading || userLoading || cashbackLoading || plansLoading;
+  const isLoading = cashbackLoading || plansLoading;
 
   // Error state
-  if (sessionError || plansError) {
+  if (plansError) {
     return (
-      <PageLayout title="Оплата">
+      <PageLayout title="Покупка абонемента">
         <ErrorState message={ERROR_MESSAGES.DATA_LOADING_ERROR} />
       </PageLayout>
     );
   }
 
-  // No session found
-  if (!isLoading && !session) {
+  // Show loading until we have plans data
+  if (isLoading) {
     return (
-      <PageLayout title="Оплата">
-        <ErrorState message={ERROR_MESSAGES.SESSION_NOT_FOUND} />
-      </PageLayout>
-    );
-  }
-
-  // Show loading until we have session data
-  if (isLoading || !session) {
-    return (
-      <PageLayout title="Оплата">
+      <PageLayout title="Покупка абонемента">
         <LoadingState />
       </PageLayout>
     );
   }
 
-  // Configure tabs with content - FULLY CONFIGURABLE!
-  const tabs: TabConfig<ProductType>[] = useMemo(() => [
+  // No plans available
+  if (subscriptionPlans.length === 0) {
+    return (
+      <PageLayout title="Покупка абонемента">
+        <ErrorState message={ERROR_MESSAGES.NO_PLANS_AVAILABLE} />
+      </PageLayout>
+    );
+  }
+
+  // Configure single tab for season ticket purchase
+  const tabs: TabConfig<SeasonTicketTab>[] = useMemo(() => [
     {
-      id: 'subscription',
+      id: 'season_ticket',
       label: 'Абонемент',
       content: (
-        <>
-          <PriceBreakdown
-            product="subscription"
-            selectedPlan={selectedPlan}
-            session={{
-              title: session.event.title,
-              type: 'other' as const,
-              price: session.event.tickets[0]?.prepayment?.price
-                ? {
-                    amount: String(session.event.tickets[0].prepayment.price.amountMinor / 100),
-                    currency: session.event.tickets[0].prepayment.price.currency,
-                  }
-                : { amount: '0', currency: 'RUB' },
-            }}
-            sessionPrice={sessionPrice}
-            subscriptionPrice={subscriptionPrice}
-          />
-          {subscriptionPlans.length > 0 && (
-            <SubscriptionPlans
-              plans={subscriptionPlans}
-              selectedPlanId={selectedPlanId}
-              onPlanSelect={updateSelectedPlan}
-            />
-          )}
-        </>
-      ),
-    },
-    {
-      id: 'single_session',
-      label: 'Разовая тренировка',
-      content: (
-        <PriceBreakdown
-          product="single_session"
-          selectedPlan={selectedPlan}
-          session={{
-            title: session.event.title,
-            type: 'other' as const,
-            price: session.event.tickets[0]?.prepayment?.price
-              ? {
-                  amount: String(session.event.tickets[0].prepayment.price.amountMinor / 100),
-                  currency: session.event.tickets[0].prepayment.price.currency,
-                }
-              : { amount: '0', currency: 'RUB' },
-          }}
-          sessionPrice={sessionPrice}
-          subscriptionPrice={subscriptionPrice}
+        <SubscriptionPlans
+          plans={subscriptionPlans}
+          selectedPlanId={selectedPlanId}
+          onPlanSelect={setSelectedPlanId}
         />
       ),
     },
-  ], [selectedPlan, session, sessionPrice, subscriptionPrice, subscriptionPlans, selectedPlanId, updateSelectedPlan]);
+  ], [subscriptionPlans, selectedPlanId]);
 
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {
@@ -166,7 +110,7 @@ export function SeasonTicketPaymentPage() {
       enabled: cashbackValue > 0,
       value: cashbackValue,
       active: activeCashback,
-      onChange: updateActiveCashback,
+      onChange: setActiveCashback,
     },
     // Certificate disabled for now
     certificate: {
@@ -179,7 +123,7 @@ export function SeasonTicketPaymentPage() {
 
   // Payment summary configuration
   const summary: PaymentSummaryConfig = {
-    originalPrice,
+    originalPrice: subscriptionPrice,
     finalPrice,
     onPayment: handlePayment,
     isProcessing,
@@ -190,8 +134,8 @@ export function SeasonTicketPaymentPage() {
     <PageLayout title="Оплата">
       <PaymentPageLayout
         tabs={tabs}
-        activeTab={product}
-        onTabChange={updateProduct}
+        activeTab="season_ticket"
+        onTabChange={() => {}}
         paymentOptions={paymentOptions}
         summary={summary}
       />

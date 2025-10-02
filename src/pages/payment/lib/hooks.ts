@@ -224,7 +224,7 @@ export const usePaymentProcessing = (
         error: 'No next action in payment response',
         context: 'handlePaymentNextAction',
         paymentId: payment.id,
-        bookingId: payment.bookingId,
+        bookingId: payment.bookingId ?? undefined,
       });
       return;
     }
@@ -232,7 +232,7 @@ export const usePaymentProcessing = (
     paymentLogger.log({
       eventType: 'payment_api_response',
       paymentId: payment.id,
-      bookingId: payment.bookingId,
+      bookingId: payment.bookingId ?? undefined,
       amount: payment.amount.amountMinor,
       currency: payment.amount.currency,
       status: payment.status,
@@ -257,11 +257,13 @@ export const usePaymentProcessing = (
       if (result.status === 'paid' || result.status === 'none') {
         paymentLogger.logPaymentCompleted({
           paymentId: payment.id,
-          bookingId: payment.bookingId,
+          bookingId: payment.bookingId ?? undefined,
           amount: payment.amount.amountMinor,
           currency: payment.amount.currency,
         });
-        navigate(`trainings/${payment.bookingId}/payment-success`);
+
+        navigate('payment-success?type=training:surfing');
+
       } else if (result.status === 'pending') {
         // For redirect payments, stay on page or navigate to pending page
         // TODO: Implement payment status polling
@@ -273,7 +275,7 @@ export const usePaymentProcessing = (
         status: result.status,
         error: result.error,
         paymentId: payment.id,
-        bookingId: payment.bookingId,
+        bookingId: payment.bookingId ?? undefined,
       });
 
       // Error will be shown in UI via setPaymentError in parent function

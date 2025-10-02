@@ -274,7 +274,7 @@ export const PaymentNextActionSchema = z.union([
 
 export const PaymentSchema = z.object({
   id: z.string(),
-  bookingId: z.string(),
+  bookingId: z.string().nullable(), // Nullable for season ticket payments
   amount: PriceSchema,
   status: PaymentStatusSchema,
   createdAt: z.string().datetime(),

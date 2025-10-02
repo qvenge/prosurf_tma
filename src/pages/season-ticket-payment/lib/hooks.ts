@@ -1,41 +1,26 @@
 import { useNavigate } from '@/shared/navigation';
 import {
-  useBookSession,
-  useCreatePayment,
   usePurchaseSeasonTicket,
-  useCurrentUserBookings,
   usePaymentActions,
-  type Session,
-  type User,
   type PaymentMethodRequest,
   type Payment
 } from '@/shared/api';
-import type { ProductType } from '@/widgets/payment-page-layout';
 import { ERROR_MESSAGES } from './constants';
 
 // Helper to create idempotency keys
-const createIdempotencyKey = (sessionId: string): string => {
-  return `booking-${sessionId}-${Date.now()}`;
+const createIdempotencyKey = (planId: string): string => {
+  return `season-ticket-${planId}-${Date.now()}`;
 };
 
-export const usePaymentProcessing = (
-  session: Session | null,
-  user: User | null
-) => {
+export const usePaymentProcessing = () => {
   const navigate = useNavigate();
 
   // Real API hooks
-  const bookSession = useBookSession();
-  const createPayment = useCreatePayment();
   const purchaseSeasonTicket = usePurchaseSeasonTicket();
-  const { data: userBookingsData } = useCurrentUserBookings();
   const { handlePaymentAction } = usePaymentActions();
-
-  const userBookings = userBookingsData?.items || [];
 
   const processPayment = async (
     selectedPlanId: string,
-    product: ProductType,
     activeCashback: boolean,
     cashbackAmount: number,
     setPaymentError: (error: string) => void
@@ -46,67 +31,54 @@ export const usePaymentProcessing = (
     const { paymentLogger } = await import('@/shared/lib/payment-logger');
     const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
 
-    if (!user) {
+    if (!selectedPlanId) {
+      setPaymentError(ERROR_MESSAGES.PLAN_NOT_SELECTED);
       paymentLogger.logError({
-        error: 'User not found',
+        error: ERROR_MESSAGES.PLAN_NOT_SELECTED,
         context: 'processPayment',
       });
       return;
     }
-
-    if (!session) {
-      setPaymentError(ERROR_MESSAGES.SESSION_NOT_FOUND);
-      paymentLogger.logError({
-        error: ERROR_MESSAGES.SESSION_NOT_FOUND,
-        context: 'processPayment',
-      });
-      return;
-    }
-
-    // Calculate amount for logging
-    const sessionPrice = session.event?.tickets?.[0]?.prepayment?.price?.amountMinor || 0;
-    const amount = product === 'subscription' ? 0 : sessionPrice; // Will be updated with actual subscription price
 
     // Start payment attempt
     const attemptId = paymentDebugger.startAttempt({
-      sessionId: session.id,
-      eventId: session.event.id,
-      eventTitle: session.event.title,
-      userId: user.id,
-      userEmail: user.email || undefined,
-      amount,
+      amount: 0, // Will be calculated by backend
       currency: 'RUB',
       provider: 'telegram',
       metadata: {
-        product,
-        selectedPlanId,
+        planId: selectedPlanId,
         activeCashback,
         cashbackAmount,
       },
     });
 
     paymentLogger.logPaymentInitiated({
-      sessionId: session.id,
-      amount,
+      amount: 0,
       currency: 'RUB',
       provider: 'telegram',
     });
 
     try {
-      if (product === 'subscription') {
-        await handleSubscriptionPayment(selectedPlanId, activeCashback, cashbackAmount, setPaymentError);
-      } else {
-        await handleSessionPayment(activeCashback, cashbackAmount, setPaymentError);
-      }
+      // Build payment method request
+      const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest(activeCashback, cashbackAmount);
+
+      // Purchase season ticket with payment
+      const payment = await purchaseSeasonTicket.mutateAsync({
+        planId: selectedPlanId,
+        paymentMethod,
+        idempotencyKey: createIdempotencyKey(selectedPlanId)
+      });
+
+      // Handle next action
+      await handlePaymentNextAction(payment);
     } catch (error: unknown) {
-      console.error('Payment processing failed:', error);
+      console.error('Season ticket payment processing failed:', error);
 
       paymentLogger.logPaymentFailed({
         error: error as Error | string,
         metadata: {
           attemptId,
-          product,
-          sessionId: session.id,
+          planId: selectedPlanId,
         },
       });
 
@@ -117,78 +89,6 @@ export const usePaymentProcessing = (
 
       await handlePaymentError(error, setPaymentError);
     }
-  };
-
-  const handleSubscriptionPayment = async (
-    selectedPlanId: string,
-    activeCashback: boolean,
-    cashbackAmount: number,
-    setPaymentError: (error: string) => void
-  ) => {
-    if (!selectedPlanId) {
-      setPaymentError(ERROR_MESSAGES.PLAN_NOT_SELECTED);
-      return;
-    }
-
-    // Build payment method request
-    const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest(activeCashback, cashbackAmount);
-
-    // Purchase season ticket with payment
-    const payment = await purchaseSeasonTicket.mutateAsync({
-      planId: selectedPlanId,
-      paymentMethod,
-      idempotencyKey: createIdempotencyKey(`plan-${selectedPlanId}`)
-    });
-
-    // Handle next action
-    await handlePaymentNextAction(payment);
-  };
-
-  const handleSessionPayment = async (
-    activeCashback: boolean,
-    cashbackAmount: number,
-    setPaymentError: (error: string) => void
-  ) => {
-    if (!session) {
-      setPaymentError(ERROR_MESSAGES.SESSION_NOT_FOUND);
-      return;
-    }
-
-    // Check for existing HOLD booking
-    const existingBooking = userBookings.find(
-      (booking) => booking.sessionId === session.id && booking.status === 'HOLD'
-    );
-
-    let bookingId: string;
-
-    if (existingBooking) {
-      bookingId = existingBooking.id;
-      console.log('Using existing booking:', bookingId);
-    } else {
-      // Create new booking
-      const result = await bookSession.mutateAsync({
-        sessionId: session.id,
-        data: { quantity: 1 }, // BookRequest: just quantity
-        idempotencyKey: createIdempotencyKey(session.id)
-      });
-      bookingId = result.booking.id;
-      console.log('Created new booking:', bookingId);
-
-      // TODO: Display hold TTL to user (result.holdTtlSeconds)
-    }
-
-    // Build payment method request
-    const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest(activeCashback, cashbackAmount);
-
-    // Create payment for booking
-    const payment = await createPayment.mutateAsync({
-      bookingId,
-      data: paymentMethod,
-      idempotencyKey: createIdempotencyKey(`payment-${bookingId}`)
-    });
-
-    // Handle next action
-    await handlePaymentNextAction(payment);
   };
 
   // Build payment method request based on selected options
@@ -224,7 +124,7 @@ export const usePaymentProcessing = (
         error: 'No next action in payment response',
         context: 'handlePaymentNextAction',
         paymentId: payment.id,
-        bookingId: payment.bookingId,
+        bookingId: payment.bookingId ?? undefined,
       });
       return;
     }
@@ -232,7 +132,7 @@ export const usePaymentProcessing = (
     paymentLogger.log({
       eventType: 'payment_api_response',
       paymentId: payment.id,
-      bookingId: payment.bookingId,
+      bookingId: payment.bookingId ?? undefined,
       amount: payment.amount.amountMinor,
       currency: payment.amount.currency,
       status: payment.status,
@@ -257,11 +157,12 @@ export const usePaymentProcessing = (
       if (result.status === 'paid' || result.status === 'none') {
         paymentLogger.logPaymentCompleted({
           paymentId: payment.id,
-          bookingId: payment.bookingId,
+          bookingId: payment.bookingId ?? undefined,
           amount: payment.amount.amountMinor,
           currency: payment.amount.currency,
         });
-        navigate(`trainings/${payment.bookingId}/payment-success`);
+        // Navigate to season tickets list page
+        navigate('payment-success?type=season-ticket');
       } else if (result.status === 'pending') {
         // For redirect payments, stay on page or navigate to pending page
         // TODO: Implement payment status polling
@@ -269,11 +170,11 @@ export const usePaymentProcessing = (
       }
     } else {
       // Payment failed or cancelled
-      console.error('[Payment Flow] Payment action failed:', {
+      console.error('[Payment Flow] Season ticket payment action failed:', {
         status: result.status,
         error: result.error,
         paymentId: payment.id,
-        bookingId: payment.bookingId,
+        bookingId: payment.bookingId ?? undefined,
       });
 
       // Error will be shown in UI via setPaymentError in parent function
@@ -286,22 +187,18 @@ export const usePaymentProcessing = (
     if (errorMessage.includes('Authentication required')) {
       console.log('Authentication required');
       return;
-    } else if (errorMessage.includes('HOLD_EXPIRED')) {
-      setPaymentError('Время бронирования истекло. Пожалуйста, создайте новое бронирование.');
-    } else if (errorMessage.includes('NO_SEATS')) {
-      setPaymentError(ERROR_MESSAGES.NO_SEATS_AVAILABLE);
     } else if (errorMessage.includes('AMOUNT_MISMATCH')) {
-      setPaymentError('Несоответствие суммы платежа. Попробуйте снова.');
+      setPaymentError(ERROR_MESSAGES.AMOUNT_MISMATCH);
     } else if (errorMessage.includes('PROVIDER_UNAVAILABLE')) {
-      setPaymentError('Платежная система временно недоступна. Попробуйте позже.');
+      setPaymentError(ERROR_MESSAGES.PROVIDER_UNAVAILABLE);
     } else if (errorMessage.includes('not found')) {
-      setPaymentError(ERROR_MESSAGES.TRAINING_NOT_FOUND);
+      setPaymentError(ERROR_MESSAGES.PLAN_NOT_FOUND);
     } else {
       setPaymentError(ERROR_MESSAGES.GENERIC_PAYMENT_ERROR);
     }
   };
 
-  const isProcessing = bookSession.isPending || purchaseSeasonTicket.isPending || createPayment.isPending;
+  const isProcessing = purchaseSeasonTicket.isPending;
 
   return { processPayment, isProcessing };
 };

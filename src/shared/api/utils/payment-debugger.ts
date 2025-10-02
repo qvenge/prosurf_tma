@@ -190,7 +190,7 @@ class PaymentDebugger {
 
     paymentLogger.logPaymentApiResponse({
       paymentId: payment.id,
-      bookingId: payment.bookingId,
+      bookingId: payment.bookingId ?? undefined,
       status: payment.status,
       amount: payment.amount.amountMinor,
       currency: payment.amount.currency,
