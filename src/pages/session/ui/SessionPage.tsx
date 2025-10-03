@@ -6,38 +6,30 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, type EventTicket, type Session } from '@/shared/api';
+import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, type EventTicket, type Session } from '@/shared/api';
 import styles from './SessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
 import { formatPrice } from '@/shared/lib/format-utils';
 import { formatDuration, isTheSameDay, formatRangeWithYear, formatSessionDate, formatTime } from '@/shared/lib/date-utils';
 
-// type EnchacedSessionTicket = Omit<SeasonTicket, 'planId'> & { plan?: SeasonTicketPlan };
-
 const heroImages = [
   '/images/surfing1.jpg',
   '/images/surfing2.png',
 ];
-
-// const hasPrepayment = (ticket?: EventTicket): ticket is EventTicket & { prepayment: { price: { amountMinor: number } } } => {
-//   const amount = ticket?.prepayment?.price.amountMinor;
-//   return amount != null && amount > 0;
-// };
-
 
 const hasPrepayment = (session?: Session): session is Session & { event: { tickets: (EventTicket & { prepayment: { price: { amountMinor: number } } })[] } } => {
   const amount = session?.event.tickets[0].prepayment?.price.amountMinor;
   return amount != null && amount > 0;
 };
 
-// Assets from Figma
 const mapSrc = "/map.png";
 
 export const SessionPage = () => {
   const { setOverride } = useBottomBar();
   const [modalOpen, setModalOpen] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [waitlistError, setWaitlistError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string; }>();
@@ -50,6 +42,7 @@ export const SessionPage = () => {
 
   const createBookingMutation = useBookSession();
   const createPaymentMutation = useCreatePayment();
+  const joinWaitlistMutation = useJoinWaitlist();
 
   const handleUseSubscription = useCallback((seasonTicketId: string) => {
     if (!sessionId) return;
@@ -115,6 +108,25 @@ export const SessionPage = () => {
     setModalOpen(true);
   }, [session, seasonTicketsLoading, seasonTickets, setBookingError, setModalOpen]);
 
+  const handleJoinWaitlist = useCallback(() => {
+    if (!sessionId) return;
+
+    setWaitlistError(null);
+
+    joinWaitlistMutation.mutate(
+      {
+        sessionId: sessionId,
+        idempotencyKey: crypto.randomUUID()
+      },
+      {
+        onError: (error: any) => {
+          console.error('Waitlist error:', error);
+          setWaitlistError(error.message || 'Произошла ошибка при добавлении в лист ожидания');
+        }
+      }
+    );
+  }, [sessionId, joinWaitlistMutation, navigate]);
+
   const bottomBarContent = useMemo(() => (
     <div className={styles.bottomBarContent}>
       {session?.hasBooking ? (
@@ -125,11 +137,11 @@ export const SessionPage = () => {
             size='l'
             mode='secondary'
             stretched={true}
-            loading={false}
-            disabled={true}
-            onClick={() => alert('Функция добавления в лист ожидания пока не реализована.')}
+            loading={joinWaitlistMutation.isPending}
+            disabled={!session || session.onWaitlist}
+            onClick={handleJoinWaitlist}
           >
-            В лист ожидания
+            {session.onWaitlist ? 'В листе ожидания' : 'В лист ожидания'}
           </Button>
           <div>Мест нет 😔</div>
         </>
@@ -197,6 +209,12 @@ export const SessionPage = () => {
         {bookingError && (
           <div className={styles.errorMessage}>
             {bookingError}
+          </div>
+        )}
+
+        {waitlistError && (
+          <div className={styles.errorMessage}>
+            {waitlistError}
           </div>
         )}
 

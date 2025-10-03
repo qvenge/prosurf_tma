@@ -1,1 +1,1 @@
-export { MyWaitlist } from './ui/MyWaitlist';
+export { WaitlistPage } from './ui/WaitlistPage';

@@ -10,7 +10,7 @@ import { PaymentSuccessPage } from '@/pages/payment-success';
 import { EventsPage } from '@/pages/events';
 import { SessionPage } from '@/pages/session';
 import { MyBookings } from '@/pages/my-bookings';
-import { MyWaitlist } from '@/pages/my-waitlist';
+import { WaitlistPage } from '@/pages/my-waitlist';
 import { MyPayments } from '@/pages/my-payments';
 import { MySeasonTicketsPage } from '@/pages/my-season-tickets';
 
@@ -98,7 +98,7 @@ export const router = createBrowserRouter([
           },
           { 
             path: 'waitlist', 
-            Component: MyWaitlist
+            Component: WaitlistPage
           },
           { 
             path: 'payments', 

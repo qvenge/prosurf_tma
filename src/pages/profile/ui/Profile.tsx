@@ -13,11 +13,16 @@ import {
 import { Icon } from '@/shared/ui';
 import styles from './Profile.module.scss';
 import { Link } from '@/shared/navigation';
-import { useCurrentUserProfile, useCurrentUserCashback } from '@/shared/api/hooks/users';
-import { useCurrentUserCertificates } from '@/shared/api/hooks/certificates';
-import { useBookings } from '@/shared/api/hooks/bookings';
-import { useCurrentUserWaitlist } from '@/shared/api/hooks/waitlist';
-import type { BookingExtended } from '@/shared/api/types';
+
+import {
+  useBookings,
+  useSessions,
+  useCurrentUserProfile,
+  useCurrentUserCashback,
+  useCurrentUserCertificates,
+  type BookingExtended
+} from '@/shared/api';
+
 import { PageLayout } from '@/widgets/page-layout';
 import { SeasonTicketsStat } from './SeasonTicketsStat';
 import { formatPrice } from '@/shared/lib/format-utils';
@@ -36,7 +41,7 @@ export const Profile = () => {
   const { data: bookingsData, isLoading: isBookingsLoading } = useBookings({ includeSession: true });
 
   // Fetch waitlist entries
-  const { data: waitlistData, isLoading: isWaitlistLoading } = useCurrentUserWaitlist();
+  const { data: waitlistData, isLoading: isWaitlistLoading } = useSessions({ onWaitlist: true});
 
   // Helper: Get next upcoming booking
   const getNextBooking = (): BookingExtended | null => {
@@ -87,7 +92,10 @@ export const Profile = () => {
   // Compute derived data
   const nextBooking = getNextBooking();
   const firstCertificate = getFirstCertificate();
-  const waitlistCount = waitlistData?.items?.length || 0;
+  const waitlistTotal = waitlistData?.items?.length ?? 0;
+  const waitlistCount = waitlistData?.items?.reduce((count, item) => {
+    return item.remainingSeats ? (count + 1) : count;
+  }, 0) ?? 0;
 
   // Compute menu subtitles
   const bookingsSubtitle = isBookingsLoading
@@ -98,8 +106,8 @@ export const Profile = () => {
 
   const waitlistSubtitle = isWaitlistLoading
     ? 'Загрузка...'
-    : waitlistCount > 0
-      ? `Активных: ${waitlistCount}`
+    : waitlistTotal > 0
+      ? `Доступно: ${waitlistCount}/${waitlistTotal}`
       : 'Нет записей';
 
   // Define menu items with dynamic subtitles

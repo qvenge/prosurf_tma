@@ -185,6 +185,12 @@ components:
         type: integer
         minimum: 0
       description: Минимальное количество оставшихся мест
+    OnWaitlistParam:
+      in: query
+      name: onWaitlist
+      schema:
+        type: boolean
+      description: Фильтр сессий, в которых текущий пользователь находится в листе ожидания (требуется авторизация)
     SortByParam:
       in: query
       name: sortBy
@@ -2368,6 +2374,7 @@ paths:
       - $ref: '#/components/parameters/StartsAfterParam'
       - $ref: '#/components/parameters/EndsBeforeParam'
       - $ref: '#/components/parameters/MinRemainingSeatsParam'
+      - $ref: '#/components/parameters/OnWaitlistParam'
       - $ref: '#/components/parameters/SortByParam'
       - $ref: '#/components/parameters/SortOrderParam'
       - $ref: '#/components/parameters/CursorParam'

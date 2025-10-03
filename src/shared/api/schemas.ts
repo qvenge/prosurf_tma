@@ -611,6 +611,7 @@ export const SessionFiltersSchema = z.object({
   startsAfter: StartsAfterParamSchema,
   endsBefore: EndsBeforeParamSchema,
   minRemainingSeats: z.number().int().min(0).optional(),
+  onWaitlist: z.boolean().optional(),
   sortBy: z.enum(['createdAt', 'startsAt']).default('startsAt').optional(),
   sortOrder: z.enum(['asc', 'desc']).default('asc').optional(),
   cursor: CursorParamSchema,

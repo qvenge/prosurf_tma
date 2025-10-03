@@ -1,0 +1,43 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 32px var(--outer-horizontal-padding, 16px);
+  gap: 32px;
+}
+
+.emptyStub {
+  padding-top: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading, .error {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @include ds.typo('Roboto/Text/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.error {
+  color: ds.color('Text/Error');
+}
+
+.dayBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.dayBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .day {
+    @include ds.typo('Roboto/Caption 1/Bold Caps');
+    color: ds.color('Text/Secondary');
+  }
+}
