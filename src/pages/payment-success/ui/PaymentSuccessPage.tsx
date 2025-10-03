@@ -6,15 +6,34 @@ import { useSearchParams } from 'react-router';
 
 export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
-  //type=season-ticket
-  //type=training
-  //type=session
+  // season-ticket | training | activity | tour
   const type = searchParams.get('type');
 
-  const title = type === 'training' ? 'Вы записались на тренировку!' : 'Оплачено';
-  const description = type === 'training' ? 'Напоминаем что отмена записи возможна не позднее чем за 24 часа' : null;
-  const primaryButton = type === 'training' ? {text: 'В мои записи', link: '/profile/bookings'} : null;
-  const secondaryButton = {text: 'На главную', link: '/'};
+  let title = 'Оплачено';
+  let description = null;
+  let primaryButton = null;
+  let secondaryButton = {text: 'На главную', link: '/'};
+
+  switch (type) {
+    case 'training': {
+      title = 'Вы записались на тренировку!';
+      description = 'Напоминаем что отмена записи возможна не позднее чем за 24 часа';
+      primaryButton = {text: 'В мои записи', link: '/profile/bookings'};
+      break;
+    }
+    case 'activity': {
+      title = 'Вы записались на ивент!';
+      description = 'Напоминаем что отмена записи возможна не позднее чем за 24 часа';
+      primaryButton = {text: 'В мои записи', link: '/profile/bookings'};
+      break;
+    }
+    case 'tour': {
+      title = 'Вы записались в тур!';
+      description = 'Напоминаем что отмена записи возможна не позднее чем за 24 часа';
+      primaryButton = {text: 'В мои записи', link: '/profile/bookings'};
+      break;
+    }
+  }
 
   return (
     <div className={styles.wrapper}>

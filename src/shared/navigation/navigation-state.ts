@@ -89,6 +89,10 @@ export class NavigationState<Tab extends string, Link extends string = string> e
 
   push(link: Link, {tab, reset}: { tab?: Tab, reset?: boolean } = {}) {
     let tabChanged = false;
+    
+    if (reset) {
+      this._reset();
+    }
 
     if (tab && tab !== this.activeTab) {
       this._switchTab(tab);

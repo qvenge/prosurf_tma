@@ -7,20 +7,28 @@ import {
   usePaymentActions,
   type Session,
   type User,
-  type PaymentMethodRequest,
+  type PaymentRequest,
   type Payment
 } from '@/shared/api';
 import type { ProductType } from '@/widgets/payment-page-layout';
 import { ERROR_MESSAGES } from './constants';
 
+// Payment context type
+type PaymentContext = 'session' | 'season-ticket';
+
 // Helper to create idempotency keys
-const createIdempotencyKey = (sessionId: string): string => {
-  return `booking-${sessionId}-${Date.now()}`;
+const createIdempotencyKey = (prefix: string): string => {
+  return `${prefix}-${Date.now()}`;
 };
 
+/**
+ * Unified payment processing hook for both session and season ticket payments
+ * @param session - Optional session data (required for session payment context)
+ * @param user - Optional user data (required for session payment context)
+ */
 export const usePaymentProcessing = (
-  session: Session | null,
-  user: User | null
+  session: Session | null = null,
+  user: User | null = null
 ) => {
   const navigate = useNavigate();
 
@@ -33,11 +41,15 @@ export const usePaymentProcessing = (
 
   const userBookings = userBookingsData?.items || [];
 
-  const processPayment = async (
+  /**
+   * Process session payment (with product type selection)
+   */
+  const processSessionPayment = async (
     selectedPlanId: string,
     product: ProductType,
     activeCashback: boolean,
     cashbackAmount: number,
+    cashbackCurrency: string,
     setPaymentError: (error: string) => void
   ) => {
     setPaymentError('');
@@ -49,7 +61,7 @@ export const usePaymentProcessing = (
     if (!user) {
       paymentLogger.logError({
         error: 'User not found',
-        context: 'processPayment',
+        context: 'processSessionPayment',
       });
       return;
     }
@@ -58,14 +70,14 @@ export const usePaymentProcessing = (
       setPaymentError(ERROR_MESSAGES.SESSION_NOT_FOUND);
       paymentLogger.logError({
         error: ERROR_MESSAGES.SESSION_NOT_FOUND,
-        context: 'processPayment',
+        context: 'processSessionPayment',
       });
       return;
     }
 
     // Calculate amount for logging
     const sessionPrice = session.event?.tickets?.[0]?.prepayment?.price?.amountMinor || 0;
-    const amount = product === 'subscription' ? 0 : sessionPrice; // Will be updated with actual subscription price
+    const amount = product === 'subscription' ? 0 : sessionPrice;
 
     // Start payment attempt
     const attemptId = paymentDebugger.startAttempt({
@@ -94,12 +106,12 @@ export const usePaymentProcessing = (
 
     try {
       if (product === 'subscription') {
-        await handleSubscriptionPayment(selectedPlanId, activeCashback, cashbackAmount, setPaymentError);
+        await handleSubscriptionPayment(selectedPlanId, activeCashback, cashbackAmount, cashbackCurrency, setPaymentError, 'training');
       } else {
-        await handleSessionPayment(activeCashback, cashbackAmount, setPaymentError);
+        await handleSessionPayment(activeCashback, cashbackAmount, cashbackCurrency, setPaymentError);
       }
     } catch (error: unknown) {
-      console.error('Payment processing failed:', error);
+      console.error('Session payment processing failed:', error);
 
       paymentLogger.logPaymentFailed({
         error: error as Error | string,
@@ -115,7 +127,71 @@ export const usePaymentProcessing = (
         error: error as Error | string,
       });
 
-      await handlePaymentError(error, setPaymentError);
+      await handlePaymentError(error, setPaymentError, 'session');
+    }
+  };
+
+  /**
+   * Process season ticket payment (standalone purchase)
+   */
+  const processSeasonTicketPayment = async (
+    selectedPlanId: string,
+    activeCashback: boolean,
+    cashbackAmount: number,
+    setPaymentError: (error: string) => void
+  ) => {
+    setPaymentError('');
+
+    // Import logging utilities
+    const { paymentLogger } = await import('@/shared/lib/payment-logger');
+    const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
+
+    if (!selectedPlanId) {
+      setPaymentError(ERROR_MESSAGES.PLAN_NOT_SELECTED);
+      paymentLogger.logError({
+        error: ERROR_MESSAGES.PLAN_NOT_SELECTED,
+        context: 'processSeasonTicketPayment',
+      });
+      return;
+    }
+
+    // Start payment attempt
+    const attemptId = paymentDebugger.startAttempt({
+      amount: 0,
+      currency: 'RUB',
+      provider: 'telegram',
+      metadata: {
+        planId: selectedPlanId,
+        activeCashback,
+        cashbackAmount,
+      },
+    });
+
+    paymentLogger.logPaymentInitiated({
+      amount: 0,
+      currency: 'RUB',
+      provider: 'telegram',
+    });
+
+    try {
+      await handleSubscriptionPayment(selectedPlanId, activeCashback, cashbackAmount, 'RUB', setPaymentError, 'season-ticket');
+    } catch (error: unknown) {
+      console.error('Season ticket payment processing failed:', error);
+
+      paymentLogger.logPaymentFailed({
+        error: error as Error | string,
+        metadata: {
+          attemptId,
+          planId: selectedPlanId,
+        },
+      });
+
+      paymentDebugger.endAttempt({
+        success: false,
+        error: error as Error | string,
+      });
+
+      await handlePaymentError(error, setPaymentError, 'season-ticket');
     }
   };
 
@@ -123,7 +199,9 @@ export const usePaymentProcessing = (
     selectedPlanId: string,
     activeCashback: boolean,
     cashbackAmount: number,
-    setPaymentError: (error: string) => void
+    cashbackCurrency: string,
+    setPaymentError: (error: string) => void,
+    successType: 'training' | 'season-ticket'
   ) => {
     if (!selectedPlanId) {
       setPaymentError(ERROR_MESSAGES.PLAN_NOT_SELECTED);
@@ -131,7 +209,7 @@ export const usePaymentProcessing = (
     }
 
     // Build payment method request
-    const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest(activeCashback, cashbackAmount);
+    const paymentMethod = buildPaymentMethodRequest(activeCashback, cashbackAmount, cashbackCurrency);
 
     // Purchase season ticket with payment
     const payment = await purchaseSeasonTicket.mutateAsync({
@@ -141,12 +219,13 @@ export const usePaymentProcessing = (
     });
 
     // Handle next action
-    await handlePaymentNextAction(payment);
+    await handlePaymentNextAction(payment, successType);
   };
 
   const handleSessionPayment = async (
     activeCashback: boolean,
     cashbackAmount: number,
+    cashbackCurrency: string,
     setPaymentError: (error: string) => void
   ) => {
     if (!session) {
@@ -169,7 +248,7 @@ export const usePaymentProcessing = (
       const result = await bookSession.mutateAsync({
         sessionId: session.id,
         data: { quantity: 1 }, // BookRequest: just quantity
-        idempotencyKey: createIdempotencyKey(session.id)
+        idempotencyKey: createIdempotencyKey(`booking-${session.id}`)
       });
       bookingId = result.booking.id;
       console.log('Created new booking:', bookingId);
@@ -178,7 +257,7 @@ export const usePaymentProcessing = (
     }
 
     // Build payment method request
-    const paymentMethod: PaymentMethodRequest = buildPaymentMethodRequest(activeCashback, cashbackAmount);
+    const paymentMethod = buildPaymentMethodRequest(activeCashback, cashbackAmount, cashbackCurrency);
 
     // Create payment for booking
     const payment = await createPayment.mutateAsync({
@@ -188,21 +267,31 @@ export const usePaymentProcessing = (
     });
 
     // Handle next action
-    await handlePaymentNextAction(payment);
+    await handlePaymentNextAction(payment, 'training');
   };
 
   // Build payment method request based on selected options
-  const buildPaymentMethodRequest = (activeCashback: boolean, cashbackAmount: number): PaymentMethodRequest => {
-    // For now, support card with optional cashback
-    // TODO: Add certificate support in Phase 3
-
+  const buildPaymentMethodRequest = (
+    activeCashback: boolean,
+    cashbackAmount: number,
+    cashbackCurrency: string
+  ): PaymentRequest => {
     if (activeCashback && cashbackAmount > 0) {
       // Use composite payment: cashback + card
-      // This will be refactored in Phase 3 to support CompositePaymentMethodRequest
-      // For now, just use card as the API will handle partial cashback
       return {
-        method: 'card',
-        provider: 'telegram'
+        methods: [
+          {
+            method: 'cashback',
+            amount: {
+              currency: cashbackCurrency,
+              amountMinor: cashbackAmount
+            }
+          },
+          {
+            method: 'card',
+            provider: 'telegram'
+          }
+        ]
       };
     }
 
@@ -214,7 +303,7 @@ export const usePaymentProcessing = (
   };
 
   // Handle payment next action
-  const handlePaymentNextAction = async (payment: Payment) => {
+  const handlePaymentNextAction = async (payment: Payment, successType: 'training' | 'season-ticket') => {
     const { paymentLogger } = await import('@/shared/lib/payment-logger');
     const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
 
@@ -262,7 +351,7 @@ export const usePaymentProcessing = (
           currency: payment.amount.currency,
         });
 
-        navigate('payment-success?type=training');
+        navigate(`payment-success?type=${successType}`);
 
       } else if (result.status === 'pending') {
         // For redirect payments, stay on page or navigate to pending page
@@ -282,7 +371,11 @@ export const usePaymentProcessing = (
     }
   };
 
-  const handlePaymentError = async (error: unknown, setPaymentError: (error: string) => void) => {
+  const handlePaymentError = async (
+    error: unknown,
+    setPaymentError: (error: string) => void,
+    paymentContext: PaymentContext
+  ) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     if (errorMessage.includes('Authentication required')) {
@@ -293,11 +386,11 @@ export const usePaymentProcessing = (
     } else if (errorMessage.includes('NO_SEATS')) {
       setPaymentError(ERROR_MESSAGES.NO_SEATS_AVAILABLE);
     } else if (errorMessage.includes('AMOUNT_MISMATCH')) {
-      setPaymentError('Несоответствие суммы платежа. Попробуйте снова.');
+      setPaymentError(ERROR_MESSAGES.AMOUNT_MISMATCH);
     } else if (errorMessage.includes('PROVIDER_UNAVAILABLE')) {
-      setPaymentError('Платежная система временно недоступна. Попробуйте позже.');
+      setPaymentError(ERROR_MESSAGES.PROVIDER_UNAVAILABLE);
     } else if (errorMessage.includes('not found')) {
-      setPaymentError(ERROR_MESSAGES.TRAINING_NOT_FOUND);
+      setPaymentError(paymentContext === 'session' ? ERROR_MESSAGES.TRAINING_NOT_FOUND : ERROR_MESSAGES.PLAN_NOT_FOUND);
     } else {
       setPaymentError(ERROR_MESSAGES.GENERIC_PAYMENT_ERROR);
     }
@@ -305,5 +398,9 @@ export const usePaymentProcessing = (
 
   const isProcessing = bookSession.isPending || purchaseSeasonTicket.isPending || createPayment.isPending;
 
-  return { processPayment, isProcessing };
+  return {
+    processSessionPayment,
+    processSeasonTicketPayment,
+    isProcessing,
+  };
 };

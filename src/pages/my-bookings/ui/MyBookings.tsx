@@ -107,7 +107,7 @@ export function MyBookings() {
 
   return (
     <PageLayout title="Мои записи">
-      <div className={styles.wrapper  }>
+      <div className={styles.wrapper}>
         <SegmentedControl className={styles.select}>
           <SegmentedControl.Item
             selected={selectedTab === 'trainings'}

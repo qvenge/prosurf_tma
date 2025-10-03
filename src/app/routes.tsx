@@ -13,7 +13,6 @@ import { MyBookings } from '@/pages/my-bookings';
 import { MyWaitlist } from '@/pages/my-waitlist';
 import { MyPayments } from '@/pages/my-payments';
 import { MySeasonTicketsPage } from '@/pages/my-season-tickets';
-import { SeasonTicketPaymentPage } from '@/pages/season-ticket-payment';
 
 import { AppProvider } from './ui/AppProvider';
 
@@ -31,7 +30,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'season-tickets/:planId/payment',
-        Component: SeasonTicketPaymentPage,
+        Component: PaymentPage,
         handle: { bottomBar: { visible: false } },
       },
       {

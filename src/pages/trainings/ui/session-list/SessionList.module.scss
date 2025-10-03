@@ -5,13 +5,13 @@
   width: 100%;
 }
 
-.loadingState,
-.errorState,
-.emptyState {
-  padding: 20px;
-  text-align: center;
-}
+.stub {
+  padding-top: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-.errorState {
-  color: #ff4444;
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Secondary');
+  margin: 0;
 }

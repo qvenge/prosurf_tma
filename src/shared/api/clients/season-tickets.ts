@@ -5,7 +5,7 @@ import {
   SeasonTicketPlanUpdateDtoSchema,
   SeasonTicketSchema,
   PaymentSchema,
-  PaymentMethodRequestSchema,
+  PaymentRequestSchema,
   PaginatedResponseSchema,
   SeasonTicketPlanFiltersSchema,
   SeasonTicketFiltersSchema,
@@ -17,7 +17,7 @@ import type {
   SeasonTicketPlanUpdateDto,
   SeasonTicket,
   Payment,
-  PaymentMethodRequest,
+  PaymentRequest,
   PaginatedResponse,
   SeasonTicketPlanFilters,
   SeasonTicketFilters,
@@ -103,17 +103,18 @@ export const seasonTicketsClient = {
   /**
    * Purchase season ticket (userId from token)
    * POST /season-ticket-plans/{id}/purchase
+   * Supports both single and composite payment methods
    */
   async purchaseSeasonTicket(
-    planId: string, 
-    paymentMethod: PaymentMethodRequest, 
+    planId: string,
+    paymentMethod: PaymentRequest,
     idempotencyKey: IdempotencyKey
   ): Promise<Payment> {
-    const validatedPaymentMethod = PaymentMethodRequestSchema.parse(paymentMethod);
-    
+    const validatedPaymentMethod = PaymentRequestSchema.parse(paymentMethod);
+
     const config = withIdempotency({}, idempotencyKey);
     const response = await apiClient.post(
-      `/season-ticket-plans/${encodeURIComponent(planId)}/purchase`, 
+      `/season-ticket-plans/${encodeURIComponent(planId)}/purchase`,
       validatedPaymentMethod,
       config
     );

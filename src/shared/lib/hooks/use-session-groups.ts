@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { formatAvailability, formatPrice } from '../format-utils';
-import { formatDuration } from '../date-utils';
+import { formatDuration, formatTime } from '../date-utils';
 import type { Session } from '@/shared/api';
 
 export interface SessionCard {
@@ -36,20 +36,13 @@ export const useSessionGroups = (sessions: Session[]) => {
         groups[dateKey] = [];
       }
 
-      const ticket = session.event.tickets[0];
-      const price = ticket?.prepayment?.price || { amountMinor: 0, currency: 'RUB' };
-      const endsAt = session.endsAt || (new Date(new Date(session.startsAt).getTime() + 90 * 60 * 1000)).toISOString();
-
       groups[dateKey].push({
         id: session.id,
-        time: new Date(session.startsAt).toLocaleTimeString('ru-RU', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        duration: formatDuration(session.startsAt, endsAt),
+        time: formatTime(session.startsAt),
+        duration: formatDuration(session.startsAt, session.endsAt),
         title: session.event.title,
         location: session.event.location || 'Не указано',
-        price: formatPrice(price),
+        price: formatPrice(session.event.tickets[0]?.full.price),
         availability: formatAvailability(session.remainingSeats)
       });
 

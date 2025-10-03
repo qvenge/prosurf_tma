@@ -4,7 +4,7 @@ import { useAuth } from '../auth';
 import type {
   SeasonTicketPlanCreateDto,
   SeasonTicketPlanUpdateDto,
-  PaymentMethodRequest,
+  PaymentRequest,
   SeasonTicketPlanFilters,
   SeasonTicketFilters,
   IdempotencyKey,
@@ -87,15 +87,15 @@ export const useDeleteSeasonTicketPlan = () => {
 
 export const usePurchaseSeasonTicket = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ 
-      planId, 
-      paymentMethod, 
-      idempotencyKey 
-    }: { 
-      planId: string; 
-      paymentMethod: PaymentMethodRequest;
+    mutationFn: ({
+      planId,
+      paymentMethod,
+      idempotencyKey
+    }: {
+      planId: string;
+      paymentMethod: PaymentRequest;
       idempotencyKey: IdempotencyKey;
     }) => seasonTicketsClient.purchaseSeasonTicket(planId, paymentMethod, idempotencyKey),
     onSuccess: () => {

@@ -1,7 +1,7 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  padding-top: 32px;
+  padding: 32px var(--outer-horizontal-padding, 16px);
   gap: 32px;
 }
 

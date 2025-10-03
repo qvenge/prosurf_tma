@@ -3256,6 +3256,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PaymentMethodRequest'
+              oneOf:
+              - $ref: '#/components/schemas/PaymentMethodRequest'
+              - $ref: '#/components/schemas/CompositePaymentMethodRequest'
+            examples:
+              card_telegram:
+                summary: Card via Telegram invoice
+                value:
+                  method: card
+                  provider: telegram
+              card_yookassa:
+                summary: Card via YooKassa
+                value:
+                  method: card
+                  provider: yookassa
+                  returnUrl: https://app.example.com/payments/return
+              composite:
+                summary: 'Composite: cashback + card(telegram)'
+                value:
+                  methods:
+                  - method: cashback
+                    amount:
+                      currency: RUB
+                      amountMinor: 5000
+                  - method: card
+                    provider: telegram
       responses:
         '201':
           description: Платёж на покупку абонемента создан
