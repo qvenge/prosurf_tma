@@ -16,9 +16,26 @@ import { ERROR_MESSAGES } from './constants';
 // Payment context type
 type PaymentContext = 'session' | 'season-ticket';
 
+// Success page type for navigation
+type SuccessPageType = 'training' | 'activity' | 'tour' | 'season-ticket';
+
 // Helper to create idempotency keys
 const createIdempotencyKey = (prefix: string): string => {
   return `${prefix}-${Date.now()}`;
+};
+
+// Helper to determine success page type based on event labels
+const getSuccessTypeFromEventLabels = (labels: string[] | null | undefined): SuccessPageType => {
+  if (!labels || labels.length === 0) {
+    return 'training';
+  }
+
+  // Check for tour or activity
+  if (labels.includes('tour')) return 'tour';
+  if (labels.includes('activity')) return 'activity';
+
+  // All training types map to 'training'
+  return 'training';
 };
 
 /**
@@ -106,7 +123,7 @@ export const usePaymentProcessing = (
 
     try {
       if (product === 'subscription') {
-        await handleSubscriptionPayment(selectedPlanId, activeCashback, cashbackAmount, cashbackCurrency, setPaymentError, 'training');
+        await handleSubscriptionPayment(selectedPlanId, activeCashback, cashbackAmount, cashbackCurrency, setPaymentError, 'season-ticket');
       } else {
         await handleSessionPayment(activeCashback, cashbackAmount, cashbackCurrency, setPaymentError);
       }
@@ -201,7 +218,7 @@ export const usePaymentProcessing = (
     cashbackAmount: number,
     cashbackCurrency: string,
     setPaymentError: (error: string) => void,
-    successType: 'training' | 'season-ticket'
+    successType: SuccessPageType
   ) => {
     if (!selectedPlanId) {
       setPaymentError(ERROR_MESSAGES.PLAN_NOT_SELECTED);
@@ -232,6 +249,9 @@ export const usePaymentProcessing = (
       setPaymentError(ERROR_MESSAGES.SESSION_NOT_FOUND);
       return;
     }
+
+    // Determine success page type based on event labels
+    const successType = getSuccessTypeFromEventLabels(session.event.labels);
 
     // Check for existing HOLD booking
     const existingBooking = userBookings.find(
@@ -267,7 +287,7 @@ export const usePaymentProcessing = (
     });
 
     // Handle next action
-    await handlePaymentNextAction(payment, 'training');
+    await handlePaymentNextAction(payment, successType);
   };
 
   // Build payment method request based on selected options
@@ -303,7 +323,7 @@ export const usePaymentProcessing = (
   };
 
   // Handle payment next action
-  const handlePaymentNextAction = async (payment: Payment, successType: 'training' | 'season-ticket') => {
+  const handlePaymentNextAction = async (payment: Payment, successType: SuccessPageType) => {
     const { paymentLogger } = await import('@/shared/lib/payment-logger');
     const { paymentDebugger } = await import('@/shared/api/utils/payment-debugger');
 

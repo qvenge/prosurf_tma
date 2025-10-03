@@ -12,7 +12,7 @@ export function PaymentSuccessPage() {
   let title = 'Оплачено';
   let description = null;
   let primaryButton = null;
-  let secondaryButton = {text: 'На главную', link: '/'};
+  const secondaryButton = {text: 'На главную', link: '/'};
 
   switch (type) {
     case 'training': {
@@ -31,6 +31,12 @@ export function PaymentSuccessPage() {
       title = 'Вы записались в тур!';
       description = 'Напоминаем что отмена записи возможна не позднее чем за 24 часа';
       primaryButton = {text: 'В мои записи', link: '/profile/bookings'};
+      break;
+    }
+    case 'season-ticket': {
+      title = 'Абонемент успешно приобретён!';
+      description = 'Теперь вы можете записываться на тренировки используя ваш абонемент';
+      primaryButton = {text: 'Мои абонементы', link: '/profile/season-tickets'};
       break;
     }
   }
