@@ -28,7 +28,7 @@ export const calculatePrices = (
   return {
     originalPrice,
     finalPrice,
-    cashbackAmount: activeCashback ? Math.min(cashbackValue, originalPrice) : 0,
+    cashbackAmount: Math.min(cashbackValue, originalPrice),
     earnedCashback,
   };
 };

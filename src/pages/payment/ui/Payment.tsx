@@ -135,7 +135,7 @@ export function PaymentPage() {
     ? subscriptionPrice
     : (product === 'subscription' ? subscriptionPrice : sessionPrice);
 
-  const { finalPrice } = calculatePrices(originalPrice, cashbackValue, activeCashback);
+  const { finalPrice, cashbackAmount } = calculatePrices(originalPrice, cashbackValue, activeCashback);
 
   // Handler for payment
   const handlePayment = () => {
@@ -145,7 +145,7 @@ export function PaymentPage() {
         selectedPlanId,
         product,
         activeCashback,
-        activeCashback ? cashbackValue : 0,
+        activeCashback ? cashbackAmount : 0,
         cashbackWallet?.balance.currency || 'RUB',
         setPaymentError
       );
@@ -154,7 +154,7 @@ export function PaymentPage() {
       processSeasonTicketPayment(
         selectedPlanId,
         activeCashback,
-        activeCashback ? cashbackValue : 0,
+        activeCashback ? cashbackAmount : 0,
         setPaymentError
       );
     }
@@ -270,8 +270,9 @@ export function PaymentPage() {
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {
     cashback: {
-      enabled: cashbackValue > 0,
-      value: cashbackValue,
+      enabled: cashbackAmount > 0,
+      total: cashbackValue,
+      value: cashbackAmount,
       active: activeCashback,
       onChange: updateActiveCashback,
     },

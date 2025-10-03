@@ -18,6 +18,8 @@ export interface TabConfig<T extends string = string> {
 export interface CashbackConfig {
   /** Whether cashback option is enabled */
   enabled: boolean;
+
+  total: number;
   /** Available cashback value in minor units */
   value: number;
   /** Whether cashback is currently active/selected */

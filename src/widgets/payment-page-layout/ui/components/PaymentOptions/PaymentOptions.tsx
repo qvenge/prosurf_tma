@@ -24,7 +24,7 @@ export function PaymentOptions({ options }: PaymentOptionsProps) {
           <div className={styles.settingItem}>
             <div className={styles.settingItemInfo}>
               <div className={styles.settingItemName}>
-                Кэшбек: {formatPrice(cashback.value)} {PAYMENT_CONSTANTS.CURRENCY}
+                Кэшбек: {formatPrice(cashback.total)} {PAYMENT_CONSTANTS.CURRENCY}
               </div>
               <div className={styles.settingItemDescription}>
                 Списать {formatPrice(cashback.value)} {PAYMENT_CONSTANTS.CURRENCY} бонусов?
