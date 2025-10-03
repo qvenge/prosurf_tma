@@ -1,12 +1,19 @@
 import { useState } from 'react';
-import { EmptyListStub, SegmentedControl } from '@/shared/ui'
+import { EmptyListStub, SegmentedControl, Spinner } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
 import { useBookings, type BookingExtended } from '@/shared/api'
 import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
+import clsx from 'clsx';
 
 type BookingsByDay = Array<{ day: string; items: BookingCardProps['data'][]}>;
+
+interface BookingListProps {
+  blocks: BookingsByDay;
+  isLoading: boolean;
+  error: any;
+}
 
 const labels = {
   trainings: ['training:surfing', 'training:wakeboarding', 'training:surfskate'],
@@ -85,26 +92,6 @@ export function MyBookings() {
     return aDate - bDate;
   }) || []);
 
-  if (isLoading) {
-    return (
-      <PageLayout title="Мои записи">
-        <div className={styles.wrapper}>
-          <div className={styles.loading}>Загрузка...</div>
-        </div>
-      </PageLayout>
-    );
-  }
-  
-  if (error) {
-    return (
-      <PageLayout title="Мои записи">
-        <div className={styles.wrapper}>
-          <div className={styles.error}>Ошибка загрузки записей. Попробуйте позже.</div>
-        </div>
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout title="Мои записи">
       <div className={styles.wrapper}>
@@ -122,21 +109,44 @@ export function MyBookings() {
             События
           </SegmentedControl.Item>
         </SegmentedControl>
-        {items.length > 0 ? (
-          <div className={styles.content}>
-            <BookingList key={selectedTab} blocks={items} />
-          </div>
-        ) : (
-          <div className={styles.emptyStub}>
-            <EmptyListStub message="У вас пока нет записей" />
-          </div>
-        )}
+        <div className={styles.content}>
+          <BookingList
+            key={selectedTab}
+            isLoading={isLoading}
+            error={error}
+            blocks={items}
+          />
+        </div>
       </div>
     </PageLayout>
   );
 }
 
-function BookingList({blocks}: {blocks: BookingsByDay}) {
+function BookingList({blocks, isLoading, error}: BookingListProps) {
+  if (isLoading) {
+    return (
+      <div className={styles.stub}>
+        <Spinner size="l" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={clsx(styles.stub, styles.error)}>
+        <div>Ошибка загрузки тренировок</div>
+      </div>
+    );
+  }
+
+  if (blocks.length === 0) {
+    return (
+      <div className={styles.stub}>
+        <EmptyListStub message="У вас пока нет записей" />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.dayBlocks}>
       {blocks.map((block) => (

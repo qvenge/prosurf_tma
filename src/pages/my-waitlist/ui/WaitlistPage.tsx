@@ -1,17 +1,19 @@
 import { useState } from 'react';
-import { EmptyListStub, SegmentedControl } from '@/shared/ui'
+import { EmptyListStub, SegmentedControl, Spinner } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
 import { useSessions, type Session } from '@/shared/api'
 import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './WaitlistPage.module.scss';
 import { SessionCard, type SessionCardProps } from './SessionCard';
+import clsx from 'clsx';
 
 type SessionsByDay = Array<{ day: string; items: SessionCardProps['data'][]}>;
 
-const labels = {
-  trainings: ['training:surfing', 'training:wakeboarding', 'training:surfskate'],
-  events: ['tour', 'activity']
-};
+interface WaitlistProps {
+  blocks: SessionsByDay;
+  isLoading: boolean;
+  error: any;
+}
 
 const transformSessionToCardData = (session: Session): SessionCardProps['data'] => {
   const formatSessionDurationOrYear = (startsAt?: string, endsAt?: string | null): string | undefined => {
@@ -79,26 +81,6 @@ export function WaitlistPage() {
     return aDate - bDate;
   }) || []);
 
-  if (isLoading) {
-    return (
-      <PageLayout title="Мои записи">
-        <div className={styles.wrapper}>
-          <div className={styles.loading}>Загрузка...</div>
-        </div>
-      </PageLayout>
-    );
-  }
-  
-  if (error) {
-    return (
-      <PageLayout title="Мои записи">
-        <div className={styles.wrapper}>
-          <div className={styles.error}>Ошибка загрузки записей. Попробуйте позже.</div>
-        </div>
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout title="Лист ожиданий">
       <div className={styles.wrapper}>
@@ -116,21 +98,43 @@ export function WaitlistPage() {
             Нет мест
           </SegmentedControl.Item>
         </SegmentedControl>
-        {(selectedTab === 'hasSeats' ? hasSeatsItems : noSeatsItems).length > 0 ? (
-          <div className={styles.content}>
-            <Waitlist key={selectedTab} blocks={selectedTab === 'hasSeats' ? hasSeatsItems : noSeatsItems} />
-          </div>
-        ) : (
-          <div className={styles.emptyStub}>
-            <EmptyListStub message="Нет записей" />
-          </div>
-        )}
+        <div className={styles.content}>
+          <Waitlist
+            key={selectedTab}
+            isLoading={isLoading}
+            error={error}
+            blocks={selectedTab === 'hasSeats' ? hasSeatsItems : noSeatsItems} />
+        </div>
       </div>
     </PageLayout>
   );
 }
 
-function Waitlist({blocks}: {blocks: SessionsByDay}) {
+function Waitlist({blocks, isLoading, error}: WaitlistProps) {
+  if (isLoading) {
+    return (
+      <div className={styles.stub}>
+        <Spinner size="l" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={clsx(styles.stub, styles.error)}>
+        <div>Ошибка загрузки тренировок</div>
+      </div>
+    );
+  }
+
+  if (blocks.length === 0) {
+    return (
+      <div className={styles.stub}>
+        <EmptyListStub message="Нет записей" />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.dayBlocks}>
       {blocks.map((block) => (
