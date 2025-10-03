@@ -1,45 +1,26 @@
-import type { SeasonTicketPlan } from '@/shared/api';
-import { formatPrice, getEventTypeLabel } from '../../../lib/helpers';
-import { PAYMENT_CONSTANTS } from '../../../lib/constants';
-import type { ProductType, EventType } from '../../../model/types';
+import type { Price } from '@/shared/api';
+import { formatPrice } from '@/shared/lib/format-utils';
 import styles from './PriceBreakdown.module.scss';
 
 interface PriceBreakdownProps {
-  product: ProductType;
-  selectedPlan?: SeasonTicketPlan;
-  session: {
-    title: string;
-    type: EventType;
-    price: { amount: string; currency: string };
-  };
-  sessionPrice: number;
-  subscriptionPrice: number;
+  productName: string;
+  description?: string;
+  price?: Price;
 }
 
 export function PriceBreakdown({
-  product,
-  selectedPlan,
-  session,
-  sessionPrice,
-  subscriptionPrice,
+  productName,
+  description,
+  price
 }: PriceBreakdownProps) {
-  const productName = product === 'subscription' 
-    ? (selectedPlan?.name || 'Абонемент')
-    : session.title;
-  const displayPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
-
   return (
     <div className={styles.breakdown}>
       <div className={styles.description}>
         <div className={styles.info}>
           <div className={styles.productName}>{productName}</div>
-          <div className={styles.productPurpose}>
-            {getEventTypeLabel(session.type)}
-          </div>
+          {description && <div className={styles.productPurpose}>{description}</div>}
         </div>
-        <div className={styles.price}>
-          {`${formatPrice(displayPrice)} ${PAYMENT_CONSTANTS.CURRENCY}`}
-        </div>
+        <div className={styles.price}>{formatPrice(price)}</div>
       </div>
 
     </div>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
 import { PageLayout } from '@/widgets/page-layout';
 import {
@@ -20,7 +20,8 @@ import {
 import { usePaymentProcessing } from '../lib/hooks';
 import { ERROR_MESSAGES } from '../lib/constants';
 import { LoadingState, ErrorState } from './components';
-import { PriceBreakdown, SubscriptionPlans } from '@/widgets/payment-page-layout/ui/components';
+import { PriceBreakdown, SeasonTicketPlans } from '@/widgets/payment-page-layout';
+import { pluralize, getSessionType } from '@/shared/lib';
 
 export function PaymentPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -31,7 +32,15 @@ export function PaymentPage() {
   const { data: cashbackWallet, isLoading: cashbackLoading } = useCurrentUserCashback();
   const { data: plansData, isLoading: plansLoading, error: plansError } = useSeasonTicketPlans();
 
-  const subscriptionPlans = plansData?.items || [];
+  const seasonTicketPlans = useMemo(() => {
+    if (!session || plansLoading || !plansData) {
+      return null;
+    }
+
+    return plansData.items.filter((plan) => plan.description === getSessionType(session))
+  }, [plansData, plansLoading, session])
+
+  // const seasonTicketPlans = plansData?.items?.filter((plan) => plan) || [];
   const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
 
   // State management from widget hooks
@@ -46,8 +55,16 @@ export function PaymentPage() {
     setPaymentError,
   } = usePaymentState();
 
+
+  useEffect(() => {
+    if (product === 'subscription' && seasonTicketPlans && seasonTicketPlans.length === 0) {
+      updateProduct('single_session');
+    }
+
+  }, [product, seasonTicketPlans])
+
   // Auto-select first plan
-  useInitialPlanSelection(subscriptionPlans, selectedPlanId, updateSelectedPlan);
+  useInitialPlanSelection(seasonTicketPlans ?? [], selectedPlanId, updateSelectedPlan);
 
   // Payment processing hook
   const { processPayment, isProcessing } = usePaymentProcessing(
@@ -56,9 +73,9 @@ export function PaymentPage() {
   );
 
   // Calculate prices
-  const selectedPlan = subscriptionPlans.find((plan) => plan.id === selectedPlanId);
+  const selectedPlan = seasonTicketPlans?.find((plan) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
-  const sessionPrice = session?.event?.tickets?.[0]?.prepayment?.price?.amountMinor || 0;
+  const sessionPrice = session?.event?.tickets?.[0]?.full.price.amountMinor || 0;
   const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
   const { finalPrice } = calculatePrices(originalPrice, cashbackValue, activeCashback);
 
@@ -75,6 +92,47 @@ export function PaymentPage() {
 
   // Combined loading state
   const isLoading = sessionLoading || userLoading || cashbackLoading || plansLoading;
+
+   // Configure tabs with content - FULLY CONFIGURABLE!
+  const tabs = useMemo(() => {
+    const res: TabConfig<ProductType>[] = []; 
+
+    if (seasonTicketPlans &&seasonTicketPlans.length > 0) {
+      res.push({
+        id: 'subscription',
+        label: 'Абонемент',
+        content: (
+          <>
+            {selectedPlan && (<PriceBreakdown
+              productName={`Абонемент ${selectedPlan.passes} ${pluralize(selectedPlan.passes, ['занятие', 'занятия', 'занятий'])}`}
+              description={selectedPlan.description ?? undefined}
+              price={selectedPlan.price}
+            />)}
+            <SeasonTicketPlans
+              plans={seasonTicketPlans}
+              selectedPlanId={selectedPlanId}
+              onPlanSelect={updateSelectedPlan}
+            />
+          </>
+        ),
+      });
+    }
+
+    res.push({
+      id: 'single_session',
+      label: 'Разовая тренировка',
+      content: (
+        session && <PriceBreakdown
+          productName={session.event.title}
+          description={getSessionType(session)}
+          price={session.event.tickets[0]?.full.price}
+        />
+      ),
+    });
+
+    return res;
+
+  }, [selectedPlan, session, seasonTicketPlans, selectedPlanId, updateSelectedPlan]);
 
   // Error state
   if (sessionError || plansError) {
@@ -102,63 +160,6 @@ export function PaymentPage() {
       </PageLayout>
     );
   }
-
-  // Configure tabs with content - FULLY CONFIGURABLE!
-  const tabs: TabConfig<ProductType>[] = useMemo(() => [
-    {
-      id: 'subscription',
-      label: 'Абонемент',
-      content: (
-        <>
-          <PriceBreakdown
-            product="subscription"
-            selectedPlan={selectedPlan}
-            session={{
-              title: session.event.title,
-              type: 'other' as const,
-              price: session.event.tickets[0]?.prepayment?.price
-                ? {
-                    amount: String(session.event.tickets[0].prepayment?.price.amountMinor / 100),
-                    currency: session.event.tickets[0].prepayment?.price.currency,
-                  }
-                : { amount: '0', currency: 'RUB' },
-            }}
-            sessionPrice={sessionPrice}
-            subscriptionPrice={subscriptionPrice}
-          />
-          {subscriptionPlans.length > 0 && (
-            <SubscriptionPlans
-              plans={subscriptionPlans}
-              selectedPlanId={selectedPlanId}
-              onPlanSelect={updateSelectedPlan}
-            />
-          )}
-        </>
-      ),
-    },
-    {
-      id: 'single_session',
-      label: 'Разовая тренировка',
-      content: (
-        <PriceBreakdown
-          product="single_session"
-          selectedPlan={selectedPlan}
-          session={{
-            title: session.event.title,
-            type: 'other' as const,
-            price: session.event.tickets[0]?.prepayment?.price
-              ? {
-                  amount: String(session.event.tickets[0].prepayment?.price.amountMinor / 100),
-                  currency: session.event.tickets[0].prepayment?.price.currency,
-                }
-              : { amount: '0', currency: 'RUB' },
-          }}
-          sessionPrice={sessionPrice}
-          subscriptionPrice={subscriptionPrice}
-        />
-      ),
-    },
-  ], [selectedPlan, session, sessionPrice, subscriptionPrice, subscriptionPlans, selectedPlanId, updateSelectedPlan]);
 
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {

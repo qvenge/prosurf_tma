@@ -88,8 +88,11 @@ export class NavigationState<Tab extends string, Link extends string = string> e
   }
 
   push(link: Link, {tab, reset}: { tab?: Tab, reset?: boolean } = {}) {
+    let tabChanged = false;
+
     if (tab && tab !== this.activeTab) {
       this._switchTab(tab);
+      tabChanged = true;
     }
 
     if (reset) {
@@ -97,16 +100,19 @@ export class NavigationState<Tab extends string, Link extends string = string> e
     }
 
     const hist = this.history[this.activeTab];
-    hist.stack.length = hist.pos + 1;
-    hist.stack.push(link);
-    hist.pos++;
 
-    if (tab) {
-      this.emit('history:switchTab', { tab, link: this.currentLink });
+    if (link !== hist.stack[hist.pos]) {
+      hist.stack.length = hist.pos + 1;
+      hist.stack.push(link);
+      hist.pos++;
     }
 
-    this.emit('history:push', { tab: this.activeTab, link });
-    this.emit('history:change', { tab: this.activeTab, link });
+    if (tabChanged) {
+      this.emit('history:switchTab', { tab: this.activeTab, link: this.currentLink });
+    }
+
+    this.emit('history:push', { tab: this.activeTab, link: this.currentLink });
+    this.emit('history:change', { tab: this.activeTab, link: this.currentLink });
   }
 
   replace(link: Link) {

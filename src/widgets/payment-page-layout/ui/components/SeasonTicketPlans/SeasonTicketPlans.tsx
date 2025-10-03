@@ -1,14 +1,14 @@
 import clsx from 'clsx';
 import type { SeasonTicketPlan } from '@/shared/api';
-import styles from './SubscriptionPlans.module.scss';
+import styles from './SeasonTicketPlans.module.scss';
 
-interface SubscriptionPlansProps {
+interface SeasonTicketPlansProps {
   plans: SeasonTicketPlan[];
   selectedPlanId: string;
   onPlanSelect: (planId: string) => void;
 }
 
-export function SubscriptionPlans({ plans, selectedPlanId, onPlanSelect }: SubscriptionPlansProps) {
+export function SeasonTicketPlans({ plans, selectedPlanId, onPlanSelect }: SeasonTicketPlansProps) {
   return (
     <div className={styles.productSettings}>
       <div className={styles.amountList}>

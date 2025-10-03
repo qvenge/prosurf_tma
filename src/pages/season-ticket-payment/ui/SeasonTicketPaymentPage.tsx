@@ -17,7 +17,7 @@ import { usePaymentProcessing } from '../lib/hooks';
 import { ERROR_MESSAGES } from '../lib/constants';
 import { LoadingState, ErrorState } from './components';
 import { useState } from 'react';
-import { SelectedPlanDisplay, SubscriptionPlans } from '@/widgets/payment-page-layout';
+import { SelectedPlanDisplay, SeasonTicketPlans } from '@/widgets/payment-page-layout';
 
 type SeasonTicketTab = 'season_ticket';
 
@@ -81,7 +81,7 @@ export function SeasonTicketPaymentPage() {
           {selectedPlan && <SelectedPlanDisplay
             data={selectedPlan}
           />}
-          {plans && <SubscriptionPlans
+          {plans && <SeasonTicketPlans
             plans={plans}
             selectedPlanId={selectedPlanId}
             onPlanSelect={setSelectedPlanId}

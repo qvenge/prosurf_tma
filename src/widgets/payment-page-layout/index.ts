@@ -13,7 +13,7 @@ export type {
 } from './model/types';
 
 export { SelectedPlanDisplay } from './ui/components/SeasonTicketPlan';
-export { SubscriptionPlans } from './ui/components/SubscriptionPlans';
+export { SeasonTicketPlans } from './ui/components/SeasonTicketPlans';
 export { PriceBreakdown } from './ui/components/PriceBreakdown';
 
 // Re-export hooks and helpers for external use
