@@ -336,6 +336,21 @@ export const RefundSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
+// Payment list schemas
+export const PaymentCategorySchema = z.enum(['session', 'seasonTicket', 'certificate']);
+
+export const PaymentListItemSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable().optional(),
+  category: PaymentCategorySchema,
+  labels: z.array(z.string()).nullable().optional(),
+  attrs: z.record(z.string(), z.unknown()).nullable().optional(),
+  price: PriceSchema,
+  cashback: PriceSchema.nullable().optional(),
+  status: PaymentStatusSchema,
+  createdAt: z.string().datetime(),
+});
+
 // Certificate schemas
 export const CertificateTypeSchema = z.enum(['denomination', 'passes']);
 
@@ -681,4 +696,24 @@ export const AuditLogFiltersSchema = z.object({
 export const SeasonTicketPlanFiltersSchema = z.object({
   eventIds: z.array(z.string()).optional(),
   sessionId: z.string().optional(),
+});
+
+export const PaymentFiltersSchema = z.object({
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
+  status: z.array(PaymentStatusSchema).optional(),
+  category: PaymentCategorySchema.optional(),
+  createdAfter: z.string().datetime().optional(),
+  createdBefore: z.string().datetime().optional(),
+  'labels.any': z.array(z.string()).optional(),
+  'labels.all': z.array(z.string()).optional(),
+  'labels.none': z.array(z.string()).optional(),
+  'attr.eq': z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.gte': z.record(z.string(), z.number()).optional(),
+  'attr.lte': z.record(z.string(), z.number()).optional(),
+  'attr.bool': z.record(z.string(), z.boolean()).optional(),
+  'attr.exists': z.record(z.string(), z.boolean()).optional(),
+  sortBy: z.enum(['createdAt', 'price', 'status']).default('createdAt').optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
 });

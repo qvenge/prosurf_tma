@@ -52,6 +52,8 @@ export type PaymentNextActionRedirect = z.infer<typeof schemas.PaymentNextAction
 export type PaymentNextActionNone = z.infer<typeof schemas.PaymentNextActionNoneSchema>;
 export type PaymentNextAction = z.infer<typeof schemas.PaymentNextActionSchema>;
 export type Payment = z.infer<typeof schemas.PaymentSchema>;
+export type PaymentCategory = z.infer<typeof schemas.PaymentCategorySchema>;
+export type PaymentListItem = z.infer<typeof schemas.PaymentListItemSchema>;
 
 // Payment method types
 export type CardPaymentMethod = z.infer<typeof schemas.CardPaymentMethodSchema>;
@@ -135,6 +137,7 @@ export type SeasonTicketFilters = z.infer<typeof schemas.SeasonTicketFiltersSche
 export type WaitlistFilters = z.infer<typeof schemas.WaitlistFiltersSchema>;
 export type AuditLogFilters = z.infer<typeof schemas.AuditLogFiltersSchema>;
 export type SeasonTicketPlanFilters = z.infer<typeof schemas.SeasonTicketPlanFiltersSchema>;
+export type PaymentFilters = z.infer<typeof schemas.PaymentFiltersSchema>;
 
 // Common parameter types
 export type CursorParam = z.infer<typeof schemas.CursorParamSchema>;

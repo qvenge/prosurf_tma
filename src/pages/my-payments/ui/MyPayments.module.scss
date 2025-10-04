@@ -1,16 +1,25 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  padding-top: 32px;
+  padding: 32px var(--outer-horizontal-padding, 16px);
   gap: 32px;
 }
 
-.emptyStub {
-  flex-grow: 1;
+.stub {
+  padding-top: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Secondary');
+  margin: 0;
 }
+
+.error {
+  color: ds.color('Text/Error');
+}
+
 
 .dayBlocks {
   display: flex;
@@ -21,7 +30,7 @@
 .dayBlock {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 20px;
 
   .day {
     @include ds.typo('Roboto/Caption 1/Bold Caps');
@@ -72,7 +81,11 @@
     color: ds.color('Text/Brand');
   }
 
-  .failed {
+  .failed, .cancelled {
     color: ds.color('Text/Error');
+  }
+
+  .pending {
+    color: ds.color('Text/Brand');
   }
 }

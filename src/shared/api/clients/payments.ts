@@ -1,16 +1,22 @@
-import { apiClient, validateResponse, withIdempotency } from '../config';
-import { 
-  PaymentSchema, 
+import { apiClient, validateResponse, withIdempotency, createQueryString } from '../config';
+import {
+  PaymentSchema,
   PaymentRequestSchema,
   RefundSchema,
-  RefundRequestSchema
+  RefundRequestSchema,
+  PaymentListItemSchema,
+  PaymentFiltersSchema,
+  PaginatedResponseSchema
 } from '../schemas';
-import type { 
-  Payment, 
+import type {
+  Payment,
   PaymentRequest,
   Refund,
   RefundRequest,
-  IdempotencyKey
+  IdempotencyKey,
+  PaymentListItem,
+  PaymentFilters,
+  PaginatedResponse
 } from '../types';
 
 /**
@@ -68,6 +74,39 @@ export const paymentsClient = {
       config
     );
     return validateResponse(response.data, PaymentSchema);
+  },
+
+  /**
+   * Get list of current user payments
+   * GET /payments
+   *
+   * @param filters - Optional filters (status, category, dates, labels, attributes, sorting)
+   * @returns Promise resolving to paginated list of payment items
+   *
+   * @example
+   * ```ts
+   * // Get all payments
+   * const payments = await paymentsClient.getPayments();
+   *
+   * // Get succeeded and failed payments for sessions
+   * const sessionPayments = await paymentsClient.getPayments({
+   *   status: ['SUCCEEDED', 'FAILED'],
+   *   category: 'session',
+   *   sortBy: 'createdAt',
+   *   sortOrder: 'desc',
+   * });
+   *
+   * // Get payments with pagination
+   * const page1 = await paymentsClient.getPayments({ limit: 10 });
+   * const page2 = await paymentsClient.getPayments({ cursor: page1.next, limit: 10 });
+   * ```
+   */
+  async getPayments(filters?: PaymentFilters): Promise<PaginatedResponse<PaymentListItem>> {
+    const validatedFilters = PaymentFiltersSchema.parse(filters || {});
+    const queryString = createQueryString(validatedFilters);
+
+    const response = await apiClient.get(`/payments${queryString}`);
+    return validateResponse(response.data, PaginatedResponseSchema(PaymentListItemSchema));
   },
 
   /**

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { paymentsClient } from '../clients/payments';
 import { bookingsKeys } from './bookings';
 import { telegramUtils } from '@/shared/tma';
@@ -7,12 +7,15 @@ import type {
   PaymentMethodRequest,
   CompositePaymentMethodRequest,
   RefundRequest,
-  IdempotencyKey
+  IdempotencyKey,
+  PaymentFilters
 } from '../types';
 
 // Query key factory for payments
 export const paymentsKeys = {
   all: ['payments'] as const,
+  lists: () => [...paymentsKeys.all, 'list'] as const,
+  list: (filters?: PaymentFilters) => [...paymentsKeys.lists(), filters ?? {}] as const,
   details: () => [...paymentsKeys.all, 'detail'] as const,
   detail: (id: string) => [...paymentsKeys.details(), id] as const,
   refunds: (paymentId: string) => [...paymentsKeys.detail(paymentId), 'refunds'] as const,
@@ -22,24 +25,48 @@ export const paymentsKeys = {
  * Payments hooks
  */
 
+// Get list of payments
+export const usePayments = (filters?: PaymentFilters) => {
+  return useQuery({
+    queryKey: paymentsKeys.list(filters),
+    queryFn: () => paymentsClient.getPayments(filters),
+    staleTime: 60 * 1000, // 1 minute
+  });
+};
+
+// Get list of payments with infinite scroll/cursor pagination
+export const useInfinitePayments = (filters?: Omit<PaymentFilters, 'cursor'>) => {
+  return useInfiniteQuery({
+    queryKey: paymentsKeys.list(filters),
+    queryFn: ({ pageParam }) =>
+      paymentsClient.getPayments({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.next ?? undefined,
+    staleTime: 60 * 1000, // 1 minute
+  });
+};
+
 // Create payment mutation
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ 
-      bookingId, 
-      data, 
-      idempotencyKey 
-    }: { 
-      bookingId: string; 
+    mutationFn: ({
+      bookingId,
+      data,
+      idempotencyKey
+    }: {
+      bookingId: string;
       data: PaymentMethodRequest | CompositePaymentMethodRequest;
       idempotencyKey: IdempotencyKey;
     }) => paymentsClient.createPayment(bookingId, data, idempotencyKey),
     onSuccess: (newPayment, variables) => {
       // Add payment to cache
       queryClient.setQueryData(paymentsKeys.detail(newPayment.id), newPayment);
-      
+
+      // Invalidate payments list to show new payment
+      queryClient.invalidateQueries({ queryKey: paymentsKeys.lists() });
+
       // Invalidate booking to reflect payment status
       queryClient.invalidateQueries({ queryKey: bookingsKeys.detail(variables.bookingId) });
     },
