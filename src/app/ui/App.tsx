@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { BottomBar, Spinner } from '@/shared/ui';
-import { useAuth, useTelegramAutoLogin } from '@/shared/api';
+import { useAuth } from '@/shared/api';
 import { useTelegramAppInit, telegramUtils } from '@/shared/tma';
 import styles from './App.module.scss';
 
@@ -10,10 +10,10 @@ export function App() {
   const [navbarHeight, setNavbarHeight] = useState(0);
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
 
   // Get authentication state and methods
   const auth = useAuth();
-  const telegramAutoLogin = useTelegramAutoLogin();
 
   // Initialize Telegram Mini App
   const telegramApp = useTelegramAppInit({
@@ -45,32 +45,41 @@ export function App() {
         }
 
         // If not authenticated and auth is not loading, try Telegram auto-login
-        if (!auth.isAuthenticated && !auth.isLoading) {
+        // Only attempt once to prevent infinite loop
+        if (!auth.isAuthenticated && !auth.isLoading && !autoLoginAttempted) {
+          setAutoLoginAttempted(true); // Set flag immediately to prevent duplicate calls
+
           const initData = telegramUtils.getInitDataRaw();
 
           if (initData) {
-            const result = await telegramAutoLogin.mutateAsync(initData);
-            if (result) {
-              // Login successful
+            try {
+              // Use auth context method which properly updates auth state
+              await auth.loginWithTelegram({ initData });
+              // Login successful - auth state is now updated automatically
               setIsInitializing(false);
-            } else {
-              setAuthError('Authentication failed');
+            } catch (error) {
+              console.error('Telegram login error:', error);
+              setAuthError(error instanceof Error ? error.message : 'Ошибка авторизации');
               setIsInitializing(false);
             }
           } else {
             setAuthError('No Telegram data available');
             setIsInitializing(false);
           }
+        } else if (autoLoginAttempted && !auth.isAuthenticated) {
+          // Auto-login was attempted but still not authenticated
+          setIsInitializing(false);
         }
       } catch (error) {
         console.error('Authentication initialization error:', error);
-        setAuthError(error instanceof Error ? error.message : 'Authentication failed');
+        setAuthError(error instanceof Error ? error.message : 'Ошибка инициализации аутентификации');
         setIsInitializing(false);
       }
     };
 
     initializeAuth();
-  }, [telegramApp.isInTelegram, telegramApp.isReady, auth.isAuthenticated, auth.isLoading, telegramApp, telegramAutoLogin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [telegramApp.isInTelegram, telegramApp.isReady, auth.isAuthenticated, auth.isLoading, autoLoginAttempted]);
 
   // Disable vertical swipes to prevent accidental app closure
   useEffect(() => {
@@ -99,7 +108,7 @@ export function App() {
   };
 
   // Show loading state while initializing or while auth is loading
-  if (isInitializing || auth.isLoading || telegramAutoLogin.isPending) {
+  if (isInitializing || auth.isLoading) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.content} style={{
@@ -110,9 +119,6 @@ export function App() {
         }}>
           <div style={{ textAlign: 'center' }}>
             <Spinner size="l" />
-            <p style={{ marginTop: '16px', color: 'var(--tg-theme-text-color, #000)' }}>
-              Authenticating...
-            </p>
           </div>
         </div>
       </div>

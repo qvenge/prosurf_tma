@@ -9,3 +9,5 @@ export * from './button';
 export * from './modal';
 export * from './switch';
 export * from './empty-list-stub';
+export * from './upload-image-input';
+export * from './text-input';

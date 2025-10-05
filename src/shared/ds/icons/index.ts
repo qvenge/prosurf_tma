@@ -15,3 +15,7 @@ export { default as ChatCircleTextBold } from './chat-circle-text_bold.svg';
 export { default as InfoFill } from './info_fill.svg';
 export { default as AirplaneTiltBold } from './airplane-tilt_bold.svg';
 export { default as CertificateBold } from './certificate_bold.svg';
+export { default as MoneyBold } from './money_bold.svg';
+export { default as EyeRegular } from './eye_regular.svg';
+export { default as EyeSlashRegular } from './eye-slash_regular.svg';
+export { default as CameraRegular } from './camera_regular.svg';

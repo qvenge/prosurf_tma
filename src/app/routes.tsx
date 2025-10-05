@@ -5,6 +5,7 @@ import { Home } from '@/pages/home';
 import { TrainingCategoriesPage } from '@/pages/training-categories';
 import { Trainings } from '@/pages/trainings';
 import { Profile } from '@/pages/profile';
+import { ProfileEditForm } from '@/pages/profile-edit-form';
 import { PaymentPage } from '@/pages/payment';
 import { PaymentSuccessPage } from '@/pages/payment-success';
 import { EventsPage } from '@/pages/events';
@@ -91,6 +92,11 @@ export const router = createBrowserRouter([
           { 
             index: true, 
             Component: Profile
+          },
+          {
+            path: 'edit',
+            Component: ProfileEditForm,
+            handle: { bottomBar: { visible: true, mode: 'custom' as const } },
           },
           { 
             path: 'bookings', 

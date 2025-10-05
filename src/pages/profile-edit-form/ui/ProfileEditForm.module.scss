@@ -1,0 +1,10 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px var(--outer-horizontal-padding, 16px);
+}
+
+.bottomBarContent {
+  padding: 16px var(--outer-horizontal-padding, 16px) 0;
+}

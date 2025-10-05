@@ -71,9 +71,12 @@
   position: absolute;
   bottom: calc(50% - 12px);
   right: 0;
-
-  color: ds.color('Graphic/Brand');
   cursor: pointer;
+  text-decoration: none;
+}
+
+.editIcon {
+  color: ds.color('Graphic/Brand');
 }
 
 .starIcon,

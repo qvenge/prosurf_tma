@@ -43,6 +43,7 @@ export const UserSchema = z.object({
   username: z.string().nullable(),
   email: z.string().nullable(),
   photoUrl: z.string().nullable(),
+  dateOfBirth: z.string().datetime().nullish(),
   role: RoleSchema,
   createdAt: z.string().datetime(),
   authMethod: z.enum(['telegram', 'email', 'username']),
@@ -53,6 +54,9 @@ export const UserUpdateDtoSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   email: z.string().optional(),
+  dateOfBirth: z.string().datetime().optional(),
+  photoUrl: z.string().nullable().optional(),
+  deletePhoto: z.boolean().optional(),
 });
 
 // Event schemas

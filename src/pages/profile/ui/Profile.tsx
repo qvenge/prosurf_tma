@@ -145,15 +145,15 @@ export const Profile = () => {
   ];
 
   if (isUserLoading) {
-    return <div className={styles.wrapper}>Loading...</div>;
+    return <div className={styles.wrapper}>Загрузка</div>;
   }
 
   if (userError) {
-    return <div className={styles.wrapper}>Error loading profile</div>;
+    return <div className={styles.wrapper}>Ошибка загрузки профиля</div>;
   }
 
   if (!user) {
-    return <div className={styles.wrapper}>User not found</div>;
+    return <div className={styles.wrapper}>Пользователь не найден</div>;
   }
 
   return (
@@ -187,14 +187,17 @@ export const Profile = () => {
             <div className={styles.phone}>{user.phone}</div>
             <div className={styles.email}>{user.email}</div>
 
-            <button className={styles.editButton}>
+            <Link
+              className={styles.editButton}
+              to={'/profile/edit'}
+            >
               <Icon 
                 src={PencilSimpleBold} 
                 width={24} 
                 height={24} 
                 className={styles.editIcon}
               />
-            </button>
+            </Link>
           </div>
 
 

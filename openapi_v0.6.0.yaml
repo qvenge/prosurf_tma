@@ -312,6 +312,11 @@ components:
           type: string
           nullable: true
           description: URL фотографии профиля
+        dateOfBirth:
+          type: string
+          format: date-time
+          nullable: true
+          description: Дата рождения пользователя
         role:
           $ref: "#/components/schemas/Role"
         createdAt:
@@ -335,6 +340,17 @@ components:
           type: string
         email:
           type: string
+        dateOfBirth:
+          type: string
+          format: date-time
+          description: Дата рождения пользователя в формате ISO 8601
+        photoUrl:
+          type: string
+          nullable: true
+          description: URL фотографии профиля. Установите null для удаления существующей фотографии.
+        deletePhoto:
+          type: boolean
+          description: Установите true для удаления существующей фотографии. Игнорируется, если загружается новый файл фото.
       additionalProperties: false
     LoginDto:
       type: object
@@ -2096,6 +2112,19 @@ paths:
       tags:
         - Users
       summary: Обновить профиль (self)
+      description: |
+        Обновление профиля пользователя. Поддерживает два формата запросов:
+
+        **1. application/json** - для обновления текстовых полей и удаления фото:
+        - Для удаления фото отправьте `{"photoUrl": null}` или `{"deletePhoto": true}`
+        - Для установки внешнего URL отправьте `{"photoUrl": "https://example.com/photo.jpg"}`
+
+        **2. multipart/form-data** - для загрузки или удаления фото:
+        - Для загрузки: загрузите файл в поле `photo` (макс. 10MB, JPEG/PNG/GIF/WebP)
+        - Для удаления: установите поле `deletePhoto=true`
+        - Можно комбинировать с обновлением других полей
+
+        **Приоритет операций**: Загрузка фото > deletePhoto > photoUrl
       parameters:
         - in: path
           name: id
@@ -2108,6 +2137,52 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UserUpdateDto"
+            examples:
+              deletePhotoWithFlag:
+                summary: Удаление фото профиля (deletePhoto)
+                value:
+                  deletePhoto: true
+              deletePhotoWithNull:
+                summary: Удаление фото профиля (photoUrl null)
+                value:
+                  photoUrl: null
+              updateFields:
+                summary: Обновление полей профиля
+                value:
+                  firstName: Иван
+                  lastName: Иванов
+                  email: ivan@example.com
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                  nullable: true
+                firstName:
+                  type: string
+                  nullable: true
+                lastName:
+                  type: string
+                  nullable: true
+                email:
+                  type: string
+                  format: email
+                  nullable: true
+                dateOfBirth:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Дата рождения в формате ISO 8601
+                photo:
+                  type: string
+                  format: binary
+                  nullable: true
+                  description: Фото профиля (макс. 10MB, форматы - JPEG, PNG, GIF, WebP)
+                deletePhoto:
+                  type: boolean
+                  nullable: true
+                  description: Установите true для удаления существующей фотографии
       responses:
         "200":
           description: OK
@@ -2115,6 +2190,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        "400":
+          description: Bad Request (например, файл слишком большой или неверный формат)
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -3068,9 +3145,13 @@ paths:
         - $ref: "#/components/parameters/LimitParam"
         - in: query
           name: status
+          style: form
+          explode: false
           schema:
-            $ref: "#/components/schemas/PaymentStatus"
-          description: Filter by payment status
+            type: array
+            items:
+              $ref: "#/components/schemas/PaymentStatus"
+          description: Filter by payment status (can specify multiple, e.g. status=PENDING,SUCCEEDED)
         - in: query
           name: category
           schema:
@@ -3626,9 +3707,13 @@ paths:
           description: Filter by user ID (admin only)
         - in: query
           name: status
+          style: form
+          explode: false
           schema:
-            $ref: "#/components/schemas/PaymentStatus"
-          description: Filter by payment status
+            type: array
+            items:
+              $ref: "#/components/schemas/PaymentStatus"
+          description: Filter by payment status (can specify multiple, e.g. status=PENDING,SUCCEEDED)
         - in: query
           name: category
           schema:

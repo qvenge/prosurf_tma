@@ -49,14 +49,14 @@ export const useUser = (id: string) => {
 // Update user mutation
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UserUpdateDto }) => 
-      usersClient.updateUser(id, data),
+    mutationFn: ({ id, data, photo, deletePhoto }: { id: string; data: UserUpdateDto; photo?: File; deletePhoto?: boolean }) =>
+      usersClient.updateUser(id, data, photo, deletePhoto),
     onSuccess: (updatedUser, variables) => {
       // Update the specific user in cache
       queryClient.setQueryData(usersKeys.detail(variables.id), updatedUser);
-      
+
       // Invalidate user lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
@@ -84,9 +84,9 @@ export const useCurrentUserProfile = () => {
   const userId = auth.user?.id;
 
   const updateMutation = useMutation({
-    mutationFn: (data: UserUpdateDto) => {
+    mutationFn: ({ data, photo, deletePhoto }: { data: UserUpdateDto; photo?: File; deletePhoto?: boolean }) => {
       if (!userId) throw new Error('User not authenticated');
-      return usersClient.updateUser(userId, data);
+      return usersClient.updateUser(userId, data, photo, deletePhoto);
     },
     onSuccess: (updatedUser) => {
       // Update both AuthContext and query cache

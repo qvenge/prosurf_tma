@@ -1,0 +1,69 @@
+.root {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.previewButton {
+}
+
+.preview {
+  display: flex;
+  width: 80px;
+  height: 80px;
+
+  overflow: hidden;
+
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 1/1;
+
+  border-radius: 50%;
+  border: 1px solid ds.color('Border/Primary');
+
+  color: ds.color('Graphic/Secondary');
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+}
+
+.controls {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+
+  color: ds.color('Text/Brand');
+}
+
+.control {
+  white-space: nowrap;
+}
+
+.controlRemove {
+  color: ds.color('Text/Error');
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}

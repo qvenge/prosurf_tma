@@ -1,0 +1,92 @@
+.root {
+  width: 80px;
+  height: 80px;
+  position: relative;
+}
+
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.previewButton {
+}
+
+.preview {
+  display: flex;
+  width: 80px;
+  height: 80px;
+
+  overflow: hidden;
+
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 1/1;
+
+  border-radius: 50%;
+  border: 1px solid ds.color('Border/Primary');
+
+  color: ds.color('Graphic/Secondary');
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+}
+
+.menu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(100% + 8px);
+
+  display: flex;
+  width: 120px;
+  padding: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  z-index: 100;
+
+  border-radius: 20xp;
+  background: ds.color('Background/Primary');
+
+  /* Shadow/L */
+  //box-shadow: ds.effect('Shadow/L');
+}
+
+.menuButton {
+  //@include ds.typo('body/b3/regular');
+
+  display: flex;
+  padding: 6px 4px;
+  align-items: center;
+  gap: 4px;
+
+  border-radius: 8px;
+  background: ds.color('Background/Primary');
+  color: ds.color('Text/Primary');
+
+  &:hover {
+    background: ds.color('Background/Secondary');
+  }
+
+  &:active {
+    background: ds.color('Background/Accent');
+  }
+}
+
+.menuButtonRed {
+  color: ds.color('Text/Error');
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
