@@ -5,7 +5,7 @@
 .list {
   @include utils.hScrollable;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 4px;
   padding: 0 var(--outer-horizontal-padding);
 }

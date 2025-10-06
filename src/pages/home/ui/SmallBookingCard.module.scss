@@ -24,6 +24,7 @@
 .title {
   @include ds.typo('Roboto/Caption 1/Regular');
   color: ds.color('Text/Primary');
+  flex-grow: 1;
 }
 
 .start {

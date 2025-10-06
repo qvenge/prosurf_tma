@@ -1,10 +1,20 @@
-import { useBookings } from '@/shared/api';
+import { useMemo } from 'react';
+import { useBookings, type BookingFilters } from '@/shared/api';
 import { Spinner } from '@/shared/ui';
 import styles from './HorizontalBookingList.module.scss';
 import { SmallBookingCard } from './SmallBookingCard';
 
 export function HorizontalBookingList() {
-  const { data, isLoading } = useBookings({ status: ['CONFIRMED'], includeSession: true, limit: 50 });
+  const filters: BookingFilters = useMemo(() => ({
+    status: ['CONFIRMED'],
+    includeSession: true,
+    limit: 50,
+    startsAfter: new Date().toISOString(),
+    sortBy: 'startsAt',
+    sortOrder: 'asc'
+  }), []);
+
+  const { data, isLoading } = useBookings(filters);
 
   if (isLoading) {
     return (

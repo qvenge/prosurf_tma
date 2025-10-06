@@ -3141,6 +3141,106 @@ paths:
             type: boolean
             default: false
           description: Включить контактные данные гостей в ответ. Доступно только ADMIN.
+        - in: query
+          name: createdAfter
+          schema:
+            type: string
+            format: date-time
+          description: Фильтр бронирований, созданных после этой даты (RFC3339).
+        - in: query
+          name: createdBefore
+          schema:
+            type: string
+            format: date-time
+          description: Фильтр бронирований, созданных до этой даты (RFC3339).
+        - in: query
+          name: startsAfter
+          schema:
+            type: string
+            format: date-time
+          description: Фильтр бронирований, где сессия начинается после этой даты (RFC3339).
+        - in: query
+          name: startsBefore
+          schema:
+            type: string
+            format: date-time
+          description: Фильтр бронирований, где сессия начинается до этой даты (RFC3339).
+        - in: query
+          name: endsAfter
+          schema:
+            type: string
+            format: date-time
+          description: Фильтр бронирований, где сессия заканчивается после этой даты (RFC3339).
+        - in: query
+          name: endsBefore
+          schema:
+            type: string
+            format: date-time
+          description: Фильтр бронирований, где сессия заканчивается до этой даты (RFC3339).
+        - in: query
+          name: minQuantity
+          schema:
+            type: integer
+            minimum: 1
+          description: Минимальное количество мест в бронировании.
+        - in: query
+          name: maxQuantity
+          schema:
+            type: integer
+            minimum: 1
+          description: Максимальное количество мест в бронировании.
+        - in: query
+          name: minPrice
+          schema:
+            type: integer
+            minimum: 0
+          description: Минимальная общая цена в минорных единицах (копейках/центах).
+        - in: query
+          name: maxPrice
+          schema:
+            type: integer
+            minimum: 0
+          description: Максимальная общая цена в минорных единицах (копейках/центах).
+        - in: query
+          name: eventId
+          schema:
+            type: string
+          description: Фильтр бронирований по ID события.
+        - in: query
+          name: seasonTicketId
+          schema:
+            type: string
+          description: Фильтр бронирований, оплаченных конкретным абонементом.
+        - in: query
+          name: createdBy
+          schema:
+            type: string
+          description: Фильтр по ID администратора, создавшего бронирование. Доступно только ADMIN.
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Поиск в контактных данных гостей (телефон, имя, email) и информации о пользователе.
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum:
+              - createdAt
+              - totalPrice
+              - status
+              - startsAt
+            default: createdAt
+          description: Поле для сортировки.
+        - in: query
+          name: sortOrder
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+          description: Порядок сортировки.
         - $ref: "#/components/parameters/LabelsAnyParam"
         - $ref: "#/components/parameters/LabelsAllParam"
         - $ref: "#/components/parameters/LabelsNoneParam"

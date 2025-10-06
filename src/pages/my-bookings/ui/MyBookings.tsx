@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { InfiniteScrollList, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
-import { useBookingsInfinite, type BookingExtended } from '@/shared/api'
+import { useBookingsInfinite, type BookingExtended, type BookingFilters } from '@/shared/api'
 import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
@@ -56,11 +56,17 @@ const transformBookingToCardData = (booking: BookingExtended): BookingCardProps[
 export function MyBookings() {
   const [selectedTab, setSelectedTab] = useState<'trainings' | 'events'>('trainings');
 
-  const query = useBookingsInfinite({
-    includeSession: true,
+  const filters: BookingFilters = useMemo(() => ({
     status: ['CONFIRMED'],
+    includeSession: true,
+    limit: 50,
+    startsAfter: new Date().toISOString(),
+    sortBy: 'startsAt',
+    sortOrder: 'asc',
     'labels.any': labels[selectedTab]
-  });
+  }), [selectedTab]);
+
+  const query = useBookingsInfinite(filters);
 
   return (
     <PageLayout title="Мои записи">
