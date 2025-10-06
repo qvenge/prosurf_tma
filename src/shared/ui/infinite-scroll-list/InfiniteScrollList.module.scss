@@ -1,0 +1,80 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.stub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 16px;
+
+  &.error {
+    flex-direction: column;
+    gap: 8px;
+    color: var(--color-text-error);
+  }
+}
+
+.errorDetails {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupedList {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupHeader {
+  @include ds.typo('Roboto/Caption 1/Bold Caps');
+  padding: 0;
+  margin: 0;
+  color: ds.color('Text/Secondary');
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &.groupItemsHorizontal {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0 var(--outer-horizontal-padding, 16px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+.loadingMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.trigger {
+  height: 1px;
+  width: 100%;
+}

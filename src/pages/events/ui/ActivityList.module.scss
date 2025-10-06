@@ -15,12 +15,6 @@
   margin: 0;
 }
 
-.eventsBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .day {
   @include ds.typo('Roboto/Caption 1/Bold Caps');
   color: ds.color('Text/Secondary');

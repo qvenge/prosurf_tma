@@ -1,19 +1,10 @@
-import { useState } from 'react';
-import { EmptyListStub, SegmentedControl, Spinner } from '@/shared/ui'
+import { useState, useMemo } from 'react';
+import { SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
-import { useSessions, type Session } from '@/shared/api'
+import { useSessionsInfinite, type Session } from '@/shared/api'
 import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './WaitlistPage.module.scss';
 import { SessionCard, type SessionCardProps } from './SessionCard';
-import clsx from 'clsx';
-
-type SessionsByDay = Array<{ day: string; items: SessionCardProps['data'][]}>;
-
-interface WaitlistProps {
-  blocks: SessionsByDay;
-  isLoading: boolean;
-  error: any;
-}
 
 const transformSessionToCardData = (session: Session): SessionCardProps['data'] => {
   const formatSessionDurationOrYear = (startsAt?: string, endsAt?: string | null): string | undefined => {
@@ -48,38 +39,18 @@ const transformSessionToCardData = (session: Session): SessionCardProps['data'] 
   };
 };
 
-const groupSessionsByDate = (sessions: Session[]): [SessionsByDay, SessionsByDay] => {
-  const hasSeats = sessions.filter(s => (s.remainingSeats ?? 0) > 0);
-  const noSeats = sessions.filter(s => (s.remainingSeats ?? 0) === 0);
-
-  const groupByDate = (sessionsList: Session[]): SessionsByDay => {
-    const grouped = sessionsList.reduce((acc, session) => {
-      const dateKey = formatSessionDate(session!.startsAt);
-      if (!acc[dateKey]) {
-        acc[dateKey] = [];
-      }
-      acc[dateKey].push(transformSessionToCardData(session));
-      return acc;
-    }, {} as Record<string, SessionCardProps['data'][]>);
-
-    return Object.entries(grouped).map(([day, items]) => ({ day, items }));
-  };
-
-  return [groupByDate(hasSeats), groupByDate(noSeats)];
-};
-
 export function WaitlistPage() {
   const [selectedTab, setSelectedTab] = useState<'hasSeats' | 'noSeats'>('hasSeats');
-  
-  // const sessionStartFrom = useMemo(() => new Date().toISOString(), []); // TODO: Use when needed
-  
-  const { data, isLoading, error } = useSessions({ onWaitlist: true });
-  
-  const [hasSeatsItems, noSeatsItems] = groupSessionsByDate(data?.items.sort((a: Session, b: Session) => {
-    const aDate = new Date(a.startsAt).getTime();
-    const bDate = new Date(b.startsAt).getTime();
-    return aDate - bDate;
-  }) || []);
+
+  const query = useSessionsInfinite({ onWaitlist: true });
+
+  // Filter sessions based on selected tab
+  const filteredSessions = useMemo(() => {
+    const allSessions = query.data?.pages.flatMap((page) => page.items) ?? [];
+    return selectedTab === 'hasSeats'
+      ? allSessions.filter(s => (s.remainingSeats ?? 0) > 0)
+      : allSessions.filter(s => (s.remainingSeats ?? 0) === 0);
+  }, [query.data, selectedTab]);
 
   return (
     <PageLayout title="Лист ожиданий">
@@ -99,52 +70,94 @@ export function WaitlistPage() {
           </SegmentedControl.Item>
         </SegmentedControl>
         <div className={styles.content}>
-          <Waitlist
+          <WaitlistContent
             key={selectedTab}
-            isLoading={isLoading}
-            error={error}
-            blocks={selectedTab === 'hasSeats' ? hasSeatsItems : noSeatsItems} />
+            query={query}
+            sessions={filteredSessions}
+          />
         </div>
       </div>
     </PageLayout>
   );
 }
 
-function Waitlist({blocks, isLoading, error}: WaitlistProps) {
-  if (isLoading) {
+function WaitlistContent({
+  query,
+  sessions,
+}: {
+  query: ReturnType<typeof useSessionsInfinite>;
+  sessions: Session[];
+}) {
+  if (query.isLoading) {
     return (
       <div className={styles.stub}>
-        <Spinner size="l" />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          Loading...
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  if (query.isError) {
     return (
-      <div className={clsx(styles.stub, styles.error)}>
+      <div className={styles.stub}>
         <div>Ошибка загрузки тренировок</div>
       </div>
     );
   }
 
-  if (blocks.length === 0) {
+  if (sessions.length === 0) {
     return (
       <div className={styles.stub}>
-        <EmptyListStub message="Нет записей" />
+        <div>Нет записей</div>
       </div>
     );
   }
 
   return (
     <div className={styles.dayBlocks}>
-      {blocks.map((block) => (
-        <div key={block.day} className={styles.dayBlock}>
-          <div className={styles.day}>{block.day}</div>
-          {block.items.map((event) => (
-            <SessionCard key={event.eventTitle} data={event} />
-          ))}
+      {sessions.reduce((groups: Array<{ day: string; sessions: Session[] }>, session) => {
+        const day = formatSessionDate(session.startsAt);
+        const existingGroup = groups.find(g => g.day === day);
+
+        if (existingGroup) {
+          existingGroup.sessions.push(session);
+        } else {
+          groups.push({ day, sessions: [session] });
+        }
+
+        return groups;
+      }, []).map((group) => (
+        <div key={group.day} className={styles.dayBlock}>
+          <div className={styles.day}>{group.day}</div>
+          {group.sessions.map((session) => {
+            const cardData = transformSessionToCardData(session);
+            return <SessionCard key={session.id} data={cardData} />;
+          })}
         </div>
       ))}
+
+      {query.isFetchingNextPage && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+          Loading more...
+        </div>
+      )}
+
+      {query.hasNextPage && (
+        <div
+          ref={(el) => {
+            if (!el || query.isFetchingNextPage) return;
+            const observer = new IntersectionObserver((entries) => {
+              if (entries[0].isIntersecting) {
+                query.fetchNextPage();
+              }
+            });
+            observer.observe(el);
+            return () => observer.disconnect();
+          }}
+          style={{ height: '1px' }}
+        />
+      )}
     </div>
   );
 }

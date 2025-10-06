@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import { useParams } from 'react-router';
 import styles from './Trainings.module.scss';
 import { PageLayout } from '@/widgets/page-layout';
-import { useSessions, useImages, type EventType } from '@/shared/api';
+import { useSessionsInfinite, useImages, type EventType, type Session } from '@/shared/api';
 import { getCurrentAndNextMonth, getMonthDateRange } from '@/shared/lib/date-utils';
-import { useSessionGroups } from '@/shared/lib/hooks/use-session-groups';
+import { formatAvailability, formatPrice, formatDuration, formatTime } from '@/shared/lib';
 import { MonthSelector } from './month-selector';
-import { SessionList } from './session-list';
+import { InfiniteScrollList } from '@/shared/ui';
+import { SessionCard } from './session-card';
 
 const getCategoryInfo = (categoryId: string): { label: EventType | string, title: string } => {
   switch (categoryId) {
@@ -40,15 +41,12 @@ export const Trainings = () => {
   const { data: images } = useImages({"tags.any": [categoryInfo.label]});
   const heroImages = images?.items.map(item => item.url)
 
-  const { data, isLoading, error } = useSessions({
+  const sessionsQuery = useSessionsInfinite({
     startsAfter: dateFrom,
     endsBefore: dateTo,
     'labels.any': categoryInfo.label ? [categoryInfo.label] : undefined,
-    limit: 100
+    limit: 50
   });
-  const eventSessions = data?.items || [];
-
-  const sessionGroups = useSessionGroups(eventSessions);
 
   return (
     <PageLayout
@@ -68,10 +66,33 @@ export const Trainings = () => {
           <div className={styles.divider}></div>
 
           <div className={styles.sessions}>
-            <SessionList
-              sessionGroups={sessionGroups}
-              isLoading={isLoading}
-              error={error}
+            <InfiniteScrollList
+              query={sessionsQuery}
+              renderItem={(session: Session) => (
+                <SessionCard
+                  id={session.id}
+                  time={formatTime(session.startsAt)}
+                  duration={formatDuration(session.startsAt, session.endsAt)}
+                  title={session.event.title}
+                  location={session.event.location || 'Не указано'}
+                  price={formatPrice(session.event.tickets[0]?.full.price)}
+                  availability={formatAvailability(session.remainingSeats)}
+                />
+              )}
+              groupBy={(session: Session) => {
+                const sessionDate = new Date(session.startsAt);
+                const dayName = sessionDate.toLocaleDateString('ru-RU', { weekday: 'long' });
+                const day = sessionDate.getDate();
+                const monthName = sessionDate.toLocaleDateString('ru-RU', { month: 'long' });
+                return `${dayName} • ${day} ${monthName}`;
+              }}
+              renderGroupHeader={(dateHeader: string) => (
+                <h2 className={styles.dateHeader}>{dateHeader}</h2>
+              )}
+              groupItemsLayout="horizontal"
+              emptyMessage="Тренировки не найдены"
+              errorMessage="Ошибка загрузки тренировок"
+              listClassName={styles.sessionList}
             />
           </div>
         </div>

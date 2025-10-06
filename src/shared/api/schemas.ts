@@ -688,6 +688,8 @@ export const SeasonTicketFiltersSchema = z.object({
   eventId: z.string().optional(),
   status: z.array(SeasonTicketStatusSchema).optional(),
   hasRemainingPasses: z.boolean().optional(),
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
 });
 
 export const WaitlistFiltersSchema = z.object({
@@ -703,6 +705,8 @@ export const AuditLogFiltersSchema = z.object({
 export const SeasonTicketPlanFiltersSchema = z.object({
   eventIds: z.array(z.string()).optional(),
   sessionId: z.string().optional(),
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
 });
 
 export const PaymentFiltersSchema = z.object({

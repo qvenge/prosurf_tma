@@ -1,19 +1,10 @@
 import { useState } from 'react';
-import { EmptyListStub, SegmentedControl, Spinner } from '@/shared/ui'
+import { InfiniteScrollList, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
-import { useBookings, type BookingExtended } from '@/shared/api'
+import { useBookingsInfinite, type BookingExtended } from '@/shared/api'
 import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
-import clsx from 'clsx';
-
-type BookingsByDay = Array<{ day: string; items: BookingCardProps['data'][]}>;
-
-interface BookingListProps {
-  blocks: BookingsByDay;
-  isLoading: boolean;
-  error: any;
-}
 
 const labels = {
   trainings: ['training:surfing', 'training:wakeboarding', 'training:surfskate'],
@@ -62,35 +53,14 @@ const transformBookingToCardData = (booking: BookingExtended): BookingCardProps[
   };
 };
 
-const groupBookingsByDate = (bookings: BookingExtended[]): BookingsByDay => {
-  const grouped = bookings.reduce((acc, booking) => {
-    const dateKey = formatSessionDate(booking.session!.startsAt);
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
-    acc[dateKey].push(transformBookingToCardData(booking));
-    return acc;
-  }, {} as Record<string, BookingCardProps['data'][]>);
-
-  return Object.entries(grouped).map(([day, items]) => ({ day, items }));
-};
-
 export function MyBookings() {
   const [selectedTab, setSelectedTab] = useState<'trainings' | 'events'>('trainings');
-  
-  // const sessionStartFrom = useMemo(() => new Date().toISOString(), []); // TODO: Use when needed
-  
-  const { data, isLoading, error } = useBookings({
+
+  const query = useBookingsInfinite({
     includeSession: true,
     status: ['CONFIRMED'],
     'labels.any': labels[selectedTab]
   });
-  
-  const items = groupBookingsByDate(data?.items.sort((a: BookingExtended, b: BookingExtended) => {
-    const aDate = new Date(a.session!.startsAt).getTime();
-    const bDate = new Date(b.session!.startsAt).getTime();
-    return aDate - bDate;
-  }) || []);
 
   return (
     <PageLayout title="Мои записи">
@@ -110,53 +80,23 @@ export function MyBookings() {
           </SegmentedControl.Item>
         </SegmentedControl>
         <div className={styles.content}>
-          <BookingList
+          <InfiniteScrollList
             key={selectedTab}
-            isLoading={isLoading}
-            error={error}
-            blocks={items}
+            query={query}
+            renderItem={(booking: BookingExtended) => {
+              const cardData = transformBookingToCardData(booking);
+              return <BookingCard key={booking.id} data={cardData} />;
+            }}
+            groupBy={(booking: BookingExtended) => formatSessionDate(booking.session!.startsAt)}
+            renderGroupHeader={(day: string) => (
+              <div className={styles.day}>{day}</div>
+            )}
+            emptyMessage="У вас пока нет записей"
+            errorMessage="Ошибка загрузки тренировок"
+            listClassName={styles.dayBlocks}
           />
         </div>
       </div>
     </PageLayout>
-  );
-}
-
-function BookingList({blocks, isLoading, error}: BookingListProps) {
-  if (isLoading) {
-    return (
-      <div className={styles.stub}>
-        <Spinner size="l" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={clsx(styles.stub, styles.error)}>
-        <div>Ошибка загрузки тренировок</div>
-      </div>
-    );
-  }
-
-  if (blocks.length === 0) {
-    return (
-      <div className={styles.stub}>
-        <EmptyListStub message="У вас пока нет записей" />
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.dayBlocks}>
-      {blocks.map((block) => (
-        <div key={block.day} className={styles.dayBlock}>
-          <div className={styles.day}>{block.day}</div>
-          {block.items.map((event) => (
-            <BookingCard key={event.eventTitle} data={event} />
-          ))}
-        </div>
-      ))}
-    </div>
   );
 }

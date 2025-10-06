@@ -1,8 +1,8 @@
 import { Link } from '@/shared/navigation';
 import styles from './ActivityList.module.scss';
-import { useSessions } from '@/shared/api';
-import { groupSessionsByDate } from '@/shared/lib/date-utils';
-import { EmptyListStub, Spinner, ActivityCard } from '@/shared/ui';
+import { useSessionsInfinite, type Session } from '@/shared/api';
+import { formatSessionDate } from '@/shared/lib/date-utils';
+import { InfiniteScrollList, ActivityCard } from '@/shared/ui';
 import { useMemo } from 'react';
 
 export const ActivityList = () => {
@@ -11,48 +11,25 @@ export const ActivityList = () => {
     startsAfter: new Date().toISOString(),
   }), []);
 
-  const { data, isLoading, error } = useSessions(filters);
-
-  const otherEvents = data?.items || [];
-
-  if (isLoading) {
-    return (
-      <div className={styles.stub}>
-        <Spinner size="l" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.stub}>
-        <div>Ошибка загрузки событий</div>
-      </div>
-    );
-  }
-
-  if (otherEvents.length === 0) {
-    return (
-      <div className={styles.stub}>
-        <EmptyListStub message='Пока нет доступных событий' />
-      </div>
-    );
-  }
-
-  const groupedEvents = groupSessionsByDate(otherEvents);
+  const query = useSessionsInfinite(filters);
 
   return (
     <div className={styles.wrapper}>
-      {groupedEvents.map((group) => (
-        <div key={group.date} className={styles.eventsBlock}>
-          <div className={styles.day}>{group.date}</div>
-          {group.events.map((event) => (
-            <Link key={event.id} to={`/events/sessions/${event.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <ActivityCard data={event} />
-            </Link>
-          ))}
-        </div>
-      ))}
+      <InfiniteScrollList
+        query={query}
+        renderItem={(session: Session) => (
+          <Link key={session.id} to={`/events/sessions/${session.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <ActivityCard data={session} />
+          </Link>
+        )}
+        groupBy={(session: Session) => formatSessionDate(session.startsAt)}
+        renderGroupHeader={(day: string) => (
+          <div className={styles.day}>{day}</div>
+        )}
+        emptyMessage="Пока нет доступных событий"
+        errorMessage="Ошибка загрузки событий"
+        listClassName={styles.eventsBlock}
+      />
     </div>
   );
 };

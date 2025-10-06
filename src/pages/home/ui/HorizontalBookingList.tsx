@@ -4,7 +4,7 @@ import styles from './HorizontalBookingList.module.scss';
 import { SmallBookingCard } from './SmallBookingCard';
 
 export function HorizontalBookingList() {
-  const { data, isLoading } = useBookings({ status: ['CONFIRMED'], includeSession: true });
+  const { data, isLoading } = useBookings({ status: ['CONFIRMED'], includeSession: true, limit: 50 });
 
   if (isLoading) {
     return (

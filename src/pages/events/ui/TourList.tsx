@@ -1,7 +1,7 @@
 import { Link } from '@/shared/navigation';
 import styles from './TourList.module.scss';
-import { useSessions } from '@/shared/api';
-import { EmptyListStub, Spinner, TourCard } from '@/shared/ui';
+import { useSessionsInfinite, type Session } from '@/shared/api';
+import { InfiniteScrollList, TourCard } from '@/shared/ui';
 import { useMemo } from 'react';
 
 export const TourList = () => {
@@ -10,41 +10,20 @@ export const TourList = () => {
     startsAfter: new Date().toISOString(),
   }), []);
 
-  const { data, isLoading, error } = useSessions(filters);
-
-  const tours = data?.items || [];
-
-  if (isLoading) {
-    return (
-      <div className={styles.stub}>
-        <Spinner size="l" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.stub}>
-        <div>Ошибка загрузки туров</div>
-      </div>
-    );
-  }
-
-  if (tours.length === 0) {
-    return (
-      <div className={styles.stub}>
-        <EmptyListStub message='Пока нет доступных туров' />
-      </div>
-    );
-  }
+  const query = useSessionsInfinite(filters);
 
   return (
     <div className={styles.wrapper}>
-      {tours.map((tour) => (
-        <Link key={tour.id} to={`/events/sessions/${tour.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <TourCard data={tour} />
-        </Link>
-      ))}
+      <InfiniteScrollList
+        query={query}
+        renderItem={(session: Session) => (
+          <Link key={session.id} to={`/events/sessions/${session.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <TourCard data={session} />
+          </Link>
+        )}
+        emptyMessage="Пока нет доступных туров"
+        errorMessage="Ошибка загрузки туров"
+      />
     </div>
   );
 };

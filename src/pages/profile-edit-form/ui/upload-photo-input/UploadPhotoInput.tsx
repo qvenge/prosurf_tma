@@ -49,7 +49,7 @@ export function UploadPhotoInput({
     setShowPreviewSrc(false);
 
     if (fileInputRef.current) {
-      // @ts-expect-error - удобный способ очистить инпут
+      // удобный способ очистить инпут
       fileInputRef.current.value = '';
     }
 

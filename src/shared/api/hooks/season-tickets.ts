@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { seasonTicketsClient } from '../clients/season-tickets';
 import { useAuth } from '../auth';
 import type {
@@ -9,7 +9,10 @@ import type {
   SeasonTicketFilters,
   IdempotencyKey,
   CursorParam,
-  LimitParam
+  LimitParam,
+  PaginatedResponse,
+  SeasonTicketPlan,
+  SeasonTicket
 } from '../types';
 
 export const seasonTicketsKeys = {
@@ -27,6 +30,16 @@ export const useSeasonTicketPlans = (filters?: SeasonTicketPlanFilters) => {
   return useQuery({
     queryKey: seasonTicketsKeys.plansList(filters),
     queryFn: () => seasonTicketsClient.getSeasonTicketPlans(filters),
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
+export const useSeasonTicketPlansInfinite = (filters?: Omit<SeasonTicketPlanFilters, 'cursor'>) => {
+  return useInfiniteQuery({
+    queryKey: seasonTicketsKeys.plansList(filters),
+    queryFn: ({ pageParam }) => seasonTicketsClient.getSeasonTicketPlans({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage: PaginatedResponse<SeasonTicketPlan>) => lastPage.next,
     staleTime: 10 * 60 * 1000,
   });
 };
@@ -108,6 +121,16 @@ export const useSeasonTickets = (filters?: SeasonTicketFilters) => {
   return useQuery({
     queryKey: seasonTicketsKeys.ticketsList(filters),
     queryFn: () => seasonTicketsClient.getSeasonTickets(filters),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useSeasonTicketsInfinite = (filters?: Omit<SeasonTicketFilters, 'cursor'>) => {
+  return useInfiniteQuery({
+    queryKey: seasonTicketsKeys.ticketsList(filters),
+    queryFn: ({ pageParam }) => seasonTicketsClient.getSeasonTickets({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage: PaginatedResponse<SeasonTicket>) => lastPage.next,
     staleTime: 5 * 60 * 1000,
   });
 };

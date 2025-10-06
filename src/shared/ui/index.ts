@@ -13,3 +13,4 @@ export * from './upload-image-input';
 export * from './text-input';
 export * from './tour-card';
 export * from './activity-card';
+export * from './infinite-scroll-list';
