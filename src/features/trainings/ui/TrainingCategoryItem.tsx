@@ -3,6 +3,7 @@ import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
 import { useSessions, type EventType } from '@/shared/api';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import styles from './TrainingCategoryItem.module.scss';
 
 const formatUpcomingDate = (dateString: string): string => {
@@ -37,7 +38,7 @@ export const TrainingCategoryItem = ({
   const filters = useMemo(() => ({
     'labels.any': [eventType],
     limit: 1,
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
   }), [eventType]);
 
 

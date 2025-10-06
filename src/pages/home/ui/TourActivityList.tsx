@@ -1,5 +1,6 @@
 import { Link } from '@/shared/navigation';
 import { useSessionsInfinite } from '@/shared/api';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import { InfiniteScrollList, TourCard, ActivityCard } from '@/shared/ui';
 import { useMemo } from 'react';
 import type { Session } from '@/shared/api/types';
@@ -9,7 +10,7 @@ import styles from './TourActivityList.module.scss';
 export function TourActivityList() {
   const filters = useMemo(() => ({
     'labels.any': ['tour', 'activity'],
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
   }), []);
 
   const query = useSessionsInfinite(filters);

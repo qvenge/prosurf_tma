@@ -1,5 +1,10 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Stable date for filtering upcoming events/sessions - initialized once when the app loads
+// This prevents React Query from creating new query keys on every component mount
+export const SESSION_START_DATE_RAW = new Date();
+export const SESSION_START_DATE = SESSION_START_DATE_RAW.toISOString();
+
 export const getCurrentAndNextMonth = () => {
   const now = new Date();
   const currentMonth = now.toLocaleDateString('ru-RU', { month: 'long' });
@@ -11,7 +16,7 @@ export const getCurrentAndNextMonth = () => {
 };
 
 export const getMonthDateRange = (monthName: string) => {
-  const now = new Date();
+  const now = SESSION_START_DATE_RAW;
   const currentMonthName = now.toLocaleDateString('ru-RU', { month: 'long' });
   const isCurrentMonth = monthName.toLowerCase() === currentMonthName;
   
@@ -19,7 +24,7 @@ export const getMonthDateRange = (monthName: string) => {
   const year = targetDate.getFullYear();
   const month = targetDate.getMonth();
   
-  const dateFrom = isCurrentMonth ? now.toISOString() : new Date(year, month, 1).toISOString();
+  const dateFrom = isCurrentMonth ? SESSION_START_DATE : new Date(year, month, 1).toISOString();
   const dateTo = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
   
   return { dateFrom, dateTo };

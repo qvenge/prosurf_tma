@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { eventsClient } from '../clients/events';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import type { Event, EventCreateDto, EventFilters, PaginatedResponse } from '../types';
 
 // Query key factory for events
@@ -81,7 +82,7 @@ export const useEventSearch = (searchQuery: string, additionalFilters?: Omit<Eve
 // Hook for upcoming events
 export const useUpcomingEvents = (limit: number = 20) => {
   const filters: EventFilters = {
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
     limit,
   };
 

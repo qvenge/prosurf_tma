@@ -1,14 +1,14 @@
 import { Link } from '@/shared/navigation';
 import styles from './ActivityList.module.scss';
 import { useSessionsInfinite, type Session } from '@/shared/api';
-import { formatSessionDate } from '@/shared/lib/date-utils';
+import { formatSessionDate, SESSION_START_DATE } from '@/shared/lib/date-utils';
 import { InfiniteScrollList, ActivityCard } from '@/shared/ui';
 import { useMemo } from 'react';
 
 export const ActivityList = () => {
   const filters = useMemo(() => ({
     'labels.any': ['activity'],
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
   }), []);
 
   const query = useSessionsInfinite(filters);

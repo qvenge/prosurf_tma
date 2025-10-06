@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useBookings, type BookingFilters } from '@/shared/api';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import { Spinner } from '@/shared/ui';
 import styles from './HorizontalBookingList.module.scss';
 import { SmallBookingCard } from './SmallBookingCard';
@@ -9,7 +10,7 @@ export function HorizontalBookingList() {
     status: ['CONFIRMED'],
     includeSession: true,
     limit: 50,
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
     sortBy: 'startsAt',
     sortOrder: 'asc'
   }), []);

@@ -1,13 +1,14 @@
 import { Link } from '@/shared/navigation';
 import styles from './TourList.module.scss';
 import { useSessionsInfinite, type Session } from '@/shared/api';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import { InfiniteScrollList, TourCard } from '@/shared/ui';
 import { useMemo } from 'react';
 
 export const TourList = () => {
   const filters = useMemo(() => ({
     'labels.any': ['tour'],
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
   }), []);
 
   const query = useSessionsInfinite(filters);

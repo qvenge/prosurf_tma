@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { InfiniteScrollList, SegmentedControl } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
 import { useBookingsInfinite, type BookingExtended, type BookingFilters } from '@/shared/api'
-import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
+import { formatSessionDate, formatTime, SESSION_START_DATE } from '@/shared/lib/date-utils'
 import styles from './MyBookings.module.scss';
 import { BookingCard, type BookingCardProps } from './BookingCard';
 
@@ -60,7 +60,7 @@ export function MyBookings() {
     status: ['CONFIRMED'],
     includeSession: true,
     limit: 50,
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
     sortBy: 'startsAt',
     sortOrder: 'asc',
     'labels.any': labels[selectedTab]

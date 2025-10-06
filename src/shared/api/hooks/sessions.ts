@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { sessionsClient } from '../clients/sessions';
 import { eventsKeys } from './events';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import type {
   Session,
   SessionCompact,
@@ -158,7 +159,7 @@ export const useCancelSession = () => {
 // Hook for upcoming sessions
 export const useUpcomingSessions = (limit: number = 20) => {
   const filters: SessionFilters = {
-    startsAfter: new Date().toISOString(),
+    startsAfter: SESSION_START_DATE,
     limit,
   };
 
@@ -172,8 +173,8 @@ export const useUpcomingSessions = (limit: number = 20) => {
 // Hook for available sessions (with seats)
 export const useAvailableSessions = (filters?: Omit<SessionFilters, 'cursor'>) => {
   return useQuery({
-    queryKey: sessionsKeys.list({ ...filters, startsAfter: new Date().toISOString() }),
-    queryFn: () => sessionsClient.getSessions({ ...filters, startsAfter: new Date().toISOString() }),
+    queryKey: sessionsKeys.list({ ...filters, startsAfter: SESSION_START_DATE }),
+    queryFn: () => sessionsClient.getSessions({ ...filters, startsAfter: SESSION_START_DATE }),
     select: (data) => ({
       ...data,
       items: data.items.filter(session => session.remainingSeats > 0),
