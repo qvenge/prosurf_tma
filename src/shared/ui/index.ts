@@ -11,3 +11,5 @@ export * from './switch';
 export * from './empty-list-stub';
 export * from './upload-image-input';
 export * from './text-input';
+export * from './tour-card';
+export * from './activity-card';

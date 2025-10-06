@@ -8,3 +8,10 @@
 .bottomBarContent {
   padding: 16px var(--outer-horizontal-padding, 16px) 0;
 }
+.success {
+  color: ds.color('Text/Brand');
+}
+
+.error {
+  color: ds.color('Text/Error');
+}

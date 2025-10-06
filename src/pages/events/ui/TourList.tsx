@@ -1,8 +1,7 @@
 import { Link } from '@/shared/navigation';
 import styles from './TourList.module.scss';
-import { TourCard } from './TourCard';
 import { useSessions } from '@/shared/api';
-import { EmptyListStub, Spinner } from '@/shared/ui';
+import { EmptyListStub, Spinner, TourCard } from '@/shared/ui';
 import { useMemo } from 'react';
 
 export const TourList = () => {

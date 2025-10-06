@@ -1,0 +1,20 @@
+.wrapper {
+  overflow: hidden;
+}
+
+.list {
+  @include utils.hScrollable;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 var(--outer-horizontal-padding);
+}
+
+.stub {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ds.color('Text/Secondary');
+}

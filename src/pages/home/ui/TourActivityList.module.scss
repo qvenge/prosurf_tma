@@ -1,0 +1,18 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 var(--outer-horizontal-padding, 16px);
+}
+
+.stub {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: ds.color('Text/Secondary');
+  margin: 0;
+}

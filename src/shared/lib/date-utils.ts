@@ -19,7 +19,7 @@ export const getMonthDateRange = (monthName: string) => {
   const year = targetDate.getFullYear();
   const month = targetDate.getMonth();
   
-  const dateFrom = new Date(year, month, 1).toISOString();
+  const dateFrom = isCurrentMonth ? now.toISOString() : new Date(year, month, 1).toISOString();
   const dateTo = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
   
   return { dateFrom, dateTo };
@@ -152,4 +152,18 @@ export const formatRangeWithYear = (startsAt: string, endsAt?: string | null): s
   }
 
   return `${formatedStart}, ${new Date(startsAt).getFullYear()} г – ${formatedEnd}, ${new Date(endsAt).getFullYear()} г`;
+};
+
+export const formatBookingDate = (datetime: string): string => {
+  const date = new Date(datetime);
+  const weekday = date.toLocaleDateString('ru-RU', { weekday: 'short' });
+  const day = date.getDate();
+  const month = date.toLocaleDateString('ru-RU', { month: 'long' });
+  const time = date.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+
+  return `${weekday} • ${day} ${month} в ${time}`;
 };

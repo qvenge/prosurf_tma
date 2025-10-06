@@ -1,16 +1,16 @@
 
-import styles from './OtherEventCard.module.scss';
+import styles from './ActivityCard.module.scss';
 import { formatTime } from '@/shared/lib/date-utils';
 import { formatPrice, formatAvailability } from '@/shared/lib/format-utils';
 import type { Session } from '@/shared/api';
 
-interface OtherEventCardProps {
+interface ActivityCardProps {
   data: Session;
 }
 
-export const OtherEventCard = ({
+export const ActivityCard = ({
  data
-}: OtherEventCardProps) => {
+}: ActivityCardProps) => {
   const time = formatTime(data.startsAt);
   const price = formatPrice(data.event.tickets[0]?.full?.price);
   const availability = formatAvailability(data.remainingSeats);

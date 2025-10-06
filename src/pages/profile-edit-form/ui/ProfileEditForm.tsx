@@ -3,6 +3,7 @@ import { useMemo, useEffect, useActionState, useState } from 'react';
 import { TextInput, Button, useBottomBar } from '@/shared/ui';
 import { UploadPhotoInput } from './upload-photo-input';
 import styles from './ProfileEditForm.module.scss';
+import { useNavigate } from '@/shared/navigation';
 
 import { useCurrentUserProfile } from '@/shared/api';
 
@@ -18,6 +19,7 @@ export const ProfileEditForm = () => {
   // Fetch user profile
   const { user, isLoading, error, updateUser, isUpdating } = useCurrentUserProfile();
   const { setOverride } = useBottomBar();
+  const navigate = useNavigate();
 
   // Track photo deletion state
   const [shouldDeletePhoto, setShouldDeletePhoto] = useState(false);
@@ -64,6 +66,7 @@ export const ProfileEditForm = () => {
               resolve();
               // Reset deletion flag after successful update
               setShouldDeletePhoto(false);
+              navigate('/profile', { reset: true });
             },
             onError: (err) => reject(err),
           }
@@ -137,9 +140,6 @@ export const ProfileEditForm = () => {
         <div className={styles.body}>
           {state.error && (
             <div className={styles.error}>{state.error}</div>
-          )}
-          {state.success && state.message && (
-            <div className={styles.success}>{state.message}</div>
           )}
 
           <TextInput

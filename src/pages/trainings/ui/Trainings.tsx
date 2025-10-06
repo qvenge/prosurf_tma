@@ -1,17 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'react-router';
 import styles from './Trainings.module.scss';
 import { PageLayout } from '@/widgets/page-layout';
-import { useSessions, type EventType } from '@/shared/api';
+import { useSessions, useImages, type EventType } from '@/shared/api';
 import { getCurrentAndNextMonth, getMonthDateRange } from '@/shared/lib/date-utils';
 import { useSessionGroups } from '@/shared/lib/hooks/use-session-groups';
 import { MonthSelector } from './month-selector';
 import { SessionList } from './session-list';
-
-const heroImages = [
-  '/images/surfing1.jpg',
-  '/images/surfing2.png',
-];
 
 const getCategoryInfo = (categoryId: string): { label: EventType | string, title: string } => {
   switch (categoryId) {
@@ -37,9 +32,13 @@ export const Trainings = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const { current, next } = getCurrentAndNextMonth();
   const [selectedMonth, setSelectedMonth] = useState(current);
-  const { dateFrom, dateTo } = getMonthDateRange(selectedMonth);
+
+  const { dateFrom, dateTo } = useMemo(() => getMonthDateRange(selectedMonth), [selectedMonth]);
   
   const categoryInfo = getCategoryInfo(categorySlug || '');
+
+  const { data: images } = useImages({"tags.any": [categoryInfo.label]});
+  const heroImages = images?.items.map(item => item.url)
 
   const { data, isLoading, error } = useSessions({
     startsAfter: dateFrom,

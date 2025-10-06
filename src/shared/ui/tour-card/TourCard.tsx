@@ -15,9 +15,12 @@ export const TourCard = ({
   const price = formatPrice(data.event.tickets[0]?.prepayment?.price);
   const availability = formatAvailability(data.remainingSeats);
 
+  const imageUrl = data.event.images?.[0];
+
+
   return (
     <div className={styles.wrapper}>
-      <img src="/images/surfing1.jpg" alt={data.event.title} className={styles.img} />
+      {imageUrl && <img src={imageUrl} alt={data.event.title} className={styles.img} />}
       <div className={styles.content}>
         <div className={styles.datesYear}>
           <div className={styles.dates}>{dates}</div>

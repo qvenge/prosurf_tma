@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
@@ -32,10 +33,15 @@ export const TrainingCategoryItem = ({
   eventType
 }: TrainingCategoryItemProps) => {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useSessions({
+
+  const filters = useMemo(() => ({
     'labels.any': [eventType],
-    limit: 1
-  });
+    limit: 1,
+    startsAfter: new Date().toISOString(),
+  }), [eventType]);
+
+
+  const { data, isLoading, error } = useSessions(filters);
 
   const nextSession = data && data.items && data.items.length > 0 ? data.items[0] : null;
 

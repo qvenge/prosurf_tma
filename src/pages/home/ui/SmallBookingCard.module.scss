@@ -1,0 +1,32 @@
+.wrapper {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 2px;
+  padding: 16px;
+
+  border-radius: 16px;
+  background: ds.color('Background/Secondary');
+}
+
+.type {
+  @include ds.typo('Roboto/Caption 1/Semibold');
+  color: ds.color('Text/Brand');
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Primary');
+}
+
+.start {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Brand');
+}

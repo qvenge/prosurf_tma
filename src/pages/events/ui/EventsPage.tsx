@@ -1,5 +1,5 @@
 import { TourList } from './TourList';
-import { OtherEventList } from './OtherEventList';
+import { ActivityList } from './ActivityList';
 import { SegmentedControl } from '@/shared/ui';
 import styles from './EventsPage.module.scss';
 import { useState } from 'react';
@@ -26,7 +26,7 @@ export const EventsPage = () => {
           </SegmentedControl.Item>
         </SegmentedControl>
         <div className={styles.content}>
-          {selectedTab === 'tours' ? <TourList /> : <OtherEventList />}
+          {selectedTab === 'tours' ? <TourList /> : <ActivityList />}
         </div>
       </div>
     </PageLayout>
