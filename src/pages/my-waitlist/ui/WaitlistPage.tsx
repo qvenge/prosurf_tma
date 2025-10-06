@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
-import { SegmentedControl } from '@/shared/ui'
+import { useState } from 'react';
+import { SegmentedControl, InfiniteScrollList } from '@/shared/ui'
 import { PageLayout } from '@/widgets/page-layout'
 import { useSessionsInfinite, type Session } from '@/shared/api'
-import { formatSessionDate, formatTime } from '@/shared/lib/date-utils'
+import { formatSessionDate, formatTime, SESSION_START_DATE } from '@/shared/lib/date-utils'
 import styles from './WaitlistPage.module.scss';
 import { SessionCard, type SessionCardProps } from './SessionCard';
 
@@ -42,15 +42,13 @@ const transformSessionToCardData = (session: Session): SessionCardProps['data'] 
 export function WaitlistPage() {
   const [selectedTab, setSelectedTab] = useState<'hasSeats' | 'noSeats'>('hasSeats');
 
-  const query = useSessionsInfinite({ onWaitlist: true });
-
-  // Filter sessions based on selected tab
-  const filteredSessions = useMemo(() => {
-    const allSessions = query.data?.pages.flatMap((page) => page.items) ?? [];
-    return selectedTab === 'hasSeats'
-      ? allSessions.filter(s => (s.remainingSeats ?? 0) > 0)
-      : allSessions.filter(s => (s.remainingSeats ?? 0) === 0);
-  }, [query.data, selectedTab]);
+  const query = useSessionsInfinite({
+    onWaitlist: true,
+    startsAfter: SESSION_START_DATE,
+    sortBy: 'startsAt',
+    sortOrder: 'asc',
+    minRemainingSeats: selectedTab === 'hasSeats' ? 1 : 0,
+  });
 
   return (
     <PageLayout title="Лист ожиданий">
@@ -70,94 +68,23 @@ export function WaitlistPage() {
           </SegmentedControl.Item>
         </SegmentedControl>
         <div className={styles.content}>
-          <WaitlistContent
+          <InfiniteScrollList
             key={selectedTab}
             query={query}
-            sessions={filteredSessions}
+            renderItem={(session: Session) => {
+              const cardData = transformSessionToCardData(session);
+              return <SessionCard key={session.id} data={cardData} />;
+            }}
+            groupBy={(session: Session) => formatSessionDate(session.startsAt)}
+            renderGroupHeader={(day: string) => (
+              <div className={styles.day}>{day}</div>
+            )}
+            emptyMessage="Нет записей"
+            errorMessage="Ошибка загрузки тренировок"
+            listClassName={styles.dayBlocks}
           />
         </div>
       </div>
     </PageLayout>
-  );
-}
-
-function WaitlistContent({
-  query,
-  sessions,
-}: {
-  query: ReturnType<typeof useSessionsInfinite>;
-  sessions: Session[];
-}) {
-  if (query.isLoading) {
-    return (
-      <div className={styles.stub}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
-  if (query.isError) {
-    return (
-      <div className={styles.stub}>
-        <div>Ошибка загрузки тренировок</div>
-      </div>
-    );
-  }
-
-  if (sessions.length === 0) {
-    return (
-      <div className={styles.stub}>
-        <div>Нет записей</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.dayBlocks}>
-      {sessions.reduce((groups: Array<{ day: string; sessions: Session[] }>, session) => {
-        const day = formatSessionDate(session.startsAt);
-        const existingGroup = groups.find(g => g.day === day);
-
-        if (existingGroup) {
-          existingGroup.sessions.push(session);
-        } else {
-          groups.push({ day, sessions: [session] });
-        }
-
-        return groups;
-      }, []).map((group) => (
-        <div key={group.day} className={styles.dayBlock}>
-          <div className={styles.day}>{group.day}</div>
-          {group.sessions.map((session) => {
-            const cardData = transformSessionToCardData(session);
-            return <SessionCard key={session.id} data={cardData} />;
-          })}
-        </div>
-      ))}
-
-      {query.isFetchingNextPage && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
-          Loading more...
-        </div>
-      )}
-
-      {query.hasNextPage && (
-        <div
-          ref={(el) => {
-            if (!el || query.isFetchingNextPage) return;
-            const observer = new IntersectionObserver((entries) => {
-              if (entries[0].isIntersecting) {
-                query.fetchNextPage();
-              }
-            });
-            observer.observe(el);
-            return () => observer.disconnect();
-          }}
-          style={{ height: '1px' }}
-        />
-      )}
-    </div>
   );
 }

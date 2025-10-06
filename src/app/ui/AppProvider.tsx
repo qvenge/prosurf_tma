@@ -1,4 +1,5 @@
 import { type PropsWithChildren, StrictMode, useMemo } from 'react';
+import { Outlet } from 'react-router';
 import { Navbar, BottomBarProvider } from '@/shared/ui';
 import { AppRoot } from '@/shared/app-root';
 import { ApiProvider } from '@/shared/api';
@@ -12,7 +13,7 @@ const navItems = [
   {id: 'profile', text: 'Профиль', path: '/profile', icon: UserBold},
 ];
 
-export function AppProvider({ children }: PropsWithChildren) {
+export function AppProvider({}: PropsWithChildren) {
   const defaultBar = useMemo(() => <Navbar items={navItems} />, []);
 
   return (
@@ -21,7 +22,7 @@ export function AppProvider({ children }: PropsWithChildren) {
         <AppRoot>
           <NavigatorProvider>
             <BottomBarProvider defaultContent={defaultBar}>
-              {children}
+              <Outlet />
             </BottomBarProvider>
           </NavigatorProvider>
         </AppRoot>

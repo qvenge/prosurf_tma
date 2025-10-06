@@ -26,6 +26,7 @@ import {
 import { PageLayout } from '@/widgets/page-layout';
 import { SeasonTicketsStat } from './SeasonTicketsStat';
 import { formatPrice } from '@/shared/lib/format-utils';
+import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 
 export const Profile = () => {
   // Fetch user profile
@@ -41,7 +42,12 @@ export const Profile = () => {
   const { data: bookingsData, isLoading: isBookingsLoading } = useBookings({ includeSession: true });
 
   // Fetch waitlist entries
-  const { data: waitlistData, isLoading: isWaitlistLoading } = useSessions({ onWaitlist: true});
+  const { data: waitlistData, isLoading: isWaitlistLoading } = useSessions({
+    onWaitlist: true,
+    startsAfter: SESSION_START_DATE,
+    sortBy: 'startsAt',
+    sortOrder: 'asc'
+  });
 
   // Helper: Get next upcoming booking
   const getNextBooking = (): BookingExtended | null => {
@@ -128,7 +134,7 @@ export const Profile = () => {
       icon: ListChecksBold,
       title: 'Аттестация ProSurf',
       subtitle: 'Что это?',
-      href: '/profile/prosurf-validation-info',
+      // href: '/profile/prosurf-validation-info',
     },
     {
       icon: ArrowsLeftRightBold,
