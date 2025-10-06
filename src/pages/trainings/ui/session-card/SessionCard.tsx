@@ -1,23 +1,24 @@
+import { memo, useCallback } from 'react';
 import { useNavigate } from '@/shared/navigation';
 import styles from './SessionCard.module.scss';
 import type { SessionCard as SessionCardProps } from '@/shared/lib/hooks/use-session-groups';
 
 export type { SessionCardProps };
 
-export const SessionCard = ({ 
+export const SessionCard = memo(({
   id,
-  time, 
-  duration, 
-  title, 
-  location, 
-  price, 
-  availability 
+  time,
+  duration,
+  title,
+  location,
+  price,
+  availability
 }: SessionCardProps) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     navigate(`/trainings/sessions/${id}`);
-  };
+  }, [navigate, id]);
 
   return (
     <div className={styles.wrapper} onClick={handleClick} style={{ cursor: 'pointer' }}>
@@ -41,4 +42,4 @@ export const SessionCard = ({
       </div>
     </div>
   );
-};
+});

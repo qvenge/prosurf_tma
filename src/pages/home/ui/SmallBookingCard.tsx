@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Icon } from '@/shared/ui';
 import type { BookingExtended } from '@/shared/api';
 import { BarbellBold, ConfettiBold, AirplaneTiltBold } from '@/shared/ds/icons';
@@ -30,7 +31,7 @@ function getEventType(labels?: string[] | null) {
   return { icon: ConfettiBold, name: 'Другое' };
 }
 
-export function SmallBookingCard({ data }: SmallBookingCardProps) {
+export const SmallBookingCard = memo(({ data }: SmallBookingCardProps) => {
   const typeData = getEventType(data.session?.event.labels);
   const title = data.session?.event.title || 'Без названия';
   const location = data.session?.event.location;
@@ -47,5 +48,5 @@ export function SmallBookingCard({ data }: SmallBookingCardProps) {
       </div>
       <div className={styles.start}>{formattedDate}</div>
     </div>
-  )
-}
+  );
+});

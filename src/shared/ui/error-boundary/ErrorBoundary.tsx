@@ -46,8 +46,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <ErrorFallback
           message={errorInfo.message}
-          canRetry={errorInfo.canRetry}
-          onRetry={this.handleReset}
         />
       );
     }

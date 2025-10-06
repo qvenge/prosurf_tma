@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Icon } from '@/shared/ui';
 import { BarbellBold, ConfettiBold, AirplaneTiltBold } from '@/shared/ds/icons';
 import styles from './BookingCard.module.scss';
@@ -24,17 +25,17 @@ function getEventType(labels?: string[]) {
   if (!labels || labels.length === 0) {
     return { icon: ConfettiBold, name: 'Другое' };
   }
-  
+
   for (const label of labels) {
     if (eventTypes[label as keyof typeof eventTypes]) {
       return eventTypes[label as keyof typeof eventTypes];
     }
   }
-  
+
   return { icon: ConfettiBold, name: 'Другое' };
 }
 
-export function BookingCard({ data }: BookingCardProps) {
+export const BookingCard = memo(({ data }: BookingCardProps) => {
   const typeData = getEventType(data.labels);
 
   return (
@@ -53,5 +54,5 @@ export function BookingCard({ data }: BookingCardProps) {
         {data.rightBottomInner && <div className={styles.bottom}>{data.rightBottomInner}</div>}
       </div>
     </div>
-  )
-}
+  );
+});

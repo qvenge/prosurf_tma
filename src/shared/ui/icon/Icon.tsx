@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { memo, type CSSProperties } from 'react';
 import clsx from 'clsx';
 
 import styles from './icon.module.scss';
@@ -12,7 +12,7 @@ export interface IconProps {
 
 const setUnits = (value: number | string) => typeof value === 'number' ? `${value}px` : value;
 
-export function Icon({ src, ...restProps }: IconProps) {
+export const Icon = memo(({ src, ...restProps }: IconProps) => {
   const params = Object.assign(
     {},
     typeof src === 'object' ? src : { src },
@@ -39,4 +39,4 @@ export function Icon({ src, ...restProps }: IconProps) {
       className={clsx(styles.icon, params.className)}
     />
   );
-}
+});

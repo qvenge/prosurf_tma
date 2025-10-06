@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { type PropsWithChildren, useState, useEffect } from 'react';
 import { authUtils, AuthContext } from '../auth';
 import { logError, getErrorInfo } from '../error-handler';
@@ -230,13 +230,12 @@ export const ApiProvider = ({ children }: PropsWithChildren) => {
       <AuthProvider>
         {children}
         {/* Only show devtools in development */}
-        {/* TODO: Install @tanstack/react-query-devtools for development
         {import.meta.env.MODE === 'development' && (
-          <ReactQueryDevtools 
-            initialIsOpen={false} 
+          <ReactQueryDevtools
+            initialIsOpen={false}
             buttonPosition="bottom-left"
           />
-        )} */}
+        )}
       </AuthProvider>
     </QueryClientProvider>
   );

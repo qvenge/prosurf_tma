@@ -1,4 +1,4 @@
-import {type HTMLAttributes,useCallback } from 'react';
+import { memo, type HTMLAttributes, useCallback } from 'react';
 import clsx from 'clsx';
 import { Tabbar } from '../tabbar';
 import { useTelegramHapticFeedback } from '@/shared/tma'
@@ -17,7 +17,7 @@ export interface NavbarProps extends HTMLAttributes<HTMLDivElement> {
   items: Item[];
 }
 
-export function Navbar({items, className, ...restProps}: NavbarProps) {
+export const Navbar = memo(({items, className, ...restProps}: NavbarProps) => {
   const navigator = useNavigator();
   const { tab } = useNavigationState();
   const { selectionChanged } = useTelegramHapticFeedback();
@@ -44,4 +44,4 @@ export function Navbar({items, className, ...restProps}: NavbarProps) {
       ))}
     </Tabbar>
   );
-}
+});
