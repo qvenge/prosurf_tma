@@ -1,4 +1,4 @@
-import { apiClient, validateResponse, createQueryString, withIdempotency } from '../config';
+import { apiClient, validateResponse, createQueryString, withIdempotency, joinApiUrls, joinApiUrl } from '../config';
 import {
   BookingSchema,
   BookingExtendedSchema,
@@ -19,8 +19,38 @@ import type {
 } from '../types';
 
 /**
+ * Transform BookingExtended URLs (session.event.images and user.photoUrl)
+ */
+const transformBookingExtended = (booking: BookingExtended): BookingExtended => {
+  const result = { ...booking };
+
+  // Transform session.event.images if session exists
+  if (result.session) {
+    result.session = {
+      ...result.session,
+      event: {
+        ...result.session.event,
+        images: result.session.event.images
+          ? joinApiUrls(result.session.event.images)
+          : result.session.event.images,
+      },
+    };
+  }
+
+  // Transform user.photoUrl if user exists
+  if (result.user) {
+    result.user = {
+      ...result.user,
+      photoUrl: joinApiUrl(result.user.photoUrl),
+    };
+  }
+
+  return result;
+};
+
+/**
  * Bookings API client
- * 
+ *
  * Manages session bookings including creation, retrieval, cancellation, and confirmation.
  * Bookings start in HOLD status and must be paid within the hold TTL period.
  */
@@ -115,7 +145,17 @@ export const bookingsClient = {
                                  validatedFilters.includeGuestContact;
 
     const schema = shouldReturnExtended ? BookingExtendedSchema : BookingSchema;
-    return validateResponse(response.data, PaginatedResponseSchema(schema));
+    const data = validateResponse(response.data, PaginatedResponseSchema(schema));
+
+    // Transform URLs for BookingExtended
+    if (shouldReturnExtended) {
+      return {
+        ...data,
+        items: (data.items as BookingExtended[]).map(transformBookingExtended),
+      };
+    }
+
+    return data;
   },
 
   /**
@@ -137,7 +177,10 @@ export const bookingsClient = {
     notes?: string;
   }): Promise<BookingExtended> {
     const response = await apiClient.patch(`/bookings/${encodeURIComponent(id)}`, data);
-    return validateResponse(response.data, BookingExtendedSchema);
+    const booking = validateResponse(response.data, BookingExtendedSchema);
+
+    // Transform URLs
+    return transformBookingExtended(booking);
   },
 
   /**

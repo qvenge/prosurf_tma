@@ -235,12 +235,31 @@ export const createQueryString = (filters: Record<string, unknown>): string => {
   Object.entries(filters).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return;
 
+    // Handle deepObject-style parameters (attr.eq, attr.in, attr.gte, attr.lte, attr.bool, attr.exists)
+    // OpenAPI spec: style: deepObject, explode: true → attr.eq[key]=value
+    if (key.startsWith('attr.') && typeof value === 'object' && !Array.isArray(value)) {
+      Object.entries(value as Record<string, unknown>).forEach(([nestedKey, nestedValue]) => {
+        if (nestedValue === undefined || nestedValue === null) return;
+
+        // Handle arrays in deepObject (e.g., attr.in[level]=[beginner,intermediate])
+        if (Array.isArray(nestedValue)) {
+          if (nestedValue.length > 0) {
+            params.append(`${key}[${nestedKey}]`, nestedValue.join(','));
+          }
+        } else {
+          params.append(`${key}[${nestedKey}]`, String(nestedValue));
+        }
+      });
+    }
     // Handle arrays (for OpenAPI style: form, explode: false - join with comma)
-    if (Array.isArray(value)) {
+    // This applies to labels.any, labels.all, labels.none
+    else if (Array.isArray(value)) {
       if (value.length > 0) {
         params.append(key, value.join(','));
       }
-    } else {
+    }
+    // Handle primitive values
+    else {
       params.append(key, String(value));
     }
   });
@@ -261,6 +280,9 @@ export const validateResponse = <T>(
     throw new Error('Invalid response format');
   }
 };
+
+// URL utilities
+export { joinApiUrl, joinApiUrls } from '../lib/url-utils';
 
 // Environment configuration
 export const config = {

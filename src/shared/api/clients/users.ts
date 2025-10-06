@@ -1,18 +1,26 @@
-import { apiClient, validateResponse, createQueryString } from '../config';
-import { 
-  UserSchema, 
+import { apiClient, validateResponse, createQueryString, joinApiUrl } from '../config';
+import {
+  UserSchema,
   UserUpdateDtoSchema,
   PaginatedResponseSchema,
   UserFiltersSchema,
   CashbackWalletSchema
 } from '../schemas';
-import type { 
-  User, 
+import type {
+  User,
   UserUpdateDto,
   PaginatedResponse,
   UserFilters,
   CashbackWallet
 } from '../types';
+
+/**
+ * Transform user photoUrl to full URL
+ */
+const transformUserPhotoUrl = (user: User): User => ({
+  ...user,
+  photoUrl: joinApiUrl(user.photoUrl),
+});
 
 /**
  * Users API client
@@ -25,9 +33,15 @@ export const usersClient = {
   async getUsers(filters?: UserFilters): Promise<PaginatedResponse<User>> {
     const validatedFilters = UserFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/users${queryString}`);
-    return validateResponse(response.data, PaginatedResponseSchema(UserSchema));
+    const data = validateResponse(response.data, PaginatedResponseSchema(UserSchema));
+
+    // Transform user photo URLs
+    return {
+      ...data,
+      items: data.items.map(transformUserPhotoUrl),
+    };
   },
 
   /**
@@ -36,7 +50,10 @@ export const usersClient = {
    */
   async getUserById(id: string): Promise<User> {
     const response = await apiClient.get(`/users/${encodeURIComponent(id)}`);
-    return validateResponse(response.data, UserSchema);
+    const user = validateResponse(response.data, UserSchema);
+
+    // Transform user photo URL
+    return transformUserPhotoUrl(user);
   },
 
   /**
@@ -95,7 +112,10 @@ export const usersClient = {
       }
     );
 
-    return validateResponse(response.data, UserSchema);
+    const user = validateResponse(response.data, UserSchema);
+
+    // Transform user photo URL
+    return transformUserPhotoUrl(user);
   },
 
   /**

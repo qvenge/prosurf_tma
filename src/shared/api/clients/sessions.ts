@@ -1,4 +1,4 @@
-import { apiClient, validateResponse, createQueryString, withIdempotency } from '../config';
+import { apiClient, validateResponse, createQueryString, withIdempotency, joinApiUrls } from '../config';
 import {
   SessionSchema,
   SessionCompactSchema,
@@ -24,6 +24,17 @@ import type {
 } from '../types';
 
 /**
+ * Transform session event image URLs to full URLs
+ */
+const transformSessionEventImages = (session: Session): Session => ({
+  ...session,
+  event: {
+    ...session.event,
+    images: session.event.images ? joinApiUrls(session.event.images) : session.event.images,
+  },
+});
+
+/**
  * Sessions API client
  */
 export const sessionsClient = {
@@ -44,8 +55,8 @@ export const sessionsClient = {
    * POST /events/{id}/sessions
    */
   async createEventSessions(
-    eventId: string, 
-    data: SessionCreateDto | SessionCreateDto[], 
+    eventId: string,
+    data: SessionCreateDto | SessionCreateDto[],
     idempotencyKey: IdempotencyKey
   ): Promise<SessionCreationResponse> {
     let validatedData;
@@ -54,14 +65,20 @@ export const sessionsClient = {
     } else {
       validatedData = SessionCreateDtoSchema.parse(data);
     }
-    
+
     const config = withIdempotency({}, idempotencyKey);
     const response = await apiClient.post(
-      `/events/${encodeURIComponent(eventId)}/sessions`, 
+      `/events/${encodeURIComponent(eventId)}/sessions`,
       validatedData,
       config
     );
-    return validateResponse(response.data, SessionCreationResponseSchema);
+    const result = validateResponse(response.data, SessionCreationResponseSchema);
+
+    // Transform session event image URLs
+    return {
+      ...result,
+      items: result.items.map(transformSessionEventImages),
+    };
   },
 
   /**
@@ -71,9 +88,15 @@ export const sessionsClient = {
   async getSessions(filters?: SessionFilters): Promise<PaginatedResponse<Session>> {
     const validatedFilters = SessionFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/sessions${queryString}`);
-    return validateResponse(response.data, PaginatedResponseSchema(SessionSchema));
+    const data = validateResponse(response.data, PaginatedResponseSchema(SessionSchema));
+
+    // Transform session event image URLs
+    return {
+      ...data,
+      items: data.items.map(transformSessionEventImages),
+    };
   },
 
   /**
@@ -82,7 +105,10 @@ export const sessionsClient = {
    */
   async getSessionById(id: string): Promise<Session> {
     const response = await apiClient.get(`/sessions/${encodeURIComponent(id)}`);
-    return validateResponse(response.data, SessionSchema);
+    const session = validateResponse(response.data, SessionSchema);
+
+    // Transform session event image URLs
+    return transformSessionEventImages(session);
   },
 
   /**
@@ -91,12 +117,15 @@ export const sessionsClient = {
    */
   async updateSession(id: string, data: SessionUpdateDto): Promise<Session> {
     const validatedData = SessionUpdateDtoSchema.parse(data);
-    
+
     const response = await apiClient.patch(
-      `/sessions/${encodeURIComponent(id)}`, 
+      `/sessions/${encodeURIComponent(id)}`,
       validatedData
     );
-    return validateResponse(response.data, SessionSchema);
+    const session = validateResponse(response.data, SessionSchema);
+
+    // Transform session event image URLs
+    return transformSessionEventImages(session);
   },
 
   /**
@@ -105,7 +134,10 @@ export const sessionsClient = {
    */
   async cancelSession(id: string): Promise<Session> {
     const response = await apiClient.delete(`/sessions/${encodeURIComponent(id)}`);
-    return validateResponse(response.data, SessionSchema);
+    const session = validateResponse(response.data, SessionSchema);
+
+    // Transform session event image URLs
+    return transformSessionEventImages(session);
   },
 
   /**
@@ -124,7 +156,13 @@ export const sessionsClient = {
     const config = withIdempotency({}, idempotencyKey);
 
     const response = await apiClient.patch('/sessions', validatedUpdates, config);
-    return response.data;
+    const result = response.data;
+
+    // Transform session event image URLs
+    return {
+      ...result,
+      items: result.items.map(transformSessionEventImages),
+    };
   },
 
   /**

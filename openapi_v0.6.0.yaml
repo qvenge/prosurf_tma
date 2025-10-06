@@ -20,6 +20,8 @@ tags:
   - name: SeasonTickets
   - name: Cashback
   - name: Waitlist
+  - name: Images
+  - name: Static
   - name: Admin
   - name: Jobs
   - name: Webhooks
@@ -211,6 +213,76 @@ components:
           - desc
         default: asc
       description: Порядок сортировки
+    TagsAnyParam:
+      in: query
+      name: tags.any
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Изображения с ЛЮБЫМ из указанных тегов (OR)
+    TagsAllParam:
+      in: query
+      name: tags.all
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Изображения со всеми указанными тегами (AND)
+    TagsNoneParam:
+      in: query
+      name: tags.none
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Исключить изображения с любым из указанных тегов (NOT)
+    MinSizeParam:
+      in: query
+      name: minSize
+      schema:
+        type: integer
+        minimum: 0
+      description: Минимальный размер файла в байтах
+    MaxSizeParam:
+      in: query
+      name: maxSize
+      schema:
+        type: integer
+        minimum: 0
+      description: Максимальный размер файла в байтах
+    UploadedAfterParam:
+      in: query
+      name: uploadedAfter
+      schema:
+        type: string
+        format: date-time
+      description: Вернуть изображения, загруженные ПОСЛЕ этого момента (RFC3339)
+    UploadedBeforeParam:
+      in: query
+      name: uploadedBefore
+      schema:
+        type: string
+        format: date-time
+      description: Вернуть изображения, загруженные ДО этого момента (RFC3339)
+    UploadedByParam:
+      in: query
+      name: uploadedBy
+      schema:
+        type: string
+      description: Фильтр по ID пользователя, загрузившего изображение
+    MimetypeParam:
+      in: query
+      name: mimetype
+      schema:
+        type: string
+      description: Фильтр по MIME типу (например, image/jpeg)
   responses:
     Unauthorized:
       description: Unauthorized
@@ -289,7 +361,7 @@ components:
         id:
           type: string
         telegramId:
-          type: integer
+          type: string
           nullable: true
           description: Telegram user ID (null для пользователей без Telegram)
         phone:
@@ -477,6 +549,12 @@ components:
                 items:
                   type: string
           description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
+        images:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Array of image URLs
     TicketPrice:
       type: object
       required:
@@ -492,7 +570,6 @@ components:
       required:
         - id
         - name
-        - prepayment
         - full
       properties:
         id:
@@ -501,6 +578,7 @@ components:
           type: string
         prepayment:
           $ref: "#/components/schemas/TicketPrice"
+          nullable: true
         full:
           $ref: "#/components/schemas/TicketPrice"
     EventCreateDto:
@@ -545,6 +623,12 @@ components:
                 items:
                   type: string
           description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
+        images:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Array of image URLs
       additionalProperties: false
     EventUpdateDto:
       type: object
@@ -585,18 +669,24 @@ components:
                 items:
                   type: string
           description: Произвольные атрибуты (типизированная карта ключ→значение). Управляются админом.
+        images:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Array of image URLs
       additionalProperties: false
     EventTicketCreate:
       type: object
       required:
         - name
-        - prepayment
         - full
       properties:
         name:
           type: string
         prepayment:
           $ref: "#/components/schemas/TicketPrice"
+          nullable: true
         full:
           $ref: "#/components/schemas/TicketPrice"
     Session:
@@ -1774,6 +1864,95 @@ components:
         message:
           $ref: "#/components/schemas/Message"
       additionalProperties: true
+    ImageUploader:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+    Image:
+      type: object
+      required:
+        - id
+        - url
+        - objectName
+        - originalName
+        - mimetype
+        - size
+        - tags
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          description: Public URL to access the image
+        objectName:
+          type: string
+          description: MinIO object name
+        originalName:
+          type: string
+          description: Original filename
+        mimetype:
+          type: string
+          description: MIME type (e.g., image/jpeg)
+        size:
+          type: integer
+          description: File size in bytes
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for categorization
+        uploader:
+          $ref: "#/components/schemas/ImageUploader"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ImageCreateDto:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for categorization
+          nullable: true
+      additionalProperties: false
+    ImageUpdateDto:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for categorization
+          nullable: true
+      additionalProperties: false
+    BatchDeleteDto:
+      type: object
+      required:
+        - ids
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          description: Array of image IDs to delete
+      additionalProperties: false
   examples:
     TelegramUpdatePreCheckout:
       summary: pre_checkout_query
@@ -2283,6 +2462,41 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/EventCreateDto"
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - title
+                - tickets
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                  description: JSON string of EventDescription array
+                location:
+                  type: string
+                  nullable: true
+                capacity:
+                  type: integer
+                  minimum: 0
+                  nullable: true
+                tickets:
+                  type: string
+                  description: JSON string of EventTicketCreate array
+                labels:
+                  type: string
+                  description: JSON string array of labels
+                attributes:
+                  type: string
+                  description: JSON string of attributes object
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Image files (max 10 files, 10MB each, formats JPEG/PNG/GIF/WebP)
+                  nullable: true
       responses:
         "201":
           description: Created
@@ -2290,6 +2504,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Event"
+        "400":
+          description: Bad Request (e.g., file too large or invalid file type)
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -2331,6 +2547,43 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/EventUpdateDto"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  nullable: true
+                description:
+                  type: string
+                  description: JSON string of EventDescription array
+                  nullable: true
+                location:
+                  type: string
+                  nullable: true
+                capacity:
+                  type: integer
+                  minimum: 0
+                  nullable: true
+                tickets:
+                  type: string
+                  description: JSON string of EventTicketCreate array
+                  nullable: true
+                labels:
+                  type: string
+                  description: JSON string array of labels
+                  nullable: true
+                attributes:
+                  type: string
+                  description: JSON string of attributes object
+                  nullable: true
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: New image files to add (max 10 files, 10MB each, formats JPEG/PNG/GIF/WebP)
+                  nullable: true
       responses:
         "200":
           description: OK
@@ -2338,6 +2591,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Event"
+        "400":
+          description: Bad Request (e.g., file too large or invalid file type)
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -3662,6 +3917,275 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /images:
+    get:
+      tags:
+        - Images
+      summary: Список изображений с фильтрацией
+      security: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Поиск по имени файла или объекту
+        - $ref: "#/components/parameters/MimetypeParam"
+        - $ref: "#/components/parameters/TagsAnyParam"
+        - $ref: "#/components/parameters/TagsAllParam"
+        - $ref: "#/components/parameters/TagsNoneParam"
+        - $ref: "#/components/parameters/MinSizeParam"
+        - $ref: "#/components/parameters/MaxSizeParam"
+        - $ref: "#/components/parameters/UploadedAfterParam"
+        - $ref: "#/components/parameters/UploadedBeforeParam"
+        - $ref: "#/components/parameters/UploadedByParam"
+        - $ref: "#/components/parameters/CursorParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Image"
+                  next:
+                    type: string
+                    nullable: true
+    post:
+      tags:
+        - Images
+      summary: Загрузить изображения (ADMIN)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Файлы изображений (макс. 10 файлов, 10MB каждый, форматы JPEG/PNG/GIF/WebP)
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Теги для категоризации
+                  nullable: true
+      responses:
+        "201":
+          description: Изображения успешно загружены
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Image"
+        "400":
+          description: Bad Request (например, файл слишком большой или неверный формат)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /images/batch:
+    post:
+      tags:
+        - Images
+      summary: Пакетная загрузка изображений (ADMIN, алиас к POST /images)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Файлы изображений (макс. 10 файлов, 10MB каждый)
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Теги для категоризации
+                  nullable: true
+      responses:
+        "201":
+          description: Изображения успешно загружены
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Image"
+        "400":
+          description: Bad Request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /images/batch/delete:
+    delete:
+      tags:
+        - Images
+      summary: Пакетное удаление изображений (ADMIN)
+      description: Удаляет несколько изображений из MinIO и базы данных
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchDeleteDto"
+      responses:
+        "204":
+          description: Изображения успешно удалены
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Не найдено изображений с указанными ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /images/{id}:
+    get:
+      tags:
+        - Images
+      summary: Получить изображение по ID
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - Images
+      summary: Обновить метаданные изображения (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageUpdateDto"
+      responses:
+        "200":
+          description: Изображение обновлено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Images
+      summary: Удалить изображение (ADMIN)
+      description: Удаляет изображение из MinIO и базы данных
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Изображение успешно удалено
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /static/images/{objectName}:
+    get:
+      tags:
+        - Static
+      summary: Serve image file
+      description: |
+        Proxy endpoint that serves images from MinIO storage through the API.
+        This hides the internal MinIO infrastructure from clients.
+      security: []
+      parameters:
+        - in: path
+          name: objectName
+          required: true
+          schema:
+            type: string
+          description: MinIO object name (e.g., "1759731382453-photo.jpeg")
+      responses:
+        "200":
+          description: Image file
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: image/jpeg
+            Content-Length:
+              schema:
+                type: integer
+                example: 245678
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=31536000, immutable
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/gif:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /admin/audit-logs:
     get:
       tags:

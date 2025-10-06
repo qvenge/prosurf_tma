@@ -6,17 +6,13 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, type EventTicket, type Session } from '@/shared/api';
+import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
+import { useTelegramPopup } from '@/shared/tma';
 import styles from './SessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
 import { formatPrice } from '@/shared/lib/format-utils';
 import { formatDuration, isTheSameDay, formatRangeWithYear, formatSessionDate, formatTime } from '@/shared/lib/date-utils';
-
-const heroImages = [
-  '/images/surfing1.jpg',
-  '/images/surfing2.png',
-];
 
 const hasPrepayment = (session?: Session): session is Session & { event: { tickets: (EventTicket & { prepayment: { price: { amountMinor: number } } })[] } } => {
   const amount = session?.event.tickets[0].prepayment?.price.amountMinor;
@@ -30,6 +26,7 @@ export const SessionPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [waitlistError, setWaitlistError] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string; }>();
@@ -40,9 +37,18 @@ export const SessionPage = () => {
     {status: ['ACTIVE'], hasRemainingPasses: true}
   );
 
+  // Fetch user's booking for this session (if any)
+  const { data: userBookingsData } = useBookings(
+    sessionId ? { sessionId, status: ['HOLD', 'CONFIRMED'] } : undefined
+  );
+  const userBooking = userBookingsData?.items?.[0];
+  const bookingId = userBooking?.id;
+
   const createBookingMutation = useBookSession();
   const createPaymentMutation = useCreatePayment();
   const joinWaitlistMutation = useJoinWaitlist();
+  const cancelBookingMutation = useCancelBooking();
+  const { showConfirm } = useTelegramPopup();
 
   const handleUseSubscription = useCallback((seasonTicketId: string) => {
     if (!sessionId) return;
@@ -127,6 +133,24 @@ export const SessionPage = () => {
     );
   }, [sessionId, joinWaitlistMutation, navigate]);
 
+  const handleCancelBooking = useCallback(async () => {
+    if (!bookingId) return;
+
+    // Show Telegram confirmation dialog
+    const isConfirmed = await showConfirm('Вы уверены, что хотите отменить запись?');
+
+    if (!isConfirmed) return;
+
+    setCancelError(null);
+
+    cancelBookingMutation.mutate(bookingId, {
+      onError: (error: any) => {
+        console.error('Cancel booking error:', error);
+        setCancelError(error.message || 'Произошла ошибка при отмене записи');
+      }
+    });
+  }, [bookingId, showConfirm, cancelBookingMutation]);
+
   const bottomBarContent = useMemo(() => (
     <div className={styles.bottomBarContent}>
       {session?.hasBooking ? (
@@ -191,7 +215,7 @@ export const SessionPage = () => {
   }
 
   return (
-    <PageLayout title={session.event.title} heroImages={heroImages}>
+    <PageLayout title={session.event.title} heroImages={session?.event.images ?? []}>
       <div className={styles.wrapper}>
         {session && (
           <BookingSelectionModal
@@ -215,6 +239,12 @@ export const SessionPage = () => {
         {waitlistError && (
           <div className={styles.errorMessage}>
             {waitlistError}
+          </div>
+        )}
+
+        {cancelError && (
+          <div className={styles.errorMessage}>
+            {cancelError}
           </div>
         )}
 
@@ -294,6 +324,9 @@ export const SessionPage = () => {
             size='l'
             mode='secondary'
             stretched={true}
+            loading={cancelBookingMutation.isPending}
+            disabled={!bookingId || cancelBookingMutation.isPending}
+            onClick={handleCancelBooking}
           >
             Отменить запись
           </Button>

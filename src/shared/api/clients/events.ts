@@ -1,16 +1,24 @@
-import { apiClient, validateResponse, createQueryString } from '../config';
-import { 
-  EventSchema, 
+import { apiClient, validateResponse, createQueryString, joinApiUrls } from '../config';
+import {
+  EventSchema,
   EventCreateDtoSchema,
   PaginatedResponseSchema,
   EventFiltersSchema
 } from '../schemas';
-import type { 
-  Event, 
+import type {
+  Event,
   EventCreateDto,
   PaginatedResponse,
   EventFilters
 } from '../types';
+
+/**
+ * Transform event image URLs to full URLs
+ */
+const transformEventImages = (event: Event): Event => ({
+  ...event,
+  images: event.images ? joinApiUrls(event.images) : event.images,
+});
 
 /**
  * Events API client
@@ -23,9 +31,15 @@ export const eventsClient = {
   async getEvents(filters?: EventFilters): Promise<PaginatedResponse<Event>> {
     const validatedFilters = EventFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/events${queryString}`);
-    return validateResponse(response.data, PaginatedResponseSchema(EventSchema));
+    const data = validateResponse(response.data, PaginatedResponseSchema(EventSchema));
+
+    // Transform event image URLs
+    return {
+      ...data,
+      items: data.items.map(transformEventImages),
+    };
   },
 
   /**
@@ -34,9 +48,12 @@ export const eventsClient = {
    */
   async createEvent(data: EventCreateDto): Promise<Event> {
     const validatedData = EventCreateDtoSchema.parse(data);
-    
+
     const response = await apiClient.post('/events', validatedData);
-    return validateResponse(response.data, EventSchema);
+    const event = validateResponse(response.data, EventSchema);
+
+    // Transform event image URLs
+    return transformEventImages(event);
   },
 
   /**
@@ -45,6 +62,9 @@ export const eventsClient = {
    */
   async getEventById(id: string): Promise<Event> {
     const response = await apiClient.get(`/events/${encodeURIComponent(id)}`);
-    return validateResponse(response.data, EventSchema);
+    const event = validateResponse(response.data, EventSchema);
+
+    // Transform event image URLs
+    return transformEventImages(event);
   },
 };

@@ -107,8 +107,9 @@ export const EventSchema = z.object({
   capacity: z.number().int().min(0).nullable().optional(),
   tickets: z.array(EventTicketSchema),
   createdAt: z.string().datetime(),
-  labels: z.array(EventTypeSchema).nullable().optional(),
+  labels: z.array(z.string()).nullable().optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  images: z.array(z.string()).nullable().optional(),
 });
 
 export const EventCreateDtoSchema = z.object({
@@ -119,6 +120,7 @@ export const EventCreateDtoSchema = z.object({
   tickets: z.array(EventTicketCreateSchema),
   labels: z.array(z.string()).optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  images: z.array(z.string()).nullable().optional(),
 });
 
 export const EventUpdateDtoSchema = z.object({
@@ -129,6 +131,7 @@ export const EventUpdateDtoSchema = z.object({
   tickets: z.array(EventTicketCreateSchema).optional(),
   labels: z.array(z.string()).optional(),
   attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  images: z.array(z.string()).nullable().optional(),
 });
 
 // Session schemas
@@ -618,7 +621,7 @@ export const EventFiltersSchema = z.object({
   'labels.all': z.array(z.string()).optional(),
   'labels.none': z.array(z.string()).optional(),
   'attr.eq': z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()])).min(1)).optional(),
   'attr.gte': z.record(z.string(), z.number()).optional(),
   'attr.lte': z.record(z.string(), z.number()).optional(),
   'attr.bool': z.record(z.string(), z.boolean()).optional(),
@@ -639,7 +642,7 @@ export const SessionFiltersSchema = z.object({
   'labels.all': z.array(z.string()).optional(),
   'labels.none': z.array(z.string()).optional(),
   'attr.eq': z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()])).min(1)).optional(),
   'attr.gte': z.record(z.string(), z.number()).optional(),
   'attr.lte': z.record(z.string(), z.number()).optional(),
   'attr.bool': z.record(z.string(), z.boolean()).optional(),
@@ -659,7 +662,7 @@ export const BookingFiltersSchema = z.object({
   'labels.all': z.array(z.string()).optional(),
   'labels.none': z.array(z.string()).optional(),
   'attr.eq': z.record(z.string(), AttributeValueSchema).optional(),
-  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()])).min(1)).optional(),
   'attr.gte': z.record(z.string(), z.number()).optional(),
   'attr.lte': z.record(z.string(), z.number()).optional(),
   'attr.bool': z.record(z.string(), z.boolean()).optional(),
@@ -713,11 +716,46 @@ export const PaymentFiltersSchema = z.object({
   'labels.all': z.array(z.string()).optional(),
   'labels.none': z.array(z.string()).optional(),
   'attr.eq': z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()]))).optional(),
+  'attr.in': z.record(z.string(), z.array(z.union([z.string(), z.number()])).min(1)).optional(),
   'attr.gte': z.record(z.string(), z.number()).optional(),
   'attr.lte': z.record(z.string(), z.number()).optional(),
   'attr.bool': z.record(z.string(), z.boolean()).optional(),
   'attr.exists': z.record(z.string(), z.boolean()).optional(),
   sortBy: z.enum(['createdAt', 'price', 'status']).default('createdAt').optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
+});
+
+// Image schemas
+export const ImageUploaderSchema = z.object({
+  id: z.string(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+});
+
+export const ImageSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  objectName: z.string(),
+  originalName: z.string(),
+  mimetype: z.string(),
+  size: z.number().int(),
+  tags: z.array(z.string()),
+  uploader: ImageUploaderSchema.nullable().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export const ImageFiltersSchema = z.object({
+  q: z.string().optional(),
+  mimetype: z.string().optional(),
+  'tags.any': z.array(z.string()).optional(),
+  'tags.all': z.array(z.string()).optional(),
+  'tags.none': z.array(z.string()).optional(),
+  minSize: z.number().int().min(0).optional(),
+  maxSize: z.number().int().min(0).optional(),
+  uploadedAfter: z.string().datetime().optional(),
+  uploadedBefore: z.string().datetime().optional(),
+  uploadedBy: z.string().optional(),
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
 });

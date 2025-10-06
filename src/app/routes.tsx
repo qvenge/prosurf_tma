@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { App } from './ui/App';
 
-import { Home } from '@/pages/home';
+import { HomePage } from '@/pages/home';
 import { TrainingCategoriesPage } from '@/pages/training-categories';
 import { Trainings } from '@/pages/trainings';
 import { Profile } from '@/pages/profile';
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
     children: [
       { 
         index: true, 
-        Component: Home
+        Component: HomePage
       },
       {
         path: 'season-tickets/:planId/payment',
