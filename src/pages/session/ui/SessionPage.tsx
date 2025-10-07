@@ -9,6 +9,7 @@ import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
 import { useTelegramPopup } from '@/shared/tma';
 import styles from './SessionPage.module.scss';
+import mapSrc from './map.png';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
 import { formatPrice } from '@/shared/lib/format-utils';
@@ -18,8 +19,6 @@ const hasPrepayment = (session?: Session): session is Session & { event: { ticke
   const amount = session?.event.tickets[0].prepayment?.price.amountMinor;
   return amount != null && amount > 0;
 };
-
-const mapSrc = "/map.png";
 
 export const SessionPage = () => {
   const { setOverride } = useBottomBar();
