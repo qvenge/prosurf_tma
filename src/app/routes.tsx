@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router';
 import { App } from './ui/App';
 import { AppProvider } from './ui/AppProvider';
 import { RouterErrorBoundary } from './ui/RouterErrorBoundary';
@@ -36,7 +35,7 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   </Suspense>
 );
 
-export const router = createBrowserRouter([
+export const routes = [
   {
     Component: AppProvider,
     children: [
@@ -141,4 +140,4 @@ export const router = createBrowserRouter([
       },
     ],
   }
-]);
+];
