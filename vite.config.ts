@@ -5,6 +5,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/prosurf_tma/',
   plugins: [
     react(),
     // Bundle analyzer - generates stats.html after build
