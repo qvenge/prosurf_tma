@@ -8,11 +8,13 @@ import { useNavigate } from '@/shared/navigation';
 import { useCurrentUserProfile } from '@/shared/api';
 
 import { PageLayout } from '@/widgets/page-layout';
+import { profileFormSchema, getFieldErrors } from '../lib';
 
 type FormState = {
   success: boolean;
   error?: string;
   message?: string;
+  fieldErrors?: Record<string, string>;
 };
 
 export const ProfileEditForm = () => {
@@ -35,27 +37,91 @@ export const ProfileEditForm = () => {
       const dateOfBirth = formData.get('dateOfBirth') as string;
       const photoFile = formData.get('pic_file') as File | null;
 
-      // Prepare update data with all fields (including empty for deletion)
+      // Validate form data
+      const validationResult = profileFormSchema.safeParse({
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        phone: phone || undefined,
+        email: email || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+      });
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Пожалуйста, исправьте ошибки в форме',
+          fieldErrors: getFieldErrors(validationResult.error),
+        };
+      }
+
+      // Prepare update data with only changed fields
       const updateData: Record<string, string | undefined> = {};
 
-      // Always include fields (empty string deletes the field)
-      updateData.firstName = firstName || '';
-      updateData.lastName = lastName || '';
-      updateData.phone = phone || '';
-      updateData.email = email || '';
+      // Helper to check if field was intentionally cleared
+      const wasFilledAndCleared = (originalValue: string | null | undefined, newValue: string) => {
+        return (originalValue != null && originalValue !== '') && newValue === '';
+      };
 
-      // Handle dateOfBirth
-      if (dateOfBirth) {
-        // Parse DD.MM.YYYY format
-        const [day, month, year] = dateOfBirth.split('.');
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        updateData.dateOfBirth = date.toISOString();
-      } else {
-        updateData.dateOfBirth = undefined;
+      // Helper to check if field changed
+      const hasChanged = (originalValue: string | null | undefined, newValue: string) => {
+        const original = originalValue ?? '';
+        return original !== newValue;
+      };
+
+      // Process firstName
+      if (hasChanged(user?.firstName, firstName)) {
+        updateData.firstName = wasFilledAndCleared(user?.firstName, firstName) ? '' : firstName;
+      }
+
+      // Process lastName
+      if (hasChanged(user?.lastName, lastName)) {
+        updateData.lastName = wasFilledAndCleared(user?.lastName, lastName) ? '' : lastName;
+      }
+
+      // Process phone
+      if (hasChanged(user?.phone, phone)) {
+        updateData.phone = wasFilledAndCleared(user?.phone, phone) ? '' : phone;
+      }
+
+      // Process email
+      if (hasChanged(user?.email, email)) {
+        updateData.email = wasFilledAndCleared(user?.email, email) ? '' : email;
+      }
+
+      // Process dateOfBirth
+      const originalDateStr = user?.dateOfBirth ? (() => {
+        const date = new Date(user.dateOfBirth);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}.${month}.${year}`;
+      })() : '';
+
+      if (originalDateStr !== dateOfBirth) {
+        if (dateOfBirth) {
+          // Parse DD.MM.YYYY format and convert to ISO
+          const [day, month, year] = dateOfBirth.split('.');
+          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          updateData.dateOfBirth = date.toISOString();
+        } else {
+          // Field was cleared - don't send it
+          updateData.dateOfBirth = undefined;
+        }
+      }
+
+      // Check if there are any changes
+      const hasPhotoFile = photoFile && photoFile.size > 0;
+      const hasChanges = Object.keys(updateData).length > 0 || hasPhotoFile || shouldDeletePhoto;
+
+      if (!hasChanges) {
+        return {
+          success: false,
+          error: 'Нет изменений для сохранения',
+        };
       }
 
       // Get photo file if it exists and has size > 0
-      const photo = photoFile && photoFile.size > 0 ? photoFile : undefined;
+      const photo = hasPhotoFile ? photoFile : undefined;
 
       // Call update mutation
       await new Promise<void>((resolve, reject) => {
@@ -138,7 +204,7 @@ export const ProfileEditForm = () => {
         </div>
 
         <div className={styles.body}>
-          {state.error && (
+          {state.error && !state.fieldErrors && (
             <div className={styles.error}>{state.error}</div>
           )}
 
@@ -148,6 +214,8 @@ export const ProfileEditForm = () => {
             label="Имя"
             defaultValue={user.firstName ?? ''}
             disabled={isPending || isUpdating}
+            error={Boolean(state.fieldErrors?.firstName)}
+            hint={state.fieldErrors?.firstName}
           />
           <TextInput
             name="lastName"
@@ -155,6 +223,8 @@ export const ProfileEditForm = () => {
             label="Фамилия"
             defaultValue={user.lastName ?? ''}
             disabled={isPending || isUpdating}
+            error={Boolean(state.fieldErrors?.lastName)}
+            hint={state.fieldErrors?.lastName}
           />
           <TextInput
             name="phone"
@@ -162,6 +232,8 @@ export const ProfileEditForm = () => {
             label="Телефон"
             defaultValue={user.phone ?? ''}
             disabled={isPending || isUpdating}
+            error={Boolean(state.fieldErrors?.phone)}
+            hint={state.fieldErrors?.phone}
           />
           <TextInput
             name="email"
@@ -169,6 +241,8 @@ export const ProfileEditForm = () => {
             label="Email"
             defaultValue={user.email ?? ''}
             disabled={isPending || isUpdating}
+            error={Boolean(state.fieldErrors?.email)}
+            hint={state.fieldErrors?.email}
           />
           <TextInput
             name="dateOfBirth"
@@ -182,6 +256,8 @@ export const ProfileEditForm = () => {
               return `${day}.${month}.${year}`;
             })() : ''}
             disabled={isPending || isUpdating}
+            error={Boolean(state.fieldErrors?.dateOfBirth)}
+            hint={state.fieldErrors?.dateOfBirth}
           />
         </div>
       </form>
