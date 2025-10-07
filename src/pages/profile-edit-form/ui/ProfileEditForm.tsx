@@ -51,7 +51,7 @@ export const ProfileEditForm = () => {
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         updateData.dateOfBirth = date.toISOString();
       } else {
-        updateData.dateOfBirth = '';
+        updateData.dateOfBirth = undefined;
       }
 
       // Get photo file if it exists and has size > 0
