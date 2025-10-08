@@ -60,12 +60,12 @@ export const usersClient = {
    * Update user profile (self only)
    * PATCH /users/{id}
    *
-   * Always uses multipart/form-data to support photo uploads and field deletion.
-   * To delete a field, pass empty string or null in data.
+   * Always uses multipart/form-data to support photo uploads.
+   * Only sends fields with non-empty values (except firstName/lastName which can be empty).
    * To delete photo, set deletePhoto to true.
    *
    * @param id - User ID
-   * @param data - User update data (use empty string or null to delete fields)
+   * @param data - User update data (only non-empty values will be sent)
    * @param photo - Optional photo file (max 10MB, formats: JPEG, PNG, GIF, WebP)
    * @param deletePhoto - Set to true to delete existing photo
    */
@@ -75,7 +75,9 @@ export const usersClient = {
     // Always use multipart/form-data
     const formData = new FormData();
 
-    // Append text fields (including empty strings for deletion)
+    // Append text fields
+    // Empty string "" means field should be cleared (set to null)
+    // undefined means field should not be changed
     if (validatedData.phone !== undefined) {
       formData.append('phone', validatedData.phone ?? '');
     }

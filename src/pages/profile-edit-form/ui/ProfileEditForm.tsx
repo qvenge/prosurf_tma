@@ -104,8 +104,8 @@ export const ProfileEditForm = () => {
           const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
           updateData.dateOfBirth = date.toISOString();
         } else {
-          // Field was cleared - don't send it
-          updateData.dateOfBirth = undefined;
+          // Field was cleared - send empty string to reset
+          updateData.dateOfBirth = '';
         }
       }
 

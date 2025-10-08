@@ -406,16 +406,26 @@ components:
       properties:
         phone:
           type: string
+          nullable: true
+          description: Номер телефона. Установите null (JSON) или пустую строку "" (multipart) для очистки поля.
         firstName:
           type: string
+          nullable: true
+          description: Имя. Установите null (JSON) или пустую строку "" (multipart) для очистки поля.
         lastName:
           type: string
+          nullable: true
+          description: Фамилия. Установите null (JSON) или пустую строку "" (multipart) для очистки поля.
         email:
           type: string
+          format: email
+          nullable: true
+          description: Email адрес. Установите null (JSON) или пустую строку "" (multipart) для очистки поля.
         dateOfBirth:
           type: string
           format: date-time
-          description: Дата рождения пользователя в формате ISO 8601
+          nullable: true
+          description: Дата рождения в формате ISO 8601. Установите null (JSON) или пустую строку "" (multipart) для очистки поля.
         photoUrl:
           type: string
           nullable: true
@@ -2296,14 +2306,21 @@ paths:
 
         **1. application/json** - для обновления текстовых полей и удаления фото:
         - Для удаления фото отправьте `{"photoUrl": null}` или `{"deletePhoto": true}`
+        - Для сброса текстовых полей отправьте `{"phone": null, "firstName": null}` и т.д.
         - Для установки внешнего URL отправьте `{"photoUrl": "https://example.com/photo.jpg"}`
 
         **2. multipart/form-data** - для загрузки или удаления фото:
         - Для загрузки: загрузите файл в поле `photo` (макс. 10MB, JPEG/PNG/GIF/WebP)
         - Для удаления: установите поле `deletePhoto=true`
+        - **Для сброса текстовых полей**: отправьте пустую строку `phone=""`
         - Можно комбинировать с обновлением других полей
 
         **Приоритет операций**: Загрузка фото > deletePhoto > photoUrl
+
+        **Логика сброса полей в multipart/form-data**:
+        - Пустая строка `""` → null (сброс поля)
+        - Непустая строка → обновление поля
+        - Поле не передано → undefined (поле не изменяется)
       parameters:
         - in: path
           name: id
@@ -2325,6 +2342,12 @@ paths:
                 summary: Удаление фото профиля (photoUrl null)
                 value:
                   photoUrl: null
+              clearFields:
+                summary: Сброс полей (установка в null)
+                value:
+                  phone: null
+                  firstName: null
+                  email: null
               updateFields:
                 summary: Обновление полей профиля
                 value:
@@ -2338,21 +2361,25 @@ paths:
                 phone:
                   type: string
                   nullable: true
+                  description: Телефон. Отправьте пустую строку "" для сброса в null
                 firstName:
                   type: string
                   nullable: true
+                  description: Имя. Отправьте пустую строку "" для сброса в null
                 lastName:
                   type: string
                   nullable: true
+                  description: Фамилия. Отправьте пустую строку "" для сброса в null
                 email:
                   type: string
                   format: email
                   nullable: true
+                  description: Email. Отправьте пустую строку "" для сброса в null
                 dateOfBirth:
                   type: string
                   format: date-time
                   nullable: true
-                  description: Дата рождения в формате ISO 8601
+                  description: Дата рождения в формате ISO 8601. Отправьте пустую строку "" для сброса в null
                 photo:
                   type: string
                   format: binary

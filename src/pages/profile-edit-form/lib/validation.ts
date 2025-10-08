@@ -45,9 +45,11 @@ export const profileFormSchema = z.object({
 
   email: z
     .string()
-    .email('Некорректный формат email')
-    .optional()
-    .or(z.literal('')),
+    .refine(
+      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      'Некорректный формат email'
+    )
+    .optional(),
 
   dateOfBirth: z
     .string()
@@ -74,10 +76,10 @@ export const profileFormSchema = z.object({
 export type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 // Функция для получения русских сообщений об ошибках Zod
-export const getFieldErrors = (error: z.ZodError): Record<string, string> => {
+export const getFieldErrors = (error: z.ZodError<ProfileFormData>): Record<string, string> => {
   const fieldErrors: Record<string, string> = {};
 
-  error.errors.forEach((err) => {
+  error.issues.forEach((err: z.ZodIssue) => {
     const field = err.path[0] as string;
     if (field && !fieldErrors[field]) {
       fieldErrors[field] = err.message;
