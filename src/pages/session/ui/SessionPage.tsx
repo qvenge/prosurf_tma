@@ -37,11 +37,10 @@ export const SessionPage = () => {
   );
 
   // Fetch user's booking for this session (if any)
-  const { data: userBookingsData } = useBookings(
-    sessionId ? { sessionId, status: ['HOLD', 'CONFIRMED'] } : undefined
+  const { data: userBookingsData, isLoading: userBookingsLoading } = useBookings(
+    sessionId ? { sessionId, status: ['CONFIRMED'] } : undefined
   );
-  const userBooking = userBookingsData?.items?.[0];
-  const bookingId = userBooking?.id;
+  const bookingId = userBookingsData?.items?.[0]?.id;
 
   const createBookingMutation = useBookSession();
   const createPaymentMutation = useCreatePayment();
@@ -152,7 +151,7 @@ export const SessionPage = () => {
 
   const bottomBarContent = useMemo(() => (
     <div className={styles.bottomBarContent}>
-      {session?.hasBooking ? (
+      {bookingId ? (
         <div>Вы уже записаны 🤟</div>
       ) : (session?.remainingSeats === 0 ? (
         <>
@@ -174,7 +173,7 @@ export const SessionPage = () => {
             size='l'
             mode='primary'
             stretched={true}
-            loading={seasonTicketsLoading}
+            loading={isLoading || userBookingsLoading || seasonTicketsLoading}
             disabled={!session}
             onClick={handleBookingClick}
           >
@@ -188,7 +187,7 @@ export const SessionPage = () => {
         </>
       ))}
     </div>
-  ), [seasonTicketsLoading, session, handleBookingClick]);
+  ), [session, seasonTicketsLoading, userBookingsLoading, bookingId, handleBookingClick]);
 
   useEffect(() => {
     setOverride(bottomBarContent);
