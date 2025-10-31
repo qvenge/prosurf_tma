@@ -190,6 +190,20 @@ export function PaymentPage() {
     // Session payment: show subscription tab if plans available, always show single session
     const res: TabConfig<ProductType>[] = [];
 
+    res.push({
+      id: 'single_session',
+      label: 'Разовая тренировка',
+      content: (
+        session && (
+          <PriceBreakdown
+            productName={session.event.title}
+            description={getSessionType(session)}
+            price={session.event.tickets[0]?.full.price}
+          />
+        )
+      ),
+    });
+
     if (availablePlans && availablePlans.length > 0) {
       res.push({
         id: 'subscription',
@@ -212,20 +226,6 @@ export function PaymentPage() {
         ),
       });
     }
-
-    res.push({
-      id: 'single_session',
-      label: 'Разовая тренировка',
-      content: (
-        session && (
-          <PriceBreakdown
-            productName={session.event.title}
-            description={getSessionType(session)}
-            price={session.event.tickets[0]?.full.price}
-          />
-        )
-      ),
-    });
 
     return res;
   }, [context, selectedPlan, session, availablePlans, selectedPlanId, updateSelectedPlan]);
