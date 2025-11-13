@@ -17,8 +17,8 @@ import { Link } from '@/shared/navigation';
 import {
   useBookings,
   useSessions,
-  useCurrentUserProfile,
-  useCurrentUserCashback,
+  useCurrentClient,
+  useMyCashback,
   useCurrentUserCertificates,
   type BookingExtended
 } from '@/shared/api';
@@ -30,10 +30,10 @@ import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 
 export const Profile = () => {
   // Fetch user profile
-  const { user, isLoading: isUserLoading, error: userError } = useCurrentUserProfile();
+  const { user, isLoading: isUserLoading, error: userError } = useCurrentClient();
 
   // Fetch cashback data
-  const { data: cashbackData, isLoading: isCashbackLoading } = useCurrentUserCashback();
+  const { data: cashbackData, isLoading: isCashbackLoading } = useMyCashback();
 
   // Fetch certificates
   const { data: certificatesData, isLoading: isCertificatesLoading } = useCurrentUserCertificates();

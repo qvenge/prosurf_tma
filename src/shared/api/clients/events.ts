@@ -1,13 +1,11 @@
 import { apiClient, validateResponse, createQueryString, joinApiUrls } from '../config';
 import {
   EventSchema,
-  EventCreateDtoSchema,
   PaginatedResponseSchema,
   EventFiltersSchema
 } from '../schemas';
 import type {
   Event,
-  EventCreateDto,
   PaginatedResponse,
   EventFilters
 } from '../types';
@@ -40,20 +38,6 @@ export const eventsClient = {
       ...data,
       items: data.items.map(transformEventImages),
     };
-  },
-
-  /**
-   * Create new event (ADMIN only)
-   * POST /events
-   */
-  async createEvent(data: EventCreateDto): Promise<Event> {
-    const validatedData = EventCreateDtoSchema.parse(data);
-
-    const response = await apiClient.post('/events', validatedData);
-    const event = validateResponse(response.data, EventSchema);
-
-    // Transform event image URLs
-    return transformEventImages(event);
   },
 
   /**

@@ -117,18 +117,6 @@ export const bookingsClient = {
   },
 
   /**
-   * Admin booking method with full capabilities
-   * POST /sessions/{id}/book
-   */
-  async createAdminBooking(
-    sessionId: string,
-    data: BookingCreateDto,
-    idempotencyKey: IdempotencyKey
-  ): Promise<BookingWithHoldTTL> {
-    return this.bookSession(sessionId, data, idempotencyKey);
-  },
-
-  /**
    * Get list of bookings (self or ADMIN with advanced filtering)
    * GET /bookings
    */
@@ -168,36 +156,11 @@ export const bookingsClient = {
   },
 
   /**
-   * Update booking (ADMIN only)
-   * PATCH /bookings/{id}
-   */
-  async updateBooking(id: string, data: {
-    quantity?: number;
-    guestContact?: BookingCreateDto['guestContact'];
-    notes?: string;
-  }): Promise<BookingExtended> {
-    const response = await apiClient.patch(`/bookings/${encodeURIComponent(id)}`, data);
-    const booking = validateResponse(response.data, BookingExtendedSchema);
-
-    // Transform URLs
-    return transformBookingExtended(booking);
-  },
-
-  /**
-   * Cancel booking (self for HOLD/CONFIRMED within policy, or ADMIN)
+   * Cancel booking (self for HOLD/CONFIRMED within policy)
    * POST /bookings/{id}/cancel
    */
   async cancelBooking(id: string): Promise<Booking> {
     const response = await apiClient.post(`/bookings/${encodeURIComponent(id)}/cancel`);
-    return validateResponse(response.data, BookingSchema);
-  },
-
-  /**
-   * Confirm booking (offline payment, ADMIN only)
-   * POST /bookings/{id}/confirm
-   */
-  async confirmBooking(id: string): Promise<Booking> {
-    const response = await apiClient.post(`/bookings/${encodeURIComponent(id)}/confirm`);
     return validateResponse(response.data, BookingSchema);
   },
 };

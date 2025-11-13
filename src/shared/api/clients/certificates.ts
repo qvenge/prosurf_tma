@@ -1,13 +1,11 @@
 import { apiClient, validateResponse, createQueryString } from '../config';
-import { 
-  CertificateSchema, 
-  CertificateCreateDtoSchema,
+import {
+  CertificateSchema,
   PaginatedResponseSchema,
   CertificateFiltersSchema
 } from '../schemas';
-import type { 
-  Certificate, 
-  CertificateCreateDto,
+import type {
+  Certificate,
   PaginatedResponse,
   CertificateFilters
 } from '../types';
@@ -17,25 +15,23 @@ import type {
  */
 export const certificatesClient = {
   /**
-   * Issue/create certificate (ADMIN only)
-   * POST /certificates
-   */
-  async createCertificate(data: CertificateCreateDto): Promise<Certificate> {
-    const validatedData = CertificateCreateDtoSchema.parse(data);
-    
-    const response = await apiClient.post('/certificates', validatedData);
-    return validateResponse(response.data, CertificateSchema);
-  },
-
-  /**
-   * Get certificates (user's own or all for ADMIN)
+   * Get certificates (user's own certificates)
    * GET /certificates
    */
   async getCertificates(filters?: CertificateFilters): Promise<PaginatedResponse<Certificate>> {
     const validatedFilters = CertificateFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/certificates${queryString}`);
     return validateResponse(response.data, PaginatedResponseSchema(CertificateSchema));
+  },
+
+  /**
+   * Get certificate by ID
+   * GET /certificates/{id}
+   */
+  async getCertificateById(id: string): Promise<Certificate> {
+    const response = await apiClient.get(`/certificates/${encodeURIComponent(id)}`);
+    return validateResponse(response.data, CertificateSchema);
   },
 };

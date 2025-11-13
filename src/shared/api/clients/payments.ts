@@ -2,8 +2,6 @@ import { apiClient, validateResponse, withIdempotency, createQueryString } from 
 import {
   PaymentSchema,
   PaymentRequestSchema,
-  RefundSchema,
-  RefundRequestSchema,
   PaymentListItemSchema,
   PaymentFiltersSchema,
   PaginatedResponseSchema
@@ -11,8 +9,6 @@ import {
 import type {
   Payment,
   PaymentRequest,
-  Refund,
-  RefundRequest,
   IdempotencyKey,
   PaymentListItem,
   PaymentFilters,
@@ -116,25 +112,5 @@ export const paymentsClient = {
   async getPaymentById(id: string): Promise<Payment> {
     const response = await apiClient.get(`/payments/${encodeURIComponent(id)}`);
     return validateResponse(response.data, PaymentSchema);
-  },
-
-  /**
-   * Create refund for payment
-   * POST /payments/{id}/refunds
-   */
-  async createRefund(
-    paymentId: string, 
-    idempotencyKey: IdempotencyKey,
-    data?: RefundRequest
-  ): Promise<Refund> {
-    const validatedData = data ? RefundRequestSchema.parse(data) : {};
-    
-    const config = withIdempotency({}, idempotencyKey);
-    const response = await apiClient.post(
-      `/payments/${encodeURIComponent(paymentId)}/refunds`, 
-      validatedData,
-      config
-    );
-    return validateResponse(response.data, RefundSchema);
   },
 };

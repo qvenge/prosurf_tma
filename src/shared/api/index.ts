@@ -17,7 +17,7 @@ export * from './auth';
 
 // API Clients
 export { authClient } from './clients/auth';
-export { usersClient } from './clients/users';
+export { clientsClient } from './clients/clients';
 export { eventsClient } from './clients/events';
 export { sessionsClient } from './clients/sessions';
 export { bookingsClient } from './clients/bookings';
@@ -26,15 +26,14 @@ export { certificatesClient } from './clients/certificates';
 export { seasonTicketsClient } from './clients/season-tickets';
 export { cashbackClient } from './clients/cashback';
 export { waitlistClient } from './clients/waitlist';
-export { adminClient } from './clients/admin';
 export { webhooksClient } from './clients/webhooks';
 export { imagesClient } from './clients/images';
 
 // Hooks - Auth
 export * from './hooks/auth';
 
-// Hooks - Users
-export * from './hooks/users';
+// Hooks - Clients
+export * from './hooks/clients';
 
 // Hooks - Events
 export * from './hooks/events';
@@ -60,9 +59,6 @@ export * from './hooks/cashback';
 // Hooks - Waitlist
 export * from './hooks/waitlist';
 
-// Hooks - Admin
-export * from './hooks/admin';
-
 // Hooks - Images
 export * from './hooks/images';
 
@@ -71,7 +67,7 @@ export { ApiProvider } from './providers/ApiProvider';
 
 // Query key factories (for advanced usage)
 export { authKeys } from './auth';
-export { usersKeys } from './hooks/users';
+export { clientsKeys } from './hooks/clients';
 export { eventsKeys } from './hooks/events';
 export { sessionsKeys } from './hooks/sessions';
 export { bookingsKeys } from './hooks/bookings';
@@ -80,17 +76,14 @@ export { certificatesKeys } from './hooks/certificates';
 export { seasonTicketsKeys } from './hooks/season-tickets';
 export { cashbackKeys } from './hooks/cashback';
 export { waitlistKeys } from './hooks/waitlist';
-export { adminKeys } from './hooks/admin';
 export { imagesKeys } from './hooks/images';
 
 // Common utilities and helpers
 export {
   // Role helpers
   hasRole,
-  isAdmin,
   isUser,
   requireAuth,
-  requireAdmin,
   // Auth utilities
   performLogout,
 } from './auth';

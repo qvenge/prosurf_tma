@@ -13,8 +13,8 @@ import {
 } from '@/widgets/payment-page-layout';
 import {
   useSession,
-  useCurrentUserProfile,
-  useCurrentUserCashback,
+  useCurrentClient,
+  useMyCashback,
   useSeasonTicketPlans,
   type SeasonTicketPlan
 } from '@/shared/api';
@@ -37,8 +37,8 @@ export function PaymentPage() {
   const { data: session, isLoading: sessionLoading, error: sessionError } = context === 'session'
     ? sessionQuery
     : { data: undefined, isLoading: false, error: null };
-  const { user, isLoading: userLoading } = useCurrentUserProfile();
-  const { data: cashbackWallet, isLoading: cashbackLoading } = useCurrentUserCashback();
+  const { user, isLoading: userLoading } = useCurrentClient();
+  const { data: cashbackWallet, isLoading: cashbackLoading } = useMyCashback();
   const { data: plansData, isLoading: plansLoading, error: plansError } = useSeasonTicketPlans();
 
   const cashbackValue = cashbackWallet?.balance.amountMinor || 0;

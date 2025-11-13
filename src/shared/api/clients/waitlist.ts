@@ -30,14 +30,22 @@ export const waitlistClient = {
   },
 
   /**
-   * Get user's waitlist entries (self or ADMIN)
-   * GET /users/{id}/waitlist
+   * Get client's waitlist entries
+   * GET /clients/{id}/waitlist
    */
-  async getUserWaitlist(userId: string, filters?: WaitlistFilters): Promise<PaginatedResponse<WaitlistEntry>> {
+  async getClientWaitlist(clientId: string, filters?: WaitlistFilters): Promise<PaginatedResponse<WaitlistEntry>> {
     const validatedFilters = WaitlistFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
-    const response = await apiClient.get(`/users/${encodeURIComponent(userId)}/waitlist${queryString}`);
+
+    const response = await apiClient.get(`/clients/${encodeURIComponent(clientId)}/waitlist${queryString}`);
     return validateResponse(response.data, PaginatedResponseSchema(WaitlistEntrySchema));
+  },
+
+  /**
+   * Leave session waitlist
+   * DELETE /sessions/{id}/waitlist
+   */
+  async leaveWaitlist(sessionId: string): Promise<void> {
+    await apiClient.delete(`/sessions/${encodeURIComponent(sessionId)}/waitlist`);
   },
 };

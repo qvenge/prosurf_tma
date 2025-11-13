@@ -1,8 +1,6 @@
 import { apiClient, validateResponse, createQueryString, withIdempotency } from '../config';
 import {
   SeasonTicketPlanSchema,
-  SeasonTicketPlanCreateDtoSchema,
-  SeasonTicketPlanUpdateDtoSchema,
   SeasonTicketSchema,
   PaymentSchema,
   PaymentRequestSchema,
@@ -13,8 +11,6 @@ import {
 } from '../schemas';
 import type {
   SeasonTicketPlan,
-  SeasonTicketPlanCreateDto,
-  SeasonTicketPlanUpdateDto,
   SeasonTicket,
   Payment,
   PaymentRequest,
@@ -38,20 +34,9 @@ export const seasonTicketsClient = {
   async getSeasonTicketPlans(filters?: SeasonTicketPlanFilters): Promise<PaginatedResponse<SeasonTicketPlan>> {
     const validatedFilters = SeasonTicketPlanFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/season-ticket-plans${queryString}`);
     return validateResponse(response.data, PaginatedResponseSchema(SeasonTicketPlanSchema));
-  },
-
-  /**
-   * Create season ticket plan (ADMIN only)
-   * POST /season-ticket-plans
-   */
-  async createSeasonTicketPlan(data: SeasonTicketPlanCreateDto): Promise<SeasonTicketPlan> {
-    const validatedData = SeasonTicketPlanCreateDtoSchema.parse(data);
-    
-    const response = await apiClient.post('/season-ticket-plans', validatedData);
-    return validateResponse(response.data, SeasonTicketPlanSchema);
   },
 
   /**
@@ -61,28 +46,6 @@ export const seasonTicketsClient = {
   async getSeasonTicketPlan(id: string): Promise<SeasonTicketPlan> {
     const response = await apiClient.get(`/season-ticket-plans/${encodeURIComponent(id)}`);
     return validateResponse(response.data, SeasonTicketPlanSchema);
-  },
-
-  /**
-   * Update season ticket plan (ADMIN only)
-   * PATCH /season-ticket-plans/{id}
-   */
-  async updateSeasonTicketPlan(id: string, data: SeasonTicketPlanUpdateDto): Promise<SeasonTicketPlan> {
-    const validatedData = SeasonTicketPlanUpdateDtoSchema.parse(data);
-
-    const response = await apiClient.patch(
-      `/season-ticket-plans/${encodeURIComponent(id)}`,
-      validatedData
-    );
-    return validateResponse(response.data, SeasonTicketPlanSchema);
-  },
-
-  /**
-   * Delete season ticket plan (ADMIN only)
-   * DELETE /season-ticket-plans/{id}
-   */
-  async deleteSeasonTicketPlan(id: string): Promise<void> {
-    await apiClient.delete(`/season-ticket-plans/${encodeURIComponent(id)}`);
   },
 
   /**
@@ -128,8 +91,40 @@ export const seasonTicketsClient = {
   async getSeasonTickets(filters?: SeasonTicketFilters): Promise<PaginatedResponse<SeasonTicket>> {
     const validatedFilters = SeasonTicketFiltersSchema.parse(filters || {});
     const queryString = createQueryString(validatedFilters);
-    
+
     const response = await apiClient.get(`/season-tickets${queryString}`);
+    return validateResponse(response.data, PaginatedResponseSchema(SeasonTicketSchema));
+  },
+
+  /**
+   * Get single season ticket by ID
+   * GET /season-tickets/{id}
+   */
+  async getSeasonTicketById(id: string): Promise<SeasonTicket> {
+    const response = await apiClient.get(`/season-tickets/${encodeURIComponent(id)}`);
+    return validateResponse(response.data, SeasonTicketSchema);
+  },
+
+  /**
+   * Cancel season ticket (proportional refund)
+   * POST /season-tickets/{id}/cancel
+   */
+  async cancelSeasonTicket(id: string): Promise<void> {
+    await apiClient.post(`/season-tickets/${encodeURIComponent(id)}/cancel`);
+  },
+
+  /**
+   * Get season tickets for a specific client
+   * GET /clients/{id}/season-tickets
+   */
+  async getClientSeasonTickets(
+    clientId: string,
+    filters?: { cursor?: CursorParam; limit?: LimitParam }
+  ): Promise<PaginatedResponse<SeasonTicket>> {
+    const queryString = createQueryString(filters || {});
+    const response = await apiClient.get(
+      `/clients/${encodeURIComponent(clientId)}/season-tickets${queryString}`
+    );
     return validateResponse(response.data, PaginatedResponseSchema(SeasonTicketSchema));
   },
 };

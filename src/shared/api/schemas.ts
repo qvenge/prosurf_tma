@@ -49,6 +49,21 @@ export const UserSchema = z.object({
   authMethod: z.enum(['telegram', 'email', 'username']),
 });
 
+// Client schema (matches backend ClientDto)
+export const ClientSchema = z.object({
+  id: z.string(),
+  telegramId: z.string(),
+  telegramChatId: z.string().nullable(),
+  username: z.string().nullable(),
+  phone: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  photoUrl: z.string().nullable(),
+  dateOfBirth: z.string().datetime().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.string().datetime(),
+});
+
 export const UserUpdateDtoSchema = z.object({
   phone: z.string().optional(),
   firstName: z.string().optional(),
@@ -518,27 +533,10 @@ export const TelegramLoginDtoSchema = z.object({
   initData: z.string(),
 });
 
-export const LoginDtoSchema = z.object({
-  login: z.string(),
-  password: z.string().min(6),
-});
-
-export const RegisterDtoSchema = z.object({
-  email: z.string().email().optional(),
-  username: z.string().regex(/^[a-zA-Z0-9_-]{3,32}$/).optional(),
-  password: z.string().min(6),
-  firstName: z.string().max(128).optional(),
-  lastName: z.string().max(128).optional(),
-  phone: z.string().regex(/^\+?[0-9]{7,15}$/).optional(),
-  role: RoleSchema.optional(),
-}).refine(data => data.email || data.username, {
-  message: "Either email or username must be provided",
-});
-
 export const AuthResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
-  user: UserSchema,
+  client: ClientSchema,
 });
 
 export const RefreshRequestSchema = z.object({
@@ -549,10 +547,6 @@ export const RefreshResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
 });
-
-// Legacy - keeping for backward compatibility
-export const LoginRequestSchema = TelegramLoginDtoSchema;
-export const LoginResponseSchema = AuthResponseSchema;
 
 // Telegram webhook schemas
 export const TelegramUserSchema = z.object({

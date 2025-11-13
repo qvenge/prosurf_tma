@@ -8,6 +8,7 @@ export type Price = z.infer<typeof schemas.PriceSchema>;
 // User types
 export type Role = z.infer<typeof schemas.RoleSchema>;
 export type User = z.infer<typeof schemas.UserSchema>;
+export type Client = z.infer<typeof schemas.ClientSchema>;
 export type UserUpdateDto = z.infer<typeof schemas.UserUpdateDtoSchema>;
 
 // Event types
@@ -103,15 +104,9 @@ export type JobExecutionResult = z.infer<typeof schemas.JobExecutionResultSchema
 
 // Auth types
 export type TelegramLoginDto = z.infer<typeof schemas.TelegramLoginDtoSchema>;
-export type LoginDto = z.infer<typeof schemas.LoginDtoSchema>;
-export type RegisterDto = z.infer<typeof schemas.RegisterDtoSchema>;
 export type AuthResponse = z.infer<typeof schemas.AuthResponseSchema>;
 export type RefreshRequest = z.infer<typeof schemas.RefreshRequestSchema>;
 export type RefreshResponse = z.infer<typeof schemas.RefreshResponseSchema>;
-
-// Legacy types for backward compatibility
-export type LoginRequest = z.infer<typeof schemas.LoginRequestSchema>;
-export type LoginResponse = z.infer<typeof schemas.LoginResponseSchema>;
 
 // Telegram webhook types
 export type TelegramUser = z.infer<typeof schemas.TelegramUserSchema>;
@@ -166,7 +161,7 @@ export interface ApiErrorResponse {
 
 // Authentication context types
 export interface AuthState {
-  user: User | null;
+  user: (User | Client) | null;
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;

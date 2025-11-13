@@ -3,39 +3,16 @@ import { authClient } from '../clients/auth';
 import { authKeys, authUtils, performLogout } from '../auth';
 import type {
   TelegramLoginDto,
-  LoginDto,
-  RegisterDto,
   AuthResponse,
-  LoginRequest,
-  LoginResponse,
   RefreshRequest,
   RefreshResponse,
-  User
+  User,
+  Client
 } from '../types';
 
 /**
  * Authentication hooks
  */
-
-// Login mutation hook (legacy - for backward compatibility)
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: LoginRequest) => authClient.login(request),
-    onSuccess: (data: LoginResponse) => {
-      // Save auth data to localStorage
-      authUtils.saveAuthData(data);
-
-      // Update auth-related queries
-      queryClient.setQueryData(authKeys.profile(), data.user);
-      queryClient.invalidateQueries({ queryKey: authKeys.all });
-    },
-    onError: (error) => {
-      console.error('Login failed:', error);
-    },
-  });
-};
 
 // Telegram login mutation hook
 export const useLoginWithTelegram = () => {
@@ -48,51 +25,11 @@ export const useLoginWithTelegram = () => {
       authUtils.saveAuthData(data);
 
       // Update auth-related queries
-      queryClient.setQueryData(authKeys.profile(), data.user);
+      queryClient.setQueryData(authKeys.profile(), data.client);
       queryClient.invalidateQueries({ queryKey: authKeys.all });
     },
     onError: (error) => {
       console.error('Telegram login failed:', error);
-    },
-  });
-};
-
-// Credentials login mutation hook
-export const useLoginWithCredentials = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: LoginDto) => authClient.loginWithCredentials(request),
-    onSuccess: (data: AuthResponse) => {
-      // Save auth data to localStorage
-      authUtils.saveAuthData(data);
-
-      // Update auth-related queries
-      queryClient.setQueryData(authKeys.profile(), data.user);
-      queryClient.invalidateQueries({ queryKey: authKeys.all });
-    },
-    onError: (error) => {
-      console.error('Credentials login failed:', error);
-    },
-  });
-};
-
-// Registration mutation hook
-export const useRegister = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: RegisterDto) => authClient.register(request),
-    onSuccess: (data: AuthResponse) => {
-      // Save auth data to localStorage
-      authUtils.saveAuthData(data);
-
-      // Update auth-related queries
-      queryClient.setQueryData(authKeys.profile(), data.user);
-      queryClient.invalidateQueries({ queryKey: authKeys.all });
-    },
-    onError: (error) => {
-      console.error('Registration failed:', error);
     },
   });
 };
@@ -107,9 +44,9 @@ export const useRefreshToken = () => {
       // Update tokens in localStorage
       authUtils.saveAuthData({
         ...data,
-        user: queryClient.getQueryData(authKeys.profile()) as User,
+        client: queryClient.getQueryData(authKeys.profile()) as (User | Client),
       });
-      
+
       // Invalidate auth queries
       queryClient.invalidateQueries({ queryKey: authKeys.all });
     },
@@ -156,7 +93,7 @@ export const useTelegramAutoLogin = () => {
         authUtils.saveAuthData(data);
 
         // Update auth-related queries
-        queryClient.setQueryData(authKeys.profile(), data.user);
+        queryClient.setQueryData(authKeys.profile(), data.client);
         queryClient.invalidateQueries({ queryKey: authKeys.all });
       }
     },
@@ -170,7 +107,7 @@ export const useTelegramAutoLogin = () => {
 export const useCurrentUser = () => {
   return useQuery({
     queryKey: authKeys.profile(),
-    queryFn: async (): Promise<User | null> => {
+    queryFn: async (): Promise<(User | Client) | null> => {
       const authState = authUtils.initializeAuth();
       return authState.user;
     },
@@ -182,12 +119,12 @@ export const useCurrentUser = () => {
 // Hook to check authentication status
 export const useAuthStatus = () => {
   const { data: user, isLoading } = useCurrentUser();
-  
+
   return {
     user,
     isAuthenticated: Boolean(user),
     isLoading,
-    isAdmin: user?.role === 'ADMIN',
-    isUser: user?.role === 'USER',
+    isAdmin: user && 'role' in user ? user.role === 'ADMIN' : false,
+    isUser: user && 'role' in user ? user.role === 'USER' : false,
   };
 };

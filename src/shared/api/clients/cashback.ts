@@ -19,5 +19,5 @@ export const cashbackClient = {
     return validateResponse(response.data, CashbackRulesSchema);
   },
 
-  // Note: User cashback wallet is accessed through usersClient.getUserCashback()
+  // Note: Client cashback wallet is accessed through clientsClient.getMyCashback()
 };

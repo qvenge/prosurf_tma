@@ -1,12 +1,9 @@
 import { createContext, useContext } from 'react';
 import { apiClient, tokenStorage, STORAGE_KEYS } from './config';
+import * as schemas from './schemas';
 import {
   TelegramLoginDtoSchema,
-  LoginDtoSchema,
-  RegisterDtoSchema,
   AuthResponseSchema,
-  LoginRequestSchema,
-  LoginResponseSchema,
   RefreshRequestSchema,
   RefreshResponseSchema,
   UserSchema
@@ -16,35 +13,26 @@ import { telegramUtils } from '@/shared/tma';
 import type {
   AuthState,
   TelegramLoginDto,
-  LoginDto,
-  RegisterDto,
   AuthResponse,
-  LoginRequest,
-  LoginResponse,
   RefreshRequest,
   RefreshResponse,
-  User
+  User,
+  Client
 } from './types';
 
 // Authentication context
 export const AuthContext = createContext<AuthState & {
-  login: (request: LoginRequest) => Promise<LoginResponse>;
   loginWithTelegram: (request: TelegramLoginDto) => Promise<AuthResponse>;
-  loginWithCredentials: (request: LoginDto) => Promise<AuthResponse>;
-  register: (request: RegisterDto) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;
-  updateUser: (user: User) => void;
+  updateUser: (user: User | Client) => void;
 }>({
   user: null,
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => { throw new Error('AuthContext not initialized'); },
   loginWithTelegram: async () => { throw new Error('AuthContext not initialized'); },
-  loginWithCredentials: async () => { throw new Error('AuthContext not initialized'); },
-  register: async () => { throw new Error('AuthContext not initialized'); },
   logout: async () => { throw new Error('AuthContext not initialized'); },
   refreshTokens: async () => { throw new Error('AuthContext not initialized'); },
   updateUser: () => { throw new Error('AuthContext not initialized'); },
@@ -53,42 +41,12 @@ export const AuthContext = createContext<AuthState & {
 // Auth API functions
 export const authApi = {
   /**
-   * Login with Telegram init data (legacy method)
-   */
-  async login(request: LoginRequest): Promise<LoginResponse> {
-    const validatedRequest = LoginRequestSchema.parse(request);
-
-    const response = await apiClient.post('/auth/telegram', validatedRequest);
-    return validateResponse(response.data, LoginResponseSchema);
-  },
-
-  /**
    * Login with Telegram Mini App init data
    */
   async loginWithTelegram(request: TelegramLoginDto): Promise<AuthResponse> {
     const validatedRequest = TelegramLoginDtoSchema.parse(request);
 
     const response = await apiClient.post('/auth/telegram', validatedRequest);
-    return validateResponse(response.data, AuthResponseSchema);
-  },
-
-  /**
-   * Login with email/username and password
-   */
-  async loginWithCredentials(request: LoginDto): Promise<AuthResponse> {
-    const validatedRequest = LoginDtoSchema.parse(request);
-
-    const response = await apiClient.post('/auth/login', validatedRequest);
-    return validateResponse(response.data, AuthResponseSchema);
-  },
-
-  /**
-   * Register new user
-   */
-  async register(request: RegisterDto): Promise<AuthResponse> {
-    const validatedRequest = RegisterDtoSchema.parse(request);
-
-    const response = await apiClient.post('/auth/register', validatedRequest);
     return validateResponse(response.data, AuthResponseSchema);
   },
 
@@ -134,12 +92,17 @@ export const authUtils = {
     const accessToken = tokenStorage.getAccessToken();
     const refreshToken = tokenStorage.getRefreshToken();
     const userString = localStorage.getItem(STORAGE_KEYS.USER);
-    
-    let user: User | null = null;
+
+    let user: (User | Client) | null = null;
     if (userString) {
       try {
         const parsedUser = JSON.parse(userString);
-        user = UserSchema.parse(parsedUser);
+        // Try parsing as UserSchema first, then ClientSchema
+        try {
+          user = UserSchema.parse(parsedUser);
+        } catch {
+          user = schemas.ClientSchema.parse(parsedUser);
+        }
       } catch (error) {
         console.error('Invalid user data in localStorage:', error);
         localStorage.removeItem(STORAGE_KEYS.USER);
@@ -160,10 +123,10 @@ export const authUtils = {
   /**
    * Save auth data to localStorage
    */
-  saveAuthData(authResponse: AuthResponse | LoginResponse): void {
+  saveAuthData(authResponse: AuthResponse): void {
     tokenStorage.setAccessToken(authResponse.accessToken);
     tokenStorage.setRefreshToken(authResponse.refreshToken);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authResponse.user));
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authResponse.client));
   },
 
   /**
@@ -193,12 +156,12 @@ export const authUtils = {
    * Get user from token payload (for development/debugging)
    * In production, always fetch user data from the server
    */
-  getUserFromToken(token: string): Partial<User> | null {
+  getUserFromToken(token: string): Partial<User | Client> | null {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return {
         id: payload.sub,
-        role: payload.role,
+        ...(payload.role && { role: payload.role }),
       };
     } catch (error) {
       console.error('Error parsing token payload:', error);
@@ -246,20 +209,6 @@ export const authUtils = {
       return null;
     }
   },
-
-  /**
-   * Auto-login using credentials (email/username + password)
-   */
-  async loginWithCredentials(request: LoginDto): Promise<AuthResponse> {
-    return await authApi.loginWithCredentials(request);
-  },
-
-  /**
-   * Register new user
-   */
-  async register(request: RegisterDto): Promise<AuthResponse> {
-    return await authApi.register(request);
-  },
 };
 
 // Custom hook to use auth context
@@ -296,20 +245,24 @@ export const performLogout = async (): Promise<void> => {
 };
 
 // Helper to check if user has specific role
-export const hasRole = (user: User | null, role: User['role']): boolean => {
-  return user?.role === role;
+export const hasRole = (user: (User | Client) | null, role: User['role']): boolean => {
+  // Client objects don't have role property
+  if (!user || !('role' in user)) {
+    return false;
+  }
+  return user.role === role;
 };
 
-export const isAdmin = (user: User | null): boolean => {
+export const isAdmin = (user: (User | Client) | null): boolean => {
   return hasRole(user, 'ADMIN');
 };
 
-export const isUser = (user: User | null): boolean => {
+export const isUser = (user: (User | Client) | null): boolean => {
   return hasRole(user, 'USER');
 };
 
 // Helper to require authentication for components
-export const requireAuth = (user: User | null): User => {
+export const requireAuth = (user: (User | Client) | null): User | Client => {
   if (!user) {
     throw new Error('Authentication required');
   }
@@ -317,7 +270,7 @@ export const requireAuth = (user: User | null): User => {
 };
 
 // Helper to require admin role
-export const requireAdmin = (user: User | null): User => {
+export const requireAdmin = (user: (User | Client) | null): User | Client => {
   const authenticatedUser = requireAuth(user);
   if (!isAdmin(authenticatedUser)) {
     throw new Error('Admin role required');

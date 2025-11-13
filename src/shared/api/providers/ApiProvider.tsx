@@ -6,11 +6,8 @@ import { logError, getErrorInfo } from '../error-handler';
 import type {
   AuthState,
   User,
-  LoginRequest,
-  LoginResponse,
+  Client,
   TelegramLoginDto,
-  LoginDto,
-  RegisterDto,
   AuthResponse
 } from '../types';
 import { authClient } from '../clients/auth';
@@ -109,57 +106,12 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     initAuth();
   }, []);
 
-  const login = async (request: LoginRequest): Promise<LoginResponse> => {
-    const response = await authClient.login(request);
-    authUtils.saveAuthData(response);
-
-    setAuthState({
-      user: response.user,
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-
-    return response;
-  };
-
   const loginWithTelegram = async (request: TelegramLoginDto): Promise<AuthResponse> => {
     const response = await authClient.loginWithTelegram(request);
     authUtils.saveAuthData(response);
 
     setAuthState({
-      user: response.user,
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-
-    return response;
-  };
-
-  const loginWithCredentials = async (request: LoginDto): Promise<AuthResponse> => {
-    const response = await authClient.loginWithCredentials(request);
-    authUtils.saveAuthData(response);
-
-    setAuthState({
-      user: response.user,
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-
-    return response;
-  };
-
-  const register = async (request: RegisterDto): Promise<AuthResponse> => {
-    const response = await authClient.register(request);
-    authUtils.saveAuthData(response);
-
-    setAuthState({
-      user: response.user,
+      user: response.client,
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
       isAuthenticated: true,
@@ -186,8 +138,8 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     }
 
     const response = await authClient.refresh({ refreshToken: authState.refreshToken });
-    authUtils.saveAuthData({ ...response, user: authState.user! });
-    
+    authUtils.saveAuthData({ ...response, client: authState.user as (User | Client) });
+
     setAuthState(prev => ({
       ...prev,
       accessToken: response.accessToken,
@@ -195,7 +147,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     }));
   };
 
-  const updateUser = (user: User): void => {
+  const updateUser = (user: User | Client): void => {
     setAuthState(prev => ({
       ...prev,
       user,
@@ -205,10 +157,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const contextValue = {
     ...authState,
-    login,
     loginWithTelegram,
-    loginWithCredentials,
-    register,
     logout,
     refreshTokens,
     updateUser,

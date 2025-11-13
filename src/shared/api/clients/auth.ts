@@ -1,85 +1,48 @@
 import { apiClient, validateResponse } from '../config';
 import {
   TelegramLoginDtoSchema,
-  LoginDtoSchema,
-  RegisterDtoSchema,
   AuthResponseSchema,
   RefreshRequestSchema,
   RefreshResponseSchema,
-  // Legacy schemas for backward compatibility
-  LoginRequestSchema,
-  LoginResponseSchema
+  UserSchema,
 } from '../schemas';
 import type {
   TelegramLoginDto,
-  LoginDto,
-  RegisterDto,
   AuthResponse,
   RefreshRequest,
   RefreshResponse,
-  // Legacy types for backward compatibility
-  LoginRequest,
-  LoginResponse
+  User,
 } from '../types';
 
 /**
  * Authentication API client
  *
- * Provides methods for user authentication including Telegram, email/username login,
- * user registration, token refresh, and logout.
+ * Provides methods for Telegram authentication, token refresh, and logout.
+ * This is a Telegram Mini App - only Telegram authentication is supported.
  */
 export const authClient = {
   /**
    * Login with Telegram Web App init data
-   * POST /auth/telegram
+   * POST /auth/client/telegram
    *
    * @param request - Telegram login request with initData
-   * @returns Promise resolving to auth response with tokens and user data
+   * @returns Promise resolving to auth response with tokens and client data
    */
   async loginWithTelegram(request: TelegramLoginDto): Promise<AuthResponse> {
     const validatedRequest = TelegramLoginDtoSchema.parse(request);
-    const response = await apiClient.post('/auth/telegram', validatedRequest);
+    const response = await apiClient.post('/auth/client/telegram', validatedRequest);
     return validateResponse(response.data, AuthResponseSchema);
   },
 
   /**
-   * Login with email/username and password
-   * POST /auth/login
+   * Get current authenticated user
+   * GET /auth/me
    *
-   * @param request - Login request with email/username and password
-   * @returns Promise resolving to auth response with tokens and user data
+   * @returns Promise resolving to current user data
    */
-  async loginWithCredentials(request: LoginDto): Promise<AuthResponse> {
-    const validatedRequest = LoginDtoSchema.parse(request);
-    const response = await apiClient.post('/auth/login', validatedRequest);
-    return validateResponse(response.data, AuthResponseSchema);
-  },
-
-  /**
-   * Register new user
-   * POST /auth/register
-   *
-   * @param request - Registration request with user data
-   * @returns Promise resolving to auth response with tokens and user data
-   */
-  async register(request: RegisterDto): Promise<AuthResponse> {
-    const validatedRequest = RegisterDtoSchema.parse(request);
-    const response = await apiClient.post('/auth/register', validatedRequest);
-    return validateResponse(response.data, AuthResponseSchema);
-  },
-
-  /**
-   * Legacy login method (Telegram init data)
-   * POST /auth/login
-   *
-   * @deprecated Use loginWithTelegram instead
-   * @param request - Login request with Telegram initData
-   * @returns Promise resolving to login response with tokens and user data
-   */
-  async login(request: LoginRequest): Promise<LoginResponse> {
-    const validatedRequest = LoginRequestSchema.parse(request);
-    const response = await apiClient.post('/auth/login', validatedRequest);
-    return validateResponse(response.data, LoginResponseSchema);
+  async getMe(): Promise<User> {
+    const response = await apiClient.get('/auth/me');
+    return validateResponse(response.data, UserSchema);
   },
 
   /**

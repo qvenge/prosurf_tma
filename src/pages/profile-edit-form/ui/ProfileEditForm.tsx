@@ -5,7 +5,7 @@ import { UploadPhotoInput } from './upload-photo-input';
 import styles from './ProfileEditForm.module.scss';
 import { useNavigate } from '@/shared/navigation';
 
-import { useCurrentUserProfile } from '@/shared/api';
+import { useCurrentClient } from '@/shared/api';
 
 import { PageLayout } from '@/widgets/page-layout';
 import { profileFormSchema, getFieldErrors } from '../lib';
@@ -19,7 +19,7 @@ type FormState = {
 
 export const ProfileEditForm = () => {
   // Fetch user profile
-  const { user, isLoading, error, updateUser, isUpdating } = useCurrentUserProfile();
+  const { user, isLoading, error, updateUser, isUpdating } = useCurrentClient();
   const { setOverride } = useBottomBar();
   const navigate = useNavigate();
 
