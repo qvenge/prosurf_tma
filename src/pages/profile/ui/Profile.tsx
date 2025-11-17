@@ -132,9 +132,15 @@ export const Profile = () => {
     },
     {
       icon: ListChecksBold,
-      title: 'Аттестация ProSurf',
+      title: 'Абонементы',
       subtitle: 'Что это?',
-      // href: '/profile/prosurf-validation-info',
+      href: '/profile/season-tickets',
+    },
+    {
+      icon: ListChecksBold,
+      title: 'Сертификаты',
+      subtitle: 'Что это?',
+      href: '/profile/certificates',
     },
     {
       icon: ArrowsLeftRightBold,
@@ -283,10 +289,18 @@ export const Profile = () => {
         {/* Footer Links */}
         <div className={styles.footerLinks}>
           <div className={styles.divider} />
-          <div className={styles.footerLink}>Правила оплаты</div>
-          <div className={styles.footerLink}>Правила отмены и возврата</div>
-          <div className={styles.footerLink}>Договор офферта</div>
-          <div className={styles.footerLink}>Техника безопасности</div>
+          <Link to='/profile/articles/payment-rules' style={{textDecoration: 'none', color: 'inherit'}}>
+            <div className={styles.footerLink}>Правила оплаты</div>
+          </Link>
+          <Link to='/profile/articles/cancellation-rules' style={{textDecoration: 'none', color: 'inherit'}}>
+            <div className={styles.footerLink}>Правила отмены и возврата</div>
+          </Link>
+          <Link to='/profile/articles/contract' style={{textDecoration: 'none', color: 'inherit'}}>
+            <div className={styles.footerLink}>Договор офферта</div>
+          </Link>
+          <Link to='/profile/articles/safety' style={{textDecoration: 'none', color: 'inherit'}}>
+            <div className={styles.footerLink}>Техника безопасности</div>
+          </Link>
           <div className={styles.divider} />
           <div className={styles.footerLink}>Разработка приложения: @yalbakov</div>
         </div>
