@@ -1,4 +1,36 @@
 .wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
   flex-grow: 1;
   padding: 32px var(--outer-horizontal-padding, 16px);
+}
+
+.images {
+  border-radius: 16px;
+}
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.descriptionHeading {
+  @include ds.typo('Roboto/Subheadline 2/Semibold Caps');
+  color: ds.color('Text/Secondary');
+  margin: 0;
+  padding: 0;
+}
+
+.descriptionText {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Primary');
+  margin: 0;
+  padding: 0;
+}
+
+.button {
+  margin-top: 2px;
 }
