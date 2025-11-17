@@ -7,6 +7,7 @@ import {
   usePaymentActions,
   type Session,
   type User,
+  type Client,
   type PaymentRequest,
   type Payment
 } from '@/shared/api';
@@ -45,7 +46,7 @@ const getSuccessTypeFromEventLabels = (labels: string[] | null | undefined): Suc
  */
 export const usePaymentProcessing = (
   session: Session | null = null,
-  user: User | null = null
+  user: User | Client | null = null
 ) => {
   const navigate = useNavigate();
 

@@ -37,30 +37,45 @@ export const RoleSchema = z.enum(['USER', 'ADMIN']);
 export const UserSchema = z.object({
   id: z.string(),
   telegramId: z.string().nullable(),
+  telegramChatId: z.string().nullable().optional(),
   phone: z.string().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   username: z.string().nullable(),
-  email: z.string().nullable(),
+  email: z.string().nullable().optional(),
   photoUrl: z.string().nullable(),
   dateOfBirth: z.string().datetime().nullish(),
   role: RoleSchema,
   createdAt: z.string().datetime(),
   authMethod: z.enum(['telegram', 'email', 'username']),
+  isActive: z.boolean().optional(),
+  // Consent fields (optional for User, required for Client)
+  personalDataConsent: z.boolean().optional(),
+  privacyPolicyConsent: z.boolean().optional(),
+  safetyRulesConsent: z.boolean().optional(),
+  consentsAcceptedAt: z.string().datetime().nullable().optional(),
+  isProfileComplete: z.boolean().optional(),
 });
 
 // Client schema (matches backend ClientDto)
 export const ClientSchema = z.object({
   id: z.string(),
-  telegramId: z.string(),
-  telegramChatId: z.string().nullable(),
+  telegramId: z.string().nullable(),
+  telegramChatId: z.string().nullable().optional(),
   username: z.string().nullable(),
   phone: z.string().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
+  email: z.string().email().nullable().optional(),
   photoUrl: z.string().nullable(),
-  dateOfBirth: z.string().datetime().nullable(),
-  isActive: z.boolean(),
+  dateOfBirth: z.string().datetime().nullish(),
+  isActive: z.boolean().optional(),
+  // Consent fields (optional to match User type for compatibility)
+  personalDataConsent: z.boolean().optional(),
+  privacyPolicyConsent: z.boolean().optional(),
+  safetyRulesConsent: z.boolean().optional(),
+  consentsAcceptedAt: z.string().datetime().nullable().optional(),
+  isProfileComplete: z.boolean().optional(),
   createdAt: z.string().datetime(),
 });
 
@@ -72,6 +87,16 @@ export const UserUpdateDtoSchema = z.object({
   dateOfBirth: z.string().datetime().optional(),
   photoUrl: z.string().nullable().optional(),
   deletePhoto: z.boolean().optional(),
+});
+
+// Complete profile DTO (for first login)
+export const CompleteProfileDtoSchema = z.object({
+  firstName: z.string().min(1, 'Введите имя').max(128),
+  lastName: z.string().min(1, 'Введите фамилию').max(128),
+  phone: z.string().min(1, 'Введите номер телефона'),
+  personalDataConsent: z.boolean().refine(val => val === true, { message: 'Необходимо принять согласие' }),
+  privacyPolicyConsent: z.boolean().refine(val => val === true, { message: 'Необходимо принять согласие' }),
+  safetyRulesConsent: z.boolean().refine(val => val === true, { message: 'Необходимо принять согласие' }),
 });
 
 // Event schemas

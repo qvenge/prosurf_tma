@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { eventsClient } from '../clients/events';
 import { SESSION_START_DATE } from '@/shared/lib/date-utils';
-import type { Event, EventCreateDto, EventFilters, PaginatedResponse } from '../types';
+import type { Event, EventFilters, PaginatedResponse } from '../types';
 
 // Query key factory for events
 export const eventsKeys = {
@@ -42,25 +42,6 @@ export const useEvent = (id: string) => {
     queryKey: eventsKeys.detail(id),
     queryFn: () => eventsClient.getEventById(id),
     staleTime: 10 * 60 * 1000, // 10 minutes
-  });
-};
-
-// Create event mutation (ADMIN only)
-export const useCreateEvent = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (data: EventCreateDto) => eventsClient.createEvent(data),
-    onSuccess: (newEvent) => {
-      // Invalidate events lists to show the new event
-      queryClient.invalidateQueries({ queryKey: eventsKeys.lists() });
-      
-      // Optionally add to cache
-      queryClient.setQueryData(eventsKeys.detail(newEvent.id), newEvent);
-    },
-    onError: (error) => {
-      console.error('Failed to create event:', error);
-    },
   });
 };
 

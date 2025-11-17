@@ -1,0 +1,39 @@
+.wrapper {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.wrapper--disabled {
+  cursor: default;
+  opacity: .4;
+}
+
+.check {
+  opacity: 0;
+}
+
+.control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 20px;
+  height: 20px;
+
+  border: 2px solid ds.color('Text/Teritary');
+  border-radius: 50%;
+}
+
+.input:checked + .control {
+  border-color: ds.color('Background/Brand');
+  background-color: ds.color('Background/Brand');
+}
+
+.input:checked + .control .check {
+  opacity: 1;
+}
+

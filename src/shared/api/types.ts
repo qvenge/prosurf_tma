@@ -10,6 +10,7 @@ export type Role = z.infer<typeof schemas.RoleSchema>;
 export type User = z.infer<typeof schemas.UserSchema>;
 export type Client = z.infer<typeof schemas.ClientSchema>;
 export type UserUpdateDto = z.infer<typeof schemas.UserUpdateDtoSchema>;
+export type CompleteProfileDto = z.infer<typeof schemas.CompleteProfileDtoSchema>;
 
 // Event types
 export type EventType = z.infer<typeof schemas.EventTypeSchema>;

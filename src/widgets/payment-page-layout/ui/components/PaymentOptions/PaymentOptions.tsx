@@ -11,15 +11,21 @@ interface PaymentOptionsProps {
 export function PaymentOptions({ options }: PaymentOptionsProps) {
   const { cashback, certificate } = options;
 
-  // Don't render if no options are enabled
-  if (!cashback?.enabled && !certificate?.enabled) {
+  // Don't render if no options are enabled and no error component
+  if (!cashback?.enabled && !certificate?.enabled && !cashback?.errorComponent) {
     return null;
   }
 
   return (
     <div className={styles.options}>
       {/* Cashback option */}
-      {cashback?.enabled && cashback.value > 0 && (
+      {cashback?.errorComponent ? (
+        // Show error component if provided
+        <>
+          {cashback.errorComponent}
+          <div className={styles.divider} />
+        </>
+      ) : cashback?.enabled && cashback.value > 0 ? (
         <>
           <div className={styles.settingItem}>
             <div className={styles.settingItemInfo}>
@@ -39,7 +45,7 @@ export function PaymentOptions({ options }: PaymentOptionsProps) {
           </div>
           <div className={styles.divider} />
         </>
-      )}
+      ) : null}
 
       {/* Certificate option */}
       {certificate?.enabled && certificate.value > 0 && (

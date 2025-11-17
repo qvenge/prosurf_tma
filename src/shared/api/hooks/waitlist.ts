@@ -28,7 +28,7 @@ export const useJoinWaitlist = () => {
 export const useUserWaitlist = (userId: string, filters?: WaitlistFilters) => {
   return useQuery({
     queryKey: waitlistKeys.userWaitlist(userId, filters),
-    queryFn: () => waitlistClient.getUserWaitlist(userId, filters),
+    queryFn: () => waitlistClient.getClientWaitlist(userId, filters),
     staleTime: 2 * 60 * 1000,
   });
 };
@@ -36,7 +36,7 @@ export const useUserWaitlist = (userId: string, filters?: WaitlistFilters) => {
 export const useUserWaitlistInfinite = (userId: string, filters?: Omit<WaitlistFilters, 'cursor'>) => {
   return useInfiniteQuery({
     queryKey: waitlistKeys.userWaitlist(userId, filters),
-    queryFn: ({ pageParam }) => waitlistClient.getUserWaitlist(userId, { ...filters, cursor: pageParam }),
+    queryFn: ({ pageParam }) => waitlistClient.getClientWaitlist(userId, { ...filters, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: PaginatedResponse<WaitlistEntry>) => lastPage.next,
     staleTime: 2 * 60 * 1000,
@@ -53,7 +53,7 @@ export const useCurrentUserWaitlist = () => {
   const userId = getCurrentUserId();
   return useQuery({
     queryKey: waitlistKeys.userWaitlist(userId!),
-    queryFn: () => waitlistClient.getUserWaitlist(userId!),
+    queryFn: () => waitlistClient.getClientWaitlist(userId!),
     enabled: Boolean(userId),
     staleTime: 2 * 60 * 1000,
   });
@@ -69,7 +69,7 @@ export const useCurrentUserWaitlistInfinite = (filters?: Omit<WaitlistFilters, '
   const userId = getCurrentUserId();
   return useInfiniteQuery({
     queryKey: waitlistKeys.userWaitlist(userId!, filters),
-    queryFn: ({ pageParam }) => waitlistClient.getUserWaitlist(userId!, { ...filters, cursor: pageParam }),
+    queryFn: ({ pageParam }) => waitlistClient.getClientWaitlist(userId!, { ...filters, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: PaginatedResponse<WaitlistEntry>) => lastPage.next,
     enabled: Boolean(userId),

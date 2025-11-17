@@ -26,6 +26,8 @@ export interface CashbackConfig {
   active: boolean;
   /** Callback when cashback toggle changes */
   onChange: (active: boolean) => void;
+  /** Optional error component to display instead of normal cashback UI */
+  errorComponent?: ReactNode;
 }
 
 /**

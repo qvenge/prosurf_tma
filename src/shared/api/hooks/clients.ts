@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsClient } from '../clients/clients';
 import { useAuth } from '../auth';
-import type { User, UserUpdateDto, CashbackWallet } from '../types';
+import type { UserUpdateDto, CompleteProfileDto } from '../types';
 
 /**
  * Query key factory for clients
@@ -101,4 +101,46 @@ export const useCurrentClient = () => {
     isUpdating: updateMutation.isPending,
     updateError: updateMutation.error,
   };
+};
+
+/**
+ * Complete client profile on first login
+ * POST /clients/me/complete-profile
+ *
+ * Used to collect required information from new users:
+ * - Full name (firstName, lastName)
+ * - Phone number
+ * - Required consents (personal data, privacy policy, safety rules)
+ *
+ * After successful completion, updates client data in cache and auth context.
+ *
+ * @example
+ * ```tsx
+ * const { mutate: completeProfile, isPending } = useCompleteProfile();
+ *
+ * const handleSubmit = (data) => {
+ *   completeProfile(data, {
+ *     onSuccess: () => navigate('/'),
+ *     onError: (error) => console.error(error),
+ *   });
+ * };
+ * ```
+ */
+export const useCompleteProfile = () => {
+  const queryClient = useQueryClient();
+  const auth = useAuth();
+
+  return useMutation({
+    mutationFn: (data: CompleteProfileDto) => clientsClient.completeProfile(data),
+    onSuccess: (updatedClient) => {
+      // Update client in cache
+      queryClient.setQueryData(clientsKeys.me(), updatedClient);
+
+      // Update auth context
+      auth.updateUser(updatedClient);
+    },
+    onError: (error) => {
+      console.error('Failed to complete profile:', error);
+    },
+  });
 };

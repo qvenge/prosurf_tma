@@ -2,8 +2,6 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import { seasonTicketsClient } from '../clients/season-tickets';
 import { useAuth } from '../auth';
 import type {
-  SeasonTicketPlanCreateDto,
-  SeasonTicketPlanUpdateDto,
   PaymentRequest,
   SeasonTicketPlanFilters,
   SeasonTicketFilters,
@@ -60,41 +58,6 @@ export const useApplicableEvents = (
     queryKey: seasonTicketsKeys.applicableEvents(planId, filters),
     queryFn: () => seasonTicketsClient.getApplicableEvents(planId, filters),
     staleTime: 10 * 60 * 1000,
-  });
-};
-
-export const useCreateSeasonTicketPlan = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: SeasonTicketPlanCreateDto) => seasonTicketsClient.createSeasonTicketPlan(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: seasonTicketsKeys.plans() });
-    },
-  });
-};
-
-export const useUpdateSeasonTicketPlan = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: SeasonTicketPlanUpdateDto }) =>
-      seasonTicketsClient.updateSeasonTicketPlan(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: seasonTicketsKeys.plans() });
-      queryClient.invalidateQueries({ queryKey: seasonTicketsKeys.plan(id) });
-    },
-  });
-};
-
-export const useDeleteSeasonTicketPlan = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => seasonTicketsClient.deleteSeasonTicketPlan(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: seasonTicketsKeys.plans() });
-    },
   });
 };
 

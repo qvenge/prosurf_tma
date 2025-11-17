@@ -1,0 +1,95 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  gap: 16px;
+  padding: 0 var(--outer-horizontal-padding, 16px);
+}
+
+.sectionTitle {
+  @include ds.typo('Roboto/Caption 1/Bold Caps');
+  margin: 0;
+  padding: 0;
+  color: ds.color('Text/Secondary');
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 0;
+}
+
+/* Consent checkbox styles */
+.consentLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--color-background-secondary);
+  }
+
+  &.consentError {
+    background-color: rgba(255, 59, 48, 0.1);
+  }
+}
+
+.consent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.consentLink {
+  @include ds.typo('Roboto/Caption 1/Semibold');
+  color: ds.color('Text/Primary');
+}
+
+.consentErrorText {
+  padding-left: 12px;
+  @include ds.typo('Roboto/Text/Regular');
+  color: ds.color('Text/Error');
+}
+
+.apiError {
+  padding: var(--spacing-4);
+  background-color: rgba(255, 59, 48, 0.1);
+  border-radius: var(--border-radius-md);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.modalContent {
+  padding: 0 var(--outer-horizontal-padding, 16px);
+}
+
+.consentTextTitle {
+  @include ds.typo('Roboto/Title 1/Bold');
+  color: ds.color('Text/Primary');
+  margin: 0;
+  padding: 0;
+}
+
+.consentTextContent {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Secondary');
+  margin: 32px 0 0 0;
+  padding: 0;
+  white-space: pre-line;
+}

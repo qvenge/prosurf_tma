@@ -1,15 +1,12 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { sessionsClient } from '../clients/sessions';
 import { eventsKeys } from './events';
 import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import type {
   Session,
   SessionCompact,
-  SessionCreateDto,
-  SessionUpdateDto,
   SessionFilters,
-  PaginatedResponse,
-  IdempotencyKey
+  PaginatedResponse
 } from '../types';
 
 // Query key factory for sessions
@@ -51,35 +48,6 @@ export const useEventSessionsInfinite = (
   });
 };
 
-// Create sessions for an event (ADMIN only)
-export const useCreateEventSessions = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ 
-      eventId, 
-      data, 
-      idempotencyKey 
-    }: { 
-      eventId: string; 
-      data: SessionCreateDto | SessionCreateDto[];
-      idempotencyKey: IdempotencyKey;
-    }) => sessionsClient.createEventSessions(eventId, data, idempotencyKey),
-    onSuccess: (_, variables) => {
-      // Invalidate event sessions queries
-      queryClient.invalidateQueries({ 
-        queryKey: [eventsKeys.detail(variables.eventId)[0], eventsKeys.detail(variables.eventId)[1], eventsKeys.detail(variables.eventId)[2], 'sessions'] 
-      });
-      
-      // Invalidate general sessions lists
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
-    },
-    onError: (error) => {
-      console.error('Failed to create sessions:', error);
-    },
-  });
-};
-
 // Search sessions across all events
 export const useSessions = (filters?: SessionFilters) => {
   return useQuery({
@@ -106,53 +74,6 @@ export const useSession = (id: string) => {
     queryKey: sessionsKeys.detail(id),
     queryFn: () => sessionsClient.getSessionById(id),
     staleTime: 1 * 60 * 1000, // 1 minute (session data changes frequently)
-  });
-};
-
-// Update session mutation (ADMIN only)
-export const useUpdateSession = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: SessionUpdateDto }) => 
-      sessionsClient.updateSession(id, data),
-    onSuccess: (updatedSession, variables) => {
-      // Update the specific session in cache
-      queryClient.setQueryData(sessionsKeys.detail(variables.id), updatedSession);
-      
-      // Invalidate sessions lists and event sessions
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => 
-          query.queryKey.includes('sessions') && query.queryKey.includes(updatedSession.event.id)
-      });
-    },
-    onError: (error) => {
-      console.error('Failed to update session:', error);
-    },
-  });
-};
-
-// Cancel session mutation (ADMIN only)
-export const useCancelSession = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (id: string) => sessionsClient.cancelSession(id),
-    onSuccess: (cancelledSession, sessionId) => {
-      // Update the specific session in cache
-      queryClient.setQueryData(sessionsKeys.detail(sessionId), cancelledSession);
-      
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => 
-          query.queryKey.includes('sessions') && query.queryKey.includes(cancelledSession.event.id)
-      });
-    },
-    onError: (error) => {
-      console.error('Failed to cancel session:', error);
-    },
   });
 };
 

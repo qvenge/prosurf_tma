@@ -6,7 +6,6 @@ import type {
   Payment,
   PaymentMethodRequest,
   CompositePaymentMethodRequest,
-  RefundRequest,
   IdempotencyKey,
   PaymentFilters
 } from '../types';
@@ -82,36 +81,6 @@ export const usePayment = (id: string) => {
     queryKey: paymentsKeys.detail(id),
     queryFn: () => paymentsClient.getPaymentById(id),
     staleTime: 30 * 1000, // 30 seconds (payment status changes frequently)
-  });
-};
-
-// Create refund mutation
-export const useCreateRefund = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ 
-      paymentId, 
-      data, 
-      idempotencyKey 
-    }: { 
-      paymentId: string; 
-      data?: RefundRequest;
-      idempotencyKey?: IdempotencyKey;
-    }) => paymentsClient.createRefund(paymentId, idempotencyKey || crypto.randomUUID(), data),
-    onSuccess: (_, variables) => {
-      // Invalidate payment to show refund status
-      queryClient.invalidateQueries({ queryKey: paymentsKeys.detail(variables.paymentId) });
-      
-      // Invalidate related booking (if payment has booking)
-      const payment = queryClient.getQueryData(paymentsKeys.detail(variables.paymentId)) as Payment;
-      if (payment?.bookingId) {
-        queryClient.invalidateQueries({ queryKey: bookingsKeys.detail(payment.bookingId) });
-      }
-    },
-    onError: (error) => {
-      console.error('Failed to create refund:', error);
-    },
   });
 };
 

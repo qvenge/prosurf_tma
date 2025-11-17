@@ -10,6 +10,7 @@ const TrainingCategoriesPage = lazy(() => import('@/pages/training-categories').
 const Trainings = lazy(() => import('@/pages/trainings').then(m => ({ default: m.Trainings })));
 const Profile = lazy(() => import('@/pages/profile').then(m => ({ default: m.Profile })));
 const ProfileEditForm = lazy(() => import('@/pages/profile-edit-form').then(m => ({ default: m.ProfileEditForm })));
+const ProfileComplete = lazy(() => import('@/pages/profile-complete').then(m => ({ default: m.ProfileComplete })));
 const PaymentPage = lazy(() => import('@/pages/payment').then(m => ({ default: m.PaymentPage })));
 const PaymentSuccessPage = lazy(() => import('@/pages/payment-success').then(m => ({ default: m.PaymentSuccessPage })));
 const EventsPage = lazy(() => import('@/pages/events').then(m => ({ default: m.EventsPage })));
@@ -112,6 +113,11 @@ export const routes = [
               {
                 index: true,
                 element: <SuspenseWrapper><Profile /></SuspenseWrapper>
+              },
+              {
+                path: 'complete',
+                element: <SuspenseWrapper><ProfileComplete /></SuspenseWrapper>,
+                handle: { bottomBar: { visible: false } },
               },
               {
                 path: 'edit',

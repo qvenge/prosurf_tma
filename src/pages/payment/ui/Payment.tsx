@@ -20,7 +20,7 @@ import {
 } from '@/shared/api';
 import { usePaymentProcessing } from '../lib/hooks';
 import { ERROR_MESSAGES } from '../lib/constants';
-import { LoadingState, ErrorState } from './components';
+import { LoadingState, ErrorState, PlansErrorState, CashbackErrorState, NoPlansState } from './components';
 import { PriceBreakdown, SeasonTicketPlans, SelectedPlanDisplay } from '@/widgets/payment-page-layout';
 import { pluralize, getSessionType } from '@/shared/lib';
 
@@ -38,8 +38,21 @@ export function PaymentPage() {
     ? sessionQuery
     : { data: undefined, isLoading: false, error: null };
   const { user, isLoading: userLoading } = useCurrentClient();
-  const { data: cashbackWallet, isLoading: cashbackLoading } = useMyCashback();
-  const { data: plansData, isLoading: plansLoading, error: plansError } = useSeasonTicketPlans();
+  const { data: cashbackWallet, isLoading: cashbackLoading, error: cashbackError } = useMyCashback();
+  const { data: plansData, isLoading: plansLoading, error: plansError, refetch: refetchPlans } = useSeasonTicketPlans();
+
+  // Log errors for debugging
+  useEffect(() => {
+    if (sessionError) {
+      console.error('Payment page - Session loading error:', sessionError);
+    }
+    if (cashbackError) {
+      console.error('Payment page - Cashback loading error:', cashbackError);
+    }
+    if (plansError) {
+      console.error('Payment page - Plans loading error:', plansError);
+    }
+  }, [sessionError, cashbackError, plansError]);
 
   const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
 
@@ -76,8 +89,14 @@ export function PaymentPage() {
 
   // Calculate available plans based on context
   const availablePlans = useMemo<SeasonTicketPlan[] | null>(() => {
-    if (plansLoading || !plansData) {
+    // Return null only if loading OR if there's no data AND no error (initial state)
+    if (plansLoading || (!plansData && !plansError)) {
       return null;
+    }
+
+    // If there's an error or no data, return empty array (graceful degradation)
+    if (plansError || !plansData) {
+      return [];
     }
 
     if (context === 'session') {
@@ -94,7 +113,7 @@ export function PaymentPage() {
         ? plansData.items.filter(plan => plan.description === selected.description)
         : plansData.items;
     }
-  }, [plansData, plansLoading, session, context, selectedPlanId]);
+  }, [plansData, plansLoading, plansError, session, context, selectedPlanId]);
 
   // Auto-select first plan on mount for season ticket context
   useEffect(() => {
@@ -112,13 +131,6 @@ export function PaymentPage() {
     context === 'session' ? selectedPlanId : '',
     context === 'session' ? updateSelectedPlan : () => {}
   );
-
-  // Auto-switch to single session if no subscription plans available
-  useEffect(() => {
-    if (context === 'session' && product === 'subscription' && availablePlans && availablePlans.length === 0) {
-      updateProduct('single_session');
-    }
-  }, [context, product, availablePlans, updateProduct]);
 
   // Payment processing hook
   const { processSessionPayment, processSeasonTicketPayment, isProcessing } = usePaymentProcessing(
@@ -174,20 +186,27 @@ export function PaymentPage() {
         label: 'Абонемент',
         content: (
           <>
-            {selectedPlan && <SelectedPlanDisplay data={selectedPlan} />}
-            {availablePlans && (
-              <SeasonTicketPlans
-                plans={availablePlans}
-                selectedPlanId={selectedPlanId}
-                onPlanSelect={updateSelectedPlan}
-              />
+            {plansError ? (
+              // Show error state with retry button
+              <PlansErrorState onRetry={() => refetchPlans()} />
+            ) : (
+              <>
+                {selectedPlan && <SelectedPlanDisplay data={selectedPlan} />}
+                {availablePlans && (
+                  <SeasonTicketPlans
+                    plans={availablePlans}
+                    selectedPlanId={selectedPlanId}
+                    onPlanSelect={updateSelectedPlan}
+                  />
+                )}
+              </>
             )}
           </>
         ),
       }];
     }
 
-    // Session payment: show subscription tab if plans available, always show single session
+    // Session payment: always show single session, show subscription tab
     const res: TabConfig<ProductType>[] = [];
 
     res.push({
@@ -204,36 +223,45 @@ export function PaymentPage() {
       ),
     });
 
-    if (availablePlans && availablePlans.length > 0) {
-      res.push({
-        id: 'subscription',
-        label: 'Абонемент',
-        content: (
-          <>
-            {selectedPlan && (
-              <PriceBreakdown
-                productName={`Абонемент ${selectedPlan.passes} ${pluralize(selectedPlan.passes, ['занятие', 'занятия', 'занятий'])}`}
-                description={selectedPlan.description ?? undefined}
-                price={selectedPlan.price}
+    // Always show subscription tab in session context
+    res.push({
+      id: 'subscription',
+      label: 'Абонемент',
+      content: (
+        <>
+          {plansError ? (
+            // Show error state with retry button
+            <PlansErrorState onRetry={() => refetchPlans()} />
+          ) : availablePlans && availablePlans.length > 0 ? (
+            <>
+              {selectedPlan && (
+                <PriceBreakdown
+                  productName={`Абонемент ${selectedPlan.passes} ${pluralize(selectedPlan.passes, ['занятие', 'занятия', 'занятий'])}`}
+                  description={selectedPlan.description ?? undefined}
+                  price={selectedPlan.price}
+                />
+              )}
+              <SeasonTicketPlans
+                plans={availablePlans}
+                selectedPlanId={selectedPlanId}
+                onPlanSelect={updateSelectedPlan}
               />
-            )}
-            <SeasonTicketPlans
-              plans={availablePlans}
-              selectedPlanId={selectedPlanId}
-              onPlanSelect={updateSelectedPlan}
-            />
-          </>
-        ),
-      });
-    }
+            </>
+          ) : (
+            // No plans available (but no error)
+            <NoPlansState />
+          )}
+        </>
+      ),
+    });
 
     return res;
-  }, [context, selectedPlan, session, availablePlans, selectedPlanId, updateSelectedPlan]);
+  }, [context, selectedPlan, session, availablePlans, selectedPlanId, updateSelectedPlan, plansError, refetchPlans]);
 
-  // Error state
-  if ((context === 'session' && sessionError) || plansError) {
+  // Error state - only show global error for session errors in session context
+  if (context === 'session' && sessionError) {
     return (
-      <PageLayout title={context === 'season-ticket' ? 'Покупка абонемента' : 'Оплата'}>
+      <PageLayout title="Оплата">
         <ErrorState message={ERROR_MESSAGES.DATA_LOADING_ERROR} />
       </PageLayout>
     );
@@ -248,14 +276,7 @@ export function PaymentPage() {
         </PageLayout>
       );
     }
-
-    if (context === 'season-ticket' && (!availablePlans || availablePlans.length === 0)) {
-      return (
-        <PageLayout title="Покупка абонемента">
-          <ErrorState message={ERROR_MESSAGES.NO_PLANS_AVAILABLE} />
-        </PageLayout>
-      );
-    }
+    // Note: Plans errors are now handled gracefully within tabs
   }
 
   // Show loading
@@ -269,13 +290,23 @@ export function PaymentPage() {
 
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {
-    cashback: {
-      enabled: cashbackAmount > 0,
-      total: cashbackValue,
-      value: cashbackAmount,
-      active: activeCashback,
-      onChange: updateActiveCashback,
-    },
+    cashback: cashbackError
+      ? {
+          // Show error state for cashback
+          enabled: false,
+          total: 0,
+          value: 0,
+          active: false,
+          onChange: () => {},
+          errorComponent: <CashbackErrorState />,
+        }
+      : {
+          enabled: cashbackAmount > 0,
+          total: cashbackValue,
+          value: cashbackAmount,
+          active: activeCashback,
+          onChange: updateActiveCashback,
+        },
     certificate: {
       enabled: false,
       value: 0,
