@@ -19,3 +19,5 @@ export { default as MoneyBold } from './money_bold.svg';
 export { default as EyeRegular } from './eye_regular.svg';
 export { default as EyeSlashRegular } from './eye-slash_regular.svg';
 export { default as CameraRegular } from './camera_regular.svg';
+export { default as TicketBold } from './ticket_bold.svg';
+export { default as GiftBold } from './gift_bold.svg';

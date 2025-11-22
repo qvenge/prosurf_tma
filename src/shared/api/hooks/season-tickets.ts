@@ -107,13 +107,13 @@ export const useSeasonTicketsBySessionId = (sessionId?: string, filters?: Season
   });
 };
 
-export const useCurrentUserSeasonTickets = () => {
+export const useCurrentUserSeasonTickets = (filters?: SeasonTicketFilters) => {
   const auth = useAuth();
   const userId = auth.user?.id;
 
   return useQuery({
-    queryKey: seasonTicketsKeys.ticketsList(),
-    queryFn: () => seasonTicketsClient.getSeasonTickets(),
+    queryKey: seasonTicketsKeys.ticketsList(filters),
+    queryFn: () => seasonTicketsClient.getSeasonTickets(filters),
     enabled: Boolean(userId),
     staleTime: 5 * 60 * 1000,
     select: (data) => data.items, // Extract items array from PaginatedResponse

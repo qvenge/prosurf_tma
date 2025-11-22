@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import {
   CaretRightBold,
   UserBold,
@@ -5,7 +7,8 @@ import {
   StarFill,
   CalendarBlankBold,
   ClockBold,
-  ListChecksBold,
+  TicketBold,
+  GiftBold,
   ArrowsLeftRightBold,
   ChatCircleTextBold
 } from '@/shared/ds/icons';
@@ -19,23 +22,26 @@ import {
   useSessions,
   useCurrentClient,
   useMyCashback,
+  useCurrentUserSeasonTickets,
   useCurrentUserCertificates,
-  type BookingExtended
+  type BookingExtended,
+  type SeasonTicketFilters
 } from '@/shared/api';
 
 import { PageLayout } from '@/widgets/page-layout';
-import { SeasonTicketsStat } from './SeasonTicketsStat';
 import { formatPrice } from '@/shared/lib/format-utils';
 import { SESSION_START_DATE } from '@/shared/lib/date-utils';
+import { pluralize } from '@/shared/lib';
+
+const seasonTicketsFilters: SeasonTicketFilters = {
+  status: ['ACTIVE'],
+  limit: 100
+};
 
 export const Profile = () => {
-  // Fetch user profile
   const { user, isLoading: isUserLoading, error: userError } = useCurrentClient();
-
-  // Fetch cashback data
   const { data: cashbackData, isLoading: isCashbackLoading } = useMyCashback();
-
-  // Fetch certificates
+  const { data: seasonTicketsData, isLoading: isSeasonTicketsLoading } = useCurrentUserSeasonTickets(seasonTicketsFilters);
   const { data: certificatesData, isLoading: isCertificatesLoading } = useCurrentUserCertificates();
 
   // Fetch bookings with session data for next booking
@@ -48,6 +54,22 @@ export const Profile = () => {
     sortBy: 'startsAt',
     sortOrder: 'asc'
   });
+
+  const seasonTicketsInfo = useMemo(() => {
+    if (isSeasonTicketsLoading) {
+      return null;
+    }
+
+    let remainingPasses = 0;
+    let totalPasses = 0;
+
+    seasonTicketsData?.forEach(ticket => {
+      remainingPasses += ticket.remainingPasses;
+      totalPasses += ticket.plan.passes;
+    });
+
+    return { remainingPasses, totalPasses  };
+  }, [seasonTicketsData, isSeasonTicketsLoading]);
 
   // Helper: Get next upcoming booking
   const getNextBooking = (): BookingExtended | null => {
@@ -116,8 +138,14 @@ export const Profile = () => {
       ? `Доступно: ${waitlistCount}/${waitlistTotal}`
       : 'Нет записей';
 
+  const seasonTicketsSubtitle = isSeasonTicketsLoading
+    ? 'Загрузка...'
+    : seasonTicketsInfo && seasonTicketsInfo.totalPasses > 0
+      ? `Осталось: ${seasonTicketsInfo.remainingPasses}/${seasonTicketsInfo.totalPasses} ${pluralize(seasonTicketsInfo.totalPasses, ['занятие', 'занятия', 'занятий'])}`
+      : 'Нет активных абонементов';
+
   // Define menu items with dynamic subtitles
-  const menuItems = [
+  const menuItems = useMemo(() => [
     {
       icon: CalendarBlankBold,
       title: 'Мои записи',
@@ -131,30 +159,29 @@ export const Profile = () => {
       href: '/profile/waitlist',
     },
     {
-      icon: ListChecksBold,
+      icon: TicketBold,
       title: 'Абонементы',
-      subtitle: 'Что это?',
+      subtitle: seasonTicketsSubtitle,
       href: '/profile/season-tickets',
     },
     {
-      icon: ListChecksBold,
-      title: 'Сертификаты',
-      subtitle: 'Что это?',
+      icon: GiftBold,
+      title: 'Подарочные сертификаты',
+      subtitle: 'У вас есть сертификат',
       href: '/profile/certificates',
+      rightContent: <div className={styles.certificateBadge}>1</div>,
     },
     {
       icon: ArrowsLeftRightBold,
       title: 'История покупок',
-      subtitle: 'Просмотреть историю',
       href: '/profile/payments',
     },
     {
       icon: ChatCircleTextBold,
-      title: 'Поддержка',
-      subtitle: 'Написать в ТГ',
-      href: '/profile',
+      title: 'Поддержка в телеграм',
+      // href: '/profile',
     }
-  ];
+  ], [bookingsSubtitle, waitlistSubtitle, seasonTicketsSubtitle]);
 
   if (isUserLoading) {
     return <div className={styles.wrapper}>Загрузка</div>;
@@ -235,7 +262,7 @@ export const Profile = () => {
         <div className={styles.statsSection}>
           <div className={styles.statItem}>
             <div className={styles.statItemContent}>
-              <div className={styles.statLabel}>Кэшбек</div>
+              <div className={styles.statLabel}>Бонусы</div>
               <div className={styles.statValue}>{
                 isCashbackLoading ? '...' : (cashbackData?.balance?.amountMinor ? formatPrice(cashbackData.balance) : '0 ₽')
               }</div>
@@ -243,9 +270,19 @@ export const Profile = () => {
           </div>
 
           <div className={styles.statItem}>
-          <Link to='/profile/season-tickets' style={{textDecoration: 'none', color: 'inherit'}}>
-            <SeasonTicketsStat />
-          </Link>
+            <div className={styles.statItemContent}>
+              <div className={styles.statLabel}>Абонемент</div>
+              <div className={styles.statContent}>
+                <span className={styles.statValue}>{
+                  seasonTicketsInfo == null ? '...' : (<>
+                    {seasonTicketsInfo.remainingPasses}
+                    <span className={styles.statValuePostfix}>{
+                      pluralize(seasonTicketsInfo.remainingPasses, ['занятие', 'занятия', 'занятий'])
+                    }</span>
+                  </>)
+                }</span>
+              </div>
+            </div>
           </div>
 
           {!isCertificatesLoading && firstCertificate && firstCertificate.type === 'denomination' && (
@@ -276,6 +313,7 @@ export const Profile = () => {
                 <div className={styles.menuTitle}>{item.title}</div>
                 <div className={styles.menuSubtitle}>{item.subtitle}</div>
               </div>
+              {item.rightContent}
               <Icon 
                 src={CaretRightBold} 
                 width={20} 
