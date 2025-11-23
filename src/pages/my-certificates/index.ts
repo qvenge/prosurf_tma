@@ -1,0 +1,1 @@
+export { MyCertificatesPage } from './ui/MyCertificatesPage';

@@ -19,6 +19,7 @@ const MyBookings = lazy(() => import('@/pages/my-bookings').then(m => ({ default
 const WaitlistPage = lazy(() => import('@/pages/my-waitlist').then(m => ({ default: m.WaitlistPage })));
 const MyPayments = lazy(() => import('@/pages/my-payments').then(m => ({ default: m.MyPayments })));
 const MySeasonTicketsPage = lazy(() => import('@/pages/my-season-tickets').then(m => ({ default: m.MySeasonTicketsPage })));
+const MyCertificatesPage = lazy(() => import('@/pages/my-certificates').then(m => ({ default: m.MyCertificatesPage })));
 const ArticlePage = lazy(() => import('@/pages/article').then(m => ({ default: m.ArticlePage })));
 
 // Suspense wrapper component for lazy-loaded routes
@@ -140,6 +141,10 @@ export const routes = [
               {
                 path: 'season-tickets',
                 element: <SuspenseWrapper><MySeasonTicketsPage /></SuspenseWrapper>
+              },
+              {
+                path: 'certificates',
+                element: <SuspenseWrapper><MyCertificatesPage /></SuspenseWrapper>
               },
               {
                 path: 'articles/:articleType',

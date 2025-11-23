@@ -1,0 +1,51 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px var(--outer-horizontal-padding, 16px) 20px;
+  flex-grow: 1;
+}
+
+.offers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.title {
+  margin: 0;
+  padding: 0;
+  @include ds.typo('Roboto/Caption 1/Bold Caps');
+  color: ds.color('Text/Secondary');
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 16px;
+  background: ds.color('Background/Secondary');
+}
+
+.cardTitle {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Primary');
+}
+
+.cardSubtitle {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.cardPrice {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Brand');
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
