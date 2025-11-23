@@ -19,7 +19,7 @@ import type {
 } from '../types';
 
 /**
- * Transform BookingExtended URLs (session.event.images and user.photoUrl)
+ * Transform BookingExtended URLs (session.event.images and client.photoUrl)
  */
 const transformBookingExtended = (booking: BookingExtended): BookingExtended => {
   const result = { ...booking };
@@ -37,11 +37,11 @@ const transformBookingExtended = (booking: BookingExtended): BookingExtended => 
     };
   }
 
-  // Transform user.photoUrl if user exists
-  if (result.user) {
-    result.user = {
-      ...result.user,
-      photoUrl: joinApiUrl(result.user.photoUrl),
+  // Transform client.photoUrl if client exists
+  if (result.client) {
+    result.client = {
+      ...result.client,
+      photoUrl: joinApiUrl(result.client.photoUrl),
     };
   }
 

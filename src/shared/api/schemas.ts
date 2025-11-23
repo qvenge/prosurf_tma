@@ -148,7 +148,7 @@ export const EventSchema = z.object({
   tickets: z.array(EventTicketSchema),
   createdAt: z.string().datetime(),
   labels: z.array(z.string()).nullable().optional(),
-  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   images: z.array(z.string()).nullable().optional(),
 });
 
@@ -188,7 +188,7 @@ export const SessionSchema = z.object({
   onWaitlist: z.boolean().optional(),
   status: SessionStatusSchema.optional(),
   labels: z.array(z.string()).nullable().optional(),
-  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   effectiveLabels: z.array(z.string()).optional(),
   effectiveAttributes: z.record(z.string(), AttributeValueSchema).optional(),
   createdAt: z.string().datetime().optional(),
@@ -205,7 +205,7 @@ export const SessionCompactSchema = z.object({
   onWaitlist: z.boolean().optional(),
   status: SessionStatusSchema.optional(),
   labels: z.array(z.string()).nullable().optional(),
-  attributes: z.record(z.string(), AttributeValueSchema).optional(),
+  attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   effectiveLabels: z.array(z.string()).optional(),
   effectiveAttributes: z.record(z.string(), AttributeValueSchema).optional(),
   createdAt: z.string().datetime().optional(),
@@ -259,7 +259,7 @@ export const GuestContactSchema = z.object({
 export const BookingSchema = z.object({
   id: z.string(),
   sessionId: z.string(),
-  userId: z.string().nullable(),
+  clientId: z.string().nullable(),
   quantity: z.number().int().min(1),
   status: BookingStatusSchema,
   hold: z.object({
@@ -269,11 +269,11 @@ export const BookingSchema = z.object({
   guestContact: GuestContactSchema.nullable().optional(),
   notes: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
-  createdBy: z.string().nullable().optional(),
+  createdByAdminId: z.string().nullable().optional(),
 });
 
 export const BookingExtendedSchema = BookingSchema.extend({
-  user: UserSchema.optional(),
+  client: UserSchema.optional(),
   session: SessionSchema.optional(),
   paymentInfo: z.object({
     method: z.enum(['card', 'certificate', 'pass', 'cashback', 'composite']),
@@ -285,7 +285,7 @@ export const BookingExtendedSchema = BookingSchema.extend({
 
 export const BookingCreateDtoSchema = z.object({
   quantity: z.number().int().min(1),
-  userId: z.string().nullable().optional(),
+  clientId: z.string().nullable().optional(),
   guestContact: GuestContactSchema.nullable().optional(),
   status: z.enum(['HOLD', 'CONFIRMED']).default('HOLD').optional(),
   ticketId: z.string().nullable().optional(),
@@ -435,6 +435,43 @@ export const CertificateCreateDtoSchema = z.object({
   ]),
   expiresAt: z.string().datetime().nullable().optional(),
   ownerUserId: z.string(),
+});
+
+// Certificate product schemas (for purchase page)
+export const CertificateProductPassesSchema = z.object({
+  type: z.literal('passes'),
+  passes: z.number().int().min(1),
+  price: PriceSchema,
+  description: z.string().optional(),
+});
+
+export const CertificateProductDenominationSchema = z.object({
+  type: z.literal('denomination'),
+  minAmount: PriceSchema.optional(),
+  maxAmount: PriceSchema.optional(),
+  description: z.string().optional(),
+});
+
+export const CertificateProductSchema = z.union([
+  CertificateProductPassesSchema,
+  CertificateProductDenominationSchema,
+]);
+
+export const CertificateProductsResponseSchema = z.object({
+  items: z.array(CertificateProductSchema),
+});
+
+// Purchase certificate schemas
+export const PurchaseCertificateDtoSchema = z.object({
+  type: CertificateTypeSchema,
+  amount: PriceSchema.optional(), // Required for 'denomination' type
+  passes: z.number().int().min(1).optional(), // Required for 'passes' type
+  paymentMethod: PaymentRequestSchema,
+});
+
+export const PurchaseCertificateResponseSchema = z.object({
+  certificate: CertificateSchema,
+  payment: PaymentSchema,
 });
 
 // Event filter schemas (for season ticket matching)
@@ -669,7 +706,7 @@ export const SessionFiltersSchema = z.object({
 });
 
 export const BookingFiltersSchema = z.object({
-  userId: z.string().optional(),
+  clientId: z.string().optional(),
   sessionId: z.string().optional(),
   status: z.array(z.enum(['HOLD', 'CONFIRMED', 'CANCELLED', 'EXPIRED'])).optional(),
   bookingType: z.enum(['registered', 'guest', 'all']).optional(),

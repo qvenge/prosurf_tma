@@ -2,12 +2,18 @@ import { apiClient, validateResponse, createQueryString } from '../config';
 import {
   CertificateSchema,
   PaginatedResponseSchema,
-  CertificateFiltersSchema
+  CertificateFiltersSchema,
+  CertificateProductsResponseSchema,
+  PurchaseCertificateDtoSchema,
+  PurchaseCertificateResponseSchema,
 } from '../schemas';
 import type {
   Certificate,
   PaginatedResponse,
-  CertificateFilters
+  CertificateFilters,
+  CertificateProductsResponse,
+  PurchaseCertificateDto,
+  PurchaseCertificateResponse,
 } from '../types';
 
 /**
@@ -33,5 +39,31 @@ export const certificatesClient = {
   async getCertificateById(id: string): Promise<Certificate> {
     const response = await apiClient.get(`/certificates/${encodeURIComponent(id)}`);
     return validateResponse(response.data, CertificateSchema);
+  },
+
+  /**
+   * Get available certificate products for purchase
+   * GET /certificates/products
+   */
+  async getCertificateProducts(): Promise<CertificateProductsResponse> {
+    const response = await apiClient.get('/certificates/products');
+    return validateResponse(response.data, CertificateProductsResponseSchema);
+  },
+
+  /**
+   * Purchase a certificate
+   * POST /certificates/purchase
+   */
+  async purchaseCertificate(
+    data: PurchaseCertificateDto,
+    idempotencyKey: string
+  ): Promise<PurchaseCertificateResponse> {
+    const validatedData = PurchaseCertificateDtoSchema.parse(data);
+    const response = await apiClient.post('/certificates/purchase', validatedData, {
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+    });
+    return validateResponse(response.data, PurchaseCertificateResponseSchema);
   },
 };

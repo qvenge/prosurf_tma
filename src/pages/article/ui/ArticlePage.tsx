@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router';
+import { useParams } from 'react-router';
 import styles from './ArticlePage.module.scss';
 import { PageLayout } from '@/widgets/page-layout';
 

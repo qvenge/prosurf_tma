@@ -11,7 +11,8 @@ const Trainings = lazy(() => import('@/pages/trainings').then(m => ({ default: m
 const Profile = lazy(() => import('@/pages/profile').then(m => ({ default: m.Profile })));
 const ProfileEditForm = lazy(() => import('@/pages/profile-edit-form').then(m => ({ default: m.ProfileEditForm })));
 const ProfileComplete = lazy(() => import('@/pages/profile-complete').then(m => ({ default: m.ProfileComplete })));
-const PaymentPage = lazy(() => import('@/pages/payment').then(m => ({ default: m.PaymentPage })));
+const SessionPaymentPage = lazy(() => import('@/pages/session-payment').then(m => ({ default: m.SessionPaymentPage })));
+const SeasonTicketPaymentPage = lazy(() => import('@/pages/season-ticket-payment').then(m => ({ default: m.SeasonTicketPaymentPage })));
 const PaymentSuccessPage = lazy(() => import('@/pages/payment-success').then(m => ({ default: m.PaymentSuccessPage })));
 const EventsPage = lazy(() => import('@/pages/events').then(m => ({ default: m.EventsPage })));
 const SessionPage = lazy(() => import('@/pages/session').then(m => ({ default: m.SessionPage })));
@@ -20,6 +21,7 @@ const WaitlistPage = lazy(() => import('@/pages/my-waitlist').then(m => ({ defau
 const MyPayments = lazy(() => import('@/pages/my-payments').then(m => ({ default: m.MyPayments })));
 const MySeasonTicketsPage = lazy(() => import('@/pages/my-season-tickets').then(m => ({ default: m.MySeasonTicketsPage })));
 const MyCertificatesPage = lazy(() => import('@/pages/my-certificates').then(m => ({ default: m.MyCertificatesPage })));
+const CertificatePaymentPage = lazy(() => import('@/pages/certificate-payment').then(m => ({ default: m.CertificatePaymentPage })));
 const ArticlePage = lazy(() => import('@/pages/article').then(m => ({ default: m.ArticlePage })));
 
 // Suspense wrapper component for lazy-loaded routes
@@ -54,7 +56,12 @@ export const routes = [
           },
           {
             path: 'season-tickets/:planId/payment',
-            element: <SuspenseWrapper><PaymentPage /></SuspenseWrapper>,
+            element: <SuspenseWrapper><SeasonTicketPaymentPage /></SuspenseWrapper>,
+            handle: { bottomBar: { visible: false } },
+          },
+          {
+            path: 'certificates/purchase',
+            element: <SuspenseWrapper><CertificatePaymentPage /></SuspenseWrapper>,
             handle: { bottomBar: { visible: false } },
           },
           {
@@ -80,7 +87,7 @@ export const routes = [
               },
               {
                 path: 'sessions/:sessionId/payment',
-                element: <SuspenseWrapper><PaymentPage /></SuspenseWrapper>,
+                element: <SuspenseWrapper><SessionPaymentPage /></SuspenseWrapper>,
                 handle: { bottomBar: { visible: false } },
               },
               {
@@ -104,7 +111,7 @@ export const routes = [
               },
               {
                 path: 'sessions/:sessionId/payment',
-                element: <SuspenseWrapper><PaymentPage /></SuspenseWrapper>,
+                element: <SuspenseWrapper><SessionPaymentPage /></SuspenseWrapper>,
                 handle: { bottomBar: { visible: false } },
               }
             ]

@@ -1,0 +1,79 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 16px;
+  border-radius: 16px;
+  background: ds.color('Background/Secondary');
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.cardSelected {
+  border-color: ds.color('Text/Brand');
+  background: ds.color('Background/Secondary');
+}
+
+.cardAmount {
+  @include ds.typo('Roboto/Title 3/Semibold');
+  color: ds.color('Text/Primary');
+}
+
+.cardCustom {
+  gap: 8px;
+}
+
+.cardLabel {
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Primary');
+  text-align: center;
+}
+
+.customInput {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid ds.color('Border/Primary');
+  background: ds.color('Background/Primary');
+  @include ds.typo('Roboto/Subheadline 2/Regular');
+  color: ds.color('Text/Primary');
+  text-align: center;
+  outline: none;
+
+  &:focus {
+    border-color: ds.color('Text/Brand');
+  }
+
+  &::placeholder {
+    color: ds.color('Text/Teritary');
+  }
+}
+
+.error {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Error');
+  padding: 0 4px;
+}

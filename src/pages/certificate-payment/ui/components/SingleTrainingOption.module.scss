@@ -1,0 +1,35 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 16px;
+  background: ds.color('Background/Secondary');
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Primary');
+}
+
+.cardSubtitle {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+}
+
+.cardPrice {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Brand');
+}
