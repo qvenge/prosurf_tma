@@ -4,8 +4,7 @@ import { bookingsKeys } from './bookings';
 import { telegramUtils } from '@/shared/tma';
 import type {
   Payment,
-  PaymentMethodRequest,
-  CompositePaymentMethodRequest,
+  PaymentRequest,
   IdempotencyKey,
   PaymentFilters
 } from '../types';
@@ -56,7 +55,7 @@ export const useCreatePayment = () => {
       idempotencyKey
     }: {
       bookingId: string;
-      data: PaymentMethodRequest | CompositePaymentMethodRequest;
+      data: PaymentRequest;
       idempotencyKey: IdempotencyKey;
     }) => paymentsClient.createPayment(bookingId, data, idempotencyKey),
     onSuccess: (newPayment, variables) => {

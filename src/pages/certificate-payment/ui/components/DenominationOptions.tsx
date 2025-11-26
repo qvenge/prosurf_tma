@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import { TextInput } from '@/shared/ui';
 import styles from './DenominationOptions.module.scss';
 
 interface DenominationOptionsProps {
@@ -7,86 +9,79 @@ interface DenominationOptionsProps {
   minAmount?: number;
 }
 
-const FIXED_DENOMINATIONS = [3000, 5000, 10000];
+const options = [
+  { id: '3000', label: '3000 ₽', value: 3000 },
+  { id: '5000', label: '5000 ₽', value: 5000 },
+  { id: '10000', label: '10000 ₽', value: 10000 },
+  { id: 'custom', label: 'Другая' },
+];
 
 export function DenominationOptions({
   selectedAmount,
   onAmountChange,
   minAmount = 3000,
 }: DenominationOptionsProps) {
-  const [customAmount, setCustomAmount] = useState('');
-  const [isCustom, setIsCustom] = useState(false);
+  const [selected, setSelected] = useState<string>(options.find(option => option.value === selectedAmount)?.id || options[0].id);
+  const [customAmount, setCustomAmount] = useState<string>('');
+  const isCustom = selected === 'custom';
+  const isAmountValid = !isCustom || (Boolean(customAmount) && parseFloat(customAmount) >= minAmount);
 
-  const handleFixedDenominationClick = (amount: number) => {
-    setIsCustom(false);
-    setCustomAmount('');
-    onAmountChange(amount);
-  };
+  useEffect(() => {
+    let value;
 
-  const handleCustomClick = () => {
-    setIsCustom(true);
-    if (customAmount) {
-      const amount = parseFloat(customAmount);
+    if (selected === 'custom') {
+        const amount = parseFloat(customAmount);
+
       if (!isNaN(amount) && amount >= minAmount) {
-        onAmountChange(Math.round(amount));
+        value = Math.round(amount);
       }
+    } else {
+      value = options.find(opt => opt.id === selected)?.value;
     }
+
+    if (value != null && value !== selectedAmount) {
+      onAmountChange(value);
+    }
+  }, [selected, customAmount]);
+
+  const handleOptionClick = (id: string) => {
+    setSelected(id);
   };
 
   const handleCustomAmountChange = (value: string) => {
     // Allow only numbers and one decimal point
     const cleaned = value.replace(/[^\d.]/g, '');
     setCustomAmount(cleaned);
-
-    const amount = parseFloat(cleaned);
-    if (!isNaN(amount) && amount >= minAmount) {
-      onAmountChange(Math.round(amount));
-    }
-  };
-
-  const isFixedSelected = (amount: number) => {
-    return !isCustom && selectedAmount === amount;
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.grid}>
-        {FIXED_DENOMINATIONS.map((amount) => (
+      <div className={styles.options}>
+        {options.map(({id, label, value}) => (
           <button
-            key={amount}
+            key={value}
             type="button"
-            className={`${styles.card} ${isFixedSelected(amount) ? styles.cardSelected : ''}`}
-            onClick={() => handleFixedDenominationClick(amount)}
+            className={clsx(styles.card, id === selected && styles.cardSelected)}
+            onClick={() => handleOptionClick(id)}
           >
-            <div className={styles.cardAmount}>{(amount).toLocaleString('ru-RU')} ₽</div>
+            <div className={styles.cardLabel}>{label}</div>
           </button>
         ))}
-
-        <button
-          type="button"
-          className={`${styles.card} ${styles.cardCustom} ${isCustom ? styles.cardSelected : ''}`}
-          onClick={handleCustomClick}
-        >
-          <div className={styles.cardLabel}>Другая сумма</div>
-          {isCustom && (
-            <input
-              type="text"
-              inputMode="decimal"
-              className={styles.customInput}
-              value={customAmount}
-              onChange={(e) => handleCustomAmountChange(e.target.value)}
-              placeholder={`от ${minAmount.toLocaleString('ru-RU')} ₽`}
-              autoFocus
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-        </button>
       </div>
 
-      {isCustom && customAmount && parseFloat(customAmount) < minAmount && (
-        <div className={styles.error}>
-          Минимальная сумма: {minAmount.toLocaleString('ru-RU')} ₽
-        </div>
+      {isCustom && (
+        <TextInput
+          type="text"
+          inputMode="decimal"
+          className={styles.customInput}
+          value={customAmount}
+          onChange={(e) => handleCustomAmountChange(e.target.value)}
+          placeholder={`от ${minAmount.toLocaleString('ru-RU')} ₽`}
+          autoFocus
+          error={!isAmountValid}
+          hint={!isAmountValid ? `Минимальная сумма: ${minAmount.toLocaleString('ru-RU')} ₽` : undefined}
+          onClick={(e) => e.stopPropagation()}
+        />
       )}
     </div>
   );

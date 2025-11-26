@@ -30,6 +30,7 @@ export const getSuccessTypeFromEventLabels = (
 
 /**
  * Build payment method request based on selected options
+ * Returns array of payment methods (simplified structure)
  */
 export const buildPaymentMethodRequest = (
   activeCashback: boolean,
@@ -37,29 +38,29 @@ export const buildPaymentMethodRequest = (
   cashbackCurrency: string
 ): PaymentRequest => {
   if (activeCashback && cashbackAmount > 0) {
-    // Use composite payment: cashback + card
-    return {
-      methods: [
-        {
-          method: 'cashback',
-          amount: {
-            currency: cashbackCurrency,
-            amountMinor: cashbackAmount,
-          },
+    // Composite payment: cashback + card
+    return [
+      {
+        method: 'cashback',
+        amount: {
+          currency: cashbackCurrency,
+          amountMinor: cashbackAmount,
         },
-        {
-          method: 'card',
-          provider: 'telegram',
-        },
-      ],
-    };
+      },
+      {
+        method: 'card',
+        provider: 'telegram',
+      },
+    ];
   }
 
-  // Simple card payment
-  return {
-    method: 'card',
-    provider: 'telegram',
-  };
+  // Simple card payment (single element array)
+  return [
+    {
+      method: 'card',
+      provider: 'telegram',
+    },
+  ];
 };
 
 /**

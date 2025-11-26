@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { PageLayout } from '@/widgets/page-layout';
 import {
   PaymentPageLayout,
+  PriceBreakdown,
   type TabConfig,
   type PaymentSummaryConfig,
 } from '@/widgets/payment-page-layout';
 import { DenominationOptions } from './components/DenominationOptions';
-import { SingleTrainingOption } from './components/SingleTrainingOption';
 import { useCertificatePayment } from '../lib/hooks';
 import { SINGLE_TRAINING_PRICE_MINOR, MIN_DENOMINATION } from '../lib/constants';
 import type { CertificateType } from '@/shared/api';
@@ -58,6 +58,11 @@ export function CertificatePaymentPage() {
         label: 'Номинал',
         content: (
           <div className={styles.tabContent}>
+            <PriceBreakdown
+              productName='Сертификат'
+              description='Разовая тренировка по серфингу'
+              price={{ amountMinor: denominationAmount ? denominationAmount * 100: 0, currency: 'RUB' }}
+            />
             <DenominationOptions
               selectedAmount={denominationAmount}
               onAmountChange={setDenominationAmount}
@@ -71,7 +76,11 @@ export function CertificatePaymentPage() {
         label: 'Разовая тренировка',
         content: (
           <div className={styles.tabContent}>
-            <SingleTrainingOption />
+            <PriceBreakdown
+              productName='Сертификат'
+              description='Разовая тренировка по серфингу'
+              price={{ amountMinor: SINGLE_TRAINING_PRICE_MINOR, currency: 'RUB' }}
+            />
           </div>
         ),
       },
@@ -88,7 +97,7 @@ export function CertificatePaymentPage() {
   };
 
   return (
-    <PageLayout title="Покупка сертификата">
+    <PageLayout title="Оплата">
       <PaymentPageLayout
         tabs={tabs}
         activeTab={activeTab}

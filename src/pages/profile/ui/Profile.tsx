@@ -23,7 +23,6 @@ import {
   useCurrentClient,
   useMyCashback,
   useCurrentUserSeasonTickets,
-  useCurrentUserCertificates,
   type BookingExtended,
   type SeasonTicketFilters
 } from '@/shared/api';
@@ -42,7 +41,7 @@ export const Profile = () => {
   const { user, isLoading: isUserLoading, error: userError } = useCurrentClient();
   const { data: cashbackData, isLoading: isCashbackLoading } = useMyCashback();
   const { data: seasonTicketsData, isLoading: isSeasonTicketsLoading } = useCurrentUserSeasonTickets(seasonTicketsFilters);
-  const { data: certificatesData, isLoading: isCertificatesLoading } = useCurrentUserCertificates();
+  // const { data: certificatesData, isLoading: isCertificatesLoading } = useCurrentUserCertificates();
 
   // Fetch bookings with session data for next booking
   const { data: bookingsData, isLoading: isBookingsLoading } = useBookings({ includeSession: true });
@@ -112,14 +111,14 @@ export const Profile = () => {
   };
 
   // Helper: Get first denomination certificate
-  const getFirstCertificate = () => {
-    if (!certificatesData?.items) return null;
-    return certificatesData.items.find(cert => cert.type === 'denomination') || null;
-  };
+  // const getFirstCertificate = () => {
+  //   if (!certificatesData?.items) return null;
+  //   return certificatesData.items.find(cert => cert.type === 'denomination') || null;
+  // };
 
   // Compute derived data
   const nextBooking = getNextBooking();
-  const firstCertificate = getFirstCertificate();
+  // const firstCertificate = getFirstCertificate();
   const waitlistTotal = waitlistData?.items?.length ?? 0;
   const waitlistCount = waitlistData?.items?.reduce((count, item) => {
     return item.remainingSeats ? (count + 1) : count;
@@ -167,9 +166,7 @@ export const Profile = () => {
     {
       icon: GiftBold,
       title: 'Подарочные сертификаты',
-      subtitle: 'У вас есть сертификат',
       href: '/profile/certificates',
-      rightContent: <div className={styles.certificateBadge}>1</div>,
     },
     {
       icon: ArrowsLeftRightBold,
@@ -285,7 +282,7 @@ export const Profile = () => {
             </div>
           </div>
 
-          {!isCertificatesLoading && firstCertificate && firstCertificate.type === 'denomination' && (
+          {/* {!isCertificatesLoading && firstCertificate && firstCertificate.type === 'denomination' && (
             <div className={styles.statItem}>
               <div className={styles.statItemContent}>
                 <div className={styles.statLabel}>Сертификат</div>
@@ -294,7 +291,7 @@ export const Profile = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Menu Items */}
@@ -313,7 +310,6 @@ export const Profile = () => {
                 <div className={styles.menuTitle}>{item.title}</div>
                 <div className={styles.menuSubtitle}>{item.subtitle}</div>
               </div>
-              {item.rightContent}
               <Icon 
                 src={CaretRightBold} 
                 width={20} 

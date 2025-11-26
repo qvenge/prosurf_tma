@@ -23,6 +23,7 @@ const MySeasonTicketsPage = lazy(() => import('@/pages/my-season-tickets').then(
 const MyCertificatesPage = lazy(() => import('@/pages/my-certificates').then(m => ({ default: m.MyCertificatesPage })));
 const CertificatePaymentPage = lazy(() => import('@/pages/certificate-payment').then(m => ({ default: m.CertificatePaymentPage })));
 const ArticlePage = lazy(() => import('@/pages/article').then(m => ({ default: m.ArticlePage })));
+const CertificateActivationPage = lazy(() => import('@/pages/certificate-activation').then(m => ({ default: m.CertificateActivationPage })));
 
 // Suspense wrapper component for lazy-loaded routes
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -62,6 +63,11 @@ export const routes = [
           {
             path: 'certificates/purchase',
             element: <SuspenseWrapper><CertificatePaymentPage /></SuspenseWrapper>,
+            handle: { bottomBar: { visible: false } },
+          },
+          {
+            path: 'certificates/activate',
+            element: <SuspenseWrapper><CertificateActivationPage /></SuspenseWrapper>,
             handle: { bottomBar: { visible: false } },
           },
           {
@@ -151,7 +157,7 @@ export const routes = [
               },
               {
                 path: 'certificates',
-                element: <SuspenseWrapper><MyCertificatesPage /></SuspenseWrapper>
+                element: <SuspenseWrapper><MyCertificatesPage /></SuspenseWrapper>,
               },
               {
                 path: 'articles/:articleType',

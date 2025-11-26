@@ -63,7 +63,7 @@ export type CertificatePaymentMethod = z.infer<typeof schemas.CertificatePayment
 export type SeasonTicketPaymentMethod = z.infer<typeof schemas.SeasonTicketPaymentMethodSchema>;
 export type CashbackPaymentMethod = z.infer<typeof schemas.CashbackPaymentMethodSchema>;
 export type PaymentMethodRequest = z.infer<typeof schemas.PaymentMethodRequestSchema>;
-export type CompositePaymentMethodRequest = z.infer<typeof schemas.CompositePaymentMethodRequestSchema>;
+// Simplified: PaymentRequest is always an array of payment methods
 export type PaymentRequest = z.infer<typeof schemas.PaymentRequestSchema>;
 
 // Refund types
@@ -86,6 +86,19 @@ export type CertificateProductsResponse = z.infer<typeof schemas.CertificateProd
 // Purchase certificate types
 export type PurchaseCertificateDto = z.infer<typeof schemas.PurchaseCertificateDtoSchema>;
 export type PurchaseCertificateResponse = z.infer<typeof schemas.PurchaseCertificateResponseSchema>;
+
+// Certificate status and activation types
+export type CertificateStatus = z.infer<typeof schemas.CertificateStatusSchema>;
+export type ClientBrief = z.infer<typeof schemas.ClientBriefSchema>;
+export type CertificateDto = z.infer<typeof schemas.CertificateDtoSchema>;
+export type ActivateCertificateRequest = z.infer<typeof schemas.ActivateCertificateRequestSchema>;
+export type CertificateActivationResultSeasonTicket = z.infer<typeof schemas.CertificateActivationResultSeasonTicketSchema>;
+export type CertificateActivationResultCashback = z.infer<typeof schemas.CertificateActivationResultCashbackSchema>;
+export type CertificateActivationResponse = z.infer<typeof schemas.CertificateActivationResponseSchema>;
+export type CheckCertificateResponse = z.infer<typeof schemas.CheckCertificateResponseSchema>;
+export type PurchasedCertificateFilters = z.infer<typeof schemas.PurchasedCertificateFiltersSchema>;
+export type ActivatedCertificateFilters = z.infer<typeof schemas.ActivatedCertificateFiltersSchema>;
+export type ListCertificatesResponse = z.infer<typeof schemas.ListCertificatesResponseSchema>;
 
 // Event filter types (for season ticket matching)
 export type EventFilterLabels = z.infer<typeof schemas.EventFilterLabelsSchema>;

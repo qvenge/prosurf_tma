@@ -1,19 +1,25 @@
 import { apiClient, validateResponse, createQueryString } from '../config';
 import {
-  CertificateSchema,
-  PaginatedResponseSchema,
-  CertificateFiltersSchema,
+  CertificateDtoSchema,
   CertificateProductsResponseSchema,
   PurchaseCertificateDtoSchema,
   PurchaseCertificateResponseSchema,
+  CertificateActivationResponseSchema,
+  CheckCertificateResponseSchema,
+  PurchasedCertificateFiltersSchema,
+  ActivatedCertificateFiltersSchema,
+  ListCertificatesResponseSchema,
 } from '../schemas';
 import type {
-  Certificate,
-  PaginatedResponse,
-  CertificateFilters,
+  CertificateDto,
   CertificateProductsResponse,
   PurchaseCertificateDto,
   PurchaseCertificateResponse,
+  CertificateActivationResponse,
+  CheckCertificateResponse,
+  PurchasedCertificateFilters,
+  ActivatedCertificateFilters,
+  ListCertificatesResponse,
 } from '../types';
 
 /**
@@ -21,24 +27,12 @@ import type {
  */
 export const certificatesClient = {
   /**
-   * Get certificates (user's own certificates)
-   * GET /certificates
-   */
-  async getCertificates(filters?: CertificateFilters): Promise<PaginatedResponse<Certificate>> {
-    const validatedFilters = CertificateFiltersSchema.parse(filters || {});
-    const queryString = createQueryString(validatedFilters);
-
-    const response = await apiClient.get(`/certificates${queryString}`);
-    return validateResponse(response.data, PaginatedResponseSchema(CertificateSchema));
-  },
-
-  /**
    * Get certificate by ID
    * GET /certificates/{id}
    */
-  async getCertificateById(id: string): Promise<Certificate> {
+  async getCertificateById(id: string): Promise<CertificateDto> {
     const response = await apiClient.get(`/certificates/${encodeURIComponent(id)}`);
-    return validateResponse(response.data, CertificateSchema);
+    return validateResponse(response.data, CertificateDtoSchema);
   },
 
   /**
@@ -65,5 +59,51 @@ export const certificatesClient = {
       },
     });
     return validateResponse(response.data, PurchaseCertificateResponseSchema);
+  },
+
+  /**
+   * Activate a certificate by code
+   * POST /certificates/activate
+   */
+  async activateCertificate(code: string): Promise<CertificateActivationResponse> {
+    const response = await apiClient.post('/certificates/activate', { code });
+    return validateResponse(response.data, CertificateActivationResponseSchema);
+  },
+
+  /**
+   * Get certificates purchased by current user
+   * GET /certificates/purchased
+   */
+  async getPurchasedCertificates(
+    filters?: PurchasedCertificateFilters
+  ): Promise<ListCertificatesResponse> {
+    const validatedFilters = PurchasedCertificateFiltersSchema.parse(filters || {});
+    const queryString = createQueryString(validatedFilters);
+
+    const response = await apiClient.get(`/certificates/purchased${queryString}`);
+    return validateResponse(response.data, ListCertificatesResponseSchema);
+  },
+
+  /**
+   * Get certificates activated by current user
+   * GET /certificates/activated
+   */
+  async getActivatedCertificates(
+    filters?: ActivatedCertificateFilters
+  ): Promise<ListCertificatesResponse> {
+    const validatedFilters = ActivatedCertificateFiltersSchema.parse(filters || {});
+    const queryString = createQueryString(validatedFilters);
+
+    const response = await apiClient.get(`/certificates/activated${queryString}`);
+    return validateResponse(response.data, ListCertificatesResponseSchema);
+  },
+
+  /**
+   * Check certificate by code before activation
+   * GET /certificates/by-code/{code}
+   */
+  async checkCertificateByCode(code: string): Promise<CheckCertificateResponse> {
+    const response = await apiClient.get(`/certificates/by-code/${encodeURIComponent(code)}`);
+    return validateResponse(response.data, CheckCertificateResponseSchema);
   },
 };

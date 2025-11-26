@@ -9,10 +9,10 @@ export function PaymentSuccessPage() {
   // season-ticket | training | activity | tour
   const type = searchParams.get('type');
 
-  let title = 'Оплачено';
-  let description = null;
-  let primaryButton = null;
-  const secondaryButton = {text: 'На главную', link: '/'};
+  let title = searchParams.get('title') || 'Оплачено';
+  let description = searchParams.get('description');
+  let primaryButton = JSON.parse(searchParams.get('primaryButton') || 'null');
+  const secondaryButton = JSON.parse(searchParams.get('secondaryButton') || 'null') ?? {text: 'На главную', link: '/'};
 
   switch (type) {
     case 'training': {

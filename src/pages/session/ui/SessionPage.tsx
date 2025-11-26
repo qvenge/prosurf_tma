@@ -66,11 +66,11 @@ export const SessionPage = () => {
           createPaymentMutation.mutate(
             {
               bookingId: bookingResult.booking.id,
-              data: {
+              data: [{
                 method: 'pass',
                 seasonTicketId: seasonTicketId,
                 passesToSpend: 1
-              },
+              }],
               idempotencyKey: crypto.randomUUID()
             },
             {

@@ -31,6 +31,13 @@ export const PriceSchema = z.object({
   amountMinor: z.number().int(),
 });
 
+// Common parameters
+export const CursorParamSchema = z.string().optional();
+export const LimitParamSchema = z.number().int().min(1).max(200).default(20).optional();
+export const StartsAfterParamSchema = z.string().datetime().optional();
+export const EndsBeforeParamSchema = z.string().datetime().optional();
+export const IdempotencyKeySchema = z.string().min(8).max(128);
+
 // User schemas
 export const RoleSchema = z.enum(['USER', 'ADMIN']);
 
@@ -361,14 +368,11 @@ export const PaymentMethodRequestSchema = z.discriminatedUnion('method', [
   CashbackPaymentMethodSchema,
 ]);
 
-export const CompositePaymentMethodRequestSchema = z.object({
-  methods: z.array(PaymentMethodRequestSchema).min(1),
-});
-
-export const PaymentRequestSchema = z.union([
-  PaymentMethodRequestSchema,
-  CompositePaymentMethodRequestSchema,
-]);
+// Simplified: paymentMethods is always an array (single or multiple methods)
+export const PaymentRequestSchema = z
+  .array(PaymentMethodRequestSchema)
+  .min(1)
+  .max(10);
 
 // Refund schemas
 export const RefundRequestSchema = z.object({
@@ -465,13 +469,48 @@ export const CertificateProductsResponseSchema = z.object({
 export const PurchaseCertificateDtoSchema = z.object({
   type: CertificateTypeSchema,
   amount: PriceSchema.optional(), // Required for 'denomination' type
-  passes: z.number().int().min(1).optional(), // Required for 'passes' type
-  paymentMethod: PaymentRequestSchema,
+  paymentMethods: PaymentRequestSchema, // Array of payment methods
 });
 
 export const PurchaseCertificateResponseSchema = z.object({
   certificate: CertificateSchema,
   payment: PaymentSchema,
+});
+
+// Certificate status enum
+export const CertificateStatusSchema = z.enum([
+  'PENDING_ACTIVATION',
+  'ACTIVATED',
+  'EXPIRED',
+]);
+
+// Client brief schema (for certificate ownership info)
+export const ClientBriefSchema = z.object({
+  id: z.string(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+});
+
+// Full certificate DTO (with all fields from server)
+export const CertificateDtoSchema = z.object({
+  id: z.string(),
+  code: z.string().optional(), // Only visible to purchaser or admin
+  type: CertificateTypeSchema,
+  status: CertificateStatusSchema,
+  data: z.union([
+    DenominationCertDataSchema,
+    PassesCertDataSchema,
+  ]),
+  purchasedBy: ClientBriefSchema.optional(),
+  activatedBy: ClientBriefSchema.optional(),
+  activatedAt: z.string().datetime().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+});
+
+// Activate certificate request
+export const ActivateCertificateRequestSchema = z.object({
+  code: z.string().min(1),
 });
 
 // Event filter schemas (for season ticket matching)
@@ -510,28 +549,6 @@ export const SeasonTicketPlanSchema = z.object({
   eventFilter: EventFilterSchema,
 });
 
-export const SeasonTicketPlanCreateDtoSchema = z.object({
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  price: PriceSchema,
-  passes: z.number().int().min(1),
-  expiresIn: z.number().int().min(1),
-  matchMode: SeasonTicketMatchModeSchema.default('ALL').optional(),
-  eventIds: z.array(z.string()).nullable().optional(),
-  eventFilter: EventFilterSchema,
-});
-
-export const SeasonTicketPlanUpdateDtoSchema = z.object({
-  name: z.string().optional(),
-  description: z.string().nullable().optional(),
-  price: PriceSchema.optional(),
-  passes: z.number().int().min(1).optional(),
-  expiresIn: z.number().int().min(1).optional(),
-  matchMode: SeasonTicketMatchModeSchema.optional(),
-  eventIds: z.array(z.string()).nullable().optional(),
-  eventFilter: EventFilterSchema.optional(),
-});
-
 export const SeasonTicketStatusSchema = z.enum(['ACTIVE', 'EXPIRED', 'CANCELLED']);
 
 export const SeasonTicketSchema = z.object({
@@ -554,6 +571,99 @@ export const CashbackTransactionSchema = z.object({
   note: z.string().nullable().optional(),
 });
 
+// Certificate activation results
+// Simplified schemas for season ticket returned in activation response
+export const CertificateActivationSeasonTicketPlanSchema = z.object({
+  name: z.string(),
+  passes: z.number().int().min(1),
+  matchMode: SeasonTicketMatchModeSchema,
+});
+
+export const CertificateActivationSeasonTicketDataSchema = z.object({
+  id: z.string(),
+  plan: CertificateActivationSeasonTicketPlanSchema,
+  status: SeasonTicketStatusSchema,
+  remainingPasses: z.number().int().min(0),
+  validUntil: z.string().datetime(),
+});
+
+export const CertificateActivationResultSeasonTicketSchema = z.object({
+  type: z.literal('season_ticket'),
+  seasonTicket: CertificateActivationSeasonTicketDataSchema,
+});
+
+export const CertificateActivationResultCashbackSchema = z.object({
+  type: z.literal('cashback'),
+  cashbackOperation: CashbackTransactionSchema,
+  newBalance: PriceSchema,
+});
+
+// Certificate activation response
+export const CertificateActivationResponseSchema = z.object({
+  certificate: CertificateDtoSchema,
+  result: z.discriminatedUnion('type', [
+    CertificateActivationResultSeasonTicketSchema,
+    CertificateActivationResultCashbackSchema,
+  ]),
+});
+
+// Check certificate by code response
+export const CheckCertificateResponseSchema = z.object({
+  code: z.string(),
+  type: CertificateTypeSchema,
+  data: z.union([
+    DenominationCertDataSchema,
+    PassesCertDataSchema,
+  ]),
+  status: CertificateStatusSchema,
+  expiresAt: z.string().datetime().nullable().optional(),
+  canActivate: z.boolean(),
+  reason: z.string().optional(),
+});
+
+// Purchased certificates filters
+export const PurchasedCertificateFiltersSchema = z.object({
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
+  status: CertificateStatusSchema.optional(),
+});
+
+// Activated certificates filters
+export const ActivatedCertificateFiltersSchema = z.object({
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
+});
+
+// List certificates response (paginated)
+export const ListCertificatesResponseSchema = z.object({
+  items: z.array(CertificateDtoSchema),
+  next: z.string().nullable(),
+});
+
+// Season ticket plan DTOs
+export const SeasonTicketPlanCreateDtoSchema = z.object({
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  price: PriceSchema,
+  passes: z.number().int().min(1),
+  expiresIn: z.number().int().min(1),
+  matchMode: SeasonTicketMatchModeSchema.default('ALL').optional(),
+  eventIds: z.array(z.string()).nullable().optional(),
+  eventFilter: EventFilterSchema,
+});
+
+export const SeasonTicketPlanUpdateDtoSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().nullable().optional(),
+  price: PriceSchema.optional(),
+  passes: z.number().int().min(1).optional(),
+  expiresIn: z.number().int().min(1).optional(),
+  matchMode: SeasonTicketMatchModeSchema.optional(),
+  eventIds: z.array(z.string()).nullable().optional(),
+  eventFilter: EventFilterSchema.optional(),
+});
+
+// Cashback wallet schema
 export const CashbackWalletSchema = z.object({
   balance: PriceSchema,
   history: z.array(CashbackTransactionSchema).optional(),
@@ -658,13 +768,6 @@ export const PaginatedResponseSchema = <T>(itemSchema: z.ZodSchema<T>) => z.obje
   items: z.array(itemSchema),
   next: z.string().nullable(),
 });
-
-// Common parameters
-export const CursorParamSchema = z.string().optional();
-export const LimitParamSchema = z.number().int().min(1).max(200).default(20).optional();
-export const StartsAfterParamSchema = z.string().datetime().optional();
-export const EndsBeforeParamSchema = z.string().datetime().optional();
-export const IdempotencyKeySchema = z.string().min(8).max(128);
 
 // Filter schemas for different endpoints
 export const EventFiltersSchema = z.object({

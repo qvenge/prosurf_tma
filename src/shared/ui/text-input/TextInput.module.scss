@@ -100,6 +100,10 @@
 }
 
 .error {
+  & .label {
+    color: ds.color('Text/Error');
+  }
+
   & .inputWrapper {
     border-color: ds.color('Text/Error');
   }

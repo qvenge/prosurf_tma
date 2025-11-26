@@ -10,6 +10,10 @@ export function MyCertificatesPage() {
     navigate('/certificates/purchase');
   };
 
+  const handleActivateClick = () => {
+    navigate('certificates/activate');
+  };
+
   return (
     <PageLayout title="Сертификат">
       <div className={styles.wrapper}>
@@ -36,10 +40,20 @@ export function MyCertificatesPage() {
         </div>
 
         <div className={styles.actions}>
-          <Button mode="primary" size="l" stretched onClick={handlePurchaseClick}>
+          <Button
+            mode="primary"
+            size="l"
+            stretched
+            onClick={handlePurchaseClick}
+          >
             Купить
           </Button>
-          <Button mode="secondary" size="l" stretched>
+          <Button
+            mode="secondary"
+            size="l"
+            stretched
+            onClick={handleActivateClick}
+          >
             Активировать
           </Button>
         </div>

@@ -72,10 +72,11 @@ export const useCertificatePayment = () => {
 
     try {
       // Build payment request - only card, no cashback or certificate
-      const paymentMethod = {
+      // Use array format (new simplified API structure)
+      const paymentMethods = [{
         method: 'card' as const,
         provider: 'telegram' as const,
-      };
+      }];
 
       // Prepare purchase data based on type
       const purchaseData = productType === 'denomination'
@@ -85,12 +86,11 @@ export const useCertificatePayment = () => {
               currency: 'RUB',
               amountMinor: amount! * 100, // Convert rubles to kopecks
             },
-            paymentMethod,
+            paymentMethods,
           }
         : {
             type: 'passes' as const,
-            passes: 1,
-            paymentMethod,
+            paymentMethods,
           };
 
       // Purchase certificate
