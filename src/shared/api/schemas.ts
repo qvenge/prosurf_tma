@@ -554,7 +554,7 @@ export const SeasonTicketStatusSchema = z.enum(['ACTIVE', 'EXPIRED', 'CANCELLED'
 export const SeasonTicketSchema = z.object({
   id: z.string(),
   plan: SeasonTicketPlanSchema,
-  userId: z.string(),
+  clientId: z.string(),
   status: SeasonTicketStatusSchema,
   remainingPasses: z.number().int().min(0),
   validUntil: z.string().datetime(),
