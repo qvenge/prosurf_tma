@@ -1,0 +1,44 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 var(--outer-horizontal-padding, 16px);
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: ds.color('Background/Secondary');
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.info {
+  flex-grow: 1;
+}
+
+.name {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Primary');
+  margin: 0;
+}
+
+.type {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+  margin: 0;
+}
+
+.price {
+  @include ds.typo('Roboto/Subheadline 2/Semibold');
+  color: ds.color('Text/Brand');
+  margin: 0;
+}
+
