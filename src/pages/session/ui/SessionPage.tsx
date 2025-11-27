@@ -179,10 +179,12 @@ export const SessionPage = () => {
           >
             {hasPrepayment(session) ? 'Забронировать' : 'Записаться'}
           </Button>
-          {hasPrepayment(session) && (
+          {hasPrepayment(session) ? (
             <div className={styles.prepaymentNote}>
               {`Бронь: ${formatPrice(session.event.tickets[0].prepayment.price)}`}
             </div>
+          ) : (
+            <div className={styles.bookingDisclaimer}>Отмена или перенос занятия менее, чем за 24 часа невозможен</div>
           )}
         </>
       ))}

@@ -177,3 +177,9 @@
   @include ds.typo('Roboto/Caption 1/Regular');
   border: 1px solid ds.color('Border/Secondary');
 }
+
+.bookingDisclaimer {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+  text-align: center; 
+}

@@ -4,3 +4,9 @@
   gap: 10px;
   padding: 0 16px;
 }
+
+.bookingDisclaimer {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+  text-align: center; 
+}

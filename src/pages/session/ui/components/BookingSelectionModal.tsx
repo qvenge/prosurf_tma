@@ -53,9 +53,6 @@ export function BookingSelectionModal({
             Использовать абонемент
           </BookingSelectionButon>
         )}
-        {/* TODO: uncomment when api will be ready
-          <BookingSelectionButon>Использовать сертификат</BookingSelectionButon>
-        */}
         <BookingSelectionButon
           onClick={onGoToPayment}
           disabled={isRedeeming || isBooking}
@@ -63,6 +60,7 @@ export function BookingSelectionModal({
         >
           Перейти к оплате
         </BookingSelectionButon>
+        <div className={styles.bookingDisclaimer}>Отмена или перенос занятия менее, чем за 24 часа невозможен</div>
       </div>
     </Modal>
   );
