@@ -26,32 +26,65 @@ export const bookingsKeys = {
 // Book session mutation
 export const useBookSession = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ 
-      sessionId, 
-      data, 
-      idempotencyKey 
-    }: { 
-      sessionId: string; 
+    mutationFn: ({
+      sessionId,
+      data,
+      idempotencyKey
+    }: {
+      sessionId: string;
       data: BookRequest;
       idempotencyKey: IdempotencyKey;
     }) => bookingsClient.bookSession(sessionId, data, idempotencyKey),
     onSuccess: (result, variables) => {
       // Add new booking to cache
       queryClient.setQueryData(bookingsKeys.detail(result.booking.id), result.booking);
-      
+
       // Invalidate bookings lists
       queryClient.invalidateQueries({ queryKey: bookingsKeys.lists() });
-      
+
       // Invalidate and update the session to reflect reduced remaining seats
       queryClient.invalidateQueries({ queryKey: sessionsKeys.detail(variables.sessionId) });
-      
+
       // Invalidate sessions lists as remainingSeats changed
       queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
     },
     onError: (error) => {
       console.error('Failed to book session:', error);
+    },
+  });
+};
+
+// Create deferred booking mutation (for offline/cash payments)
+export const useCreateDeferredBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      sessionId,
+      data,
+      idempotencyKey
+    }: {
+      sessionId: string;
+      data: BookRequest;
+      idempotencyKey: IdempotencyKey;
+    }) => bookingsClient.createDeferredBooking(sessionId, data, idempotencyKey),
+    onSuccess: (booking, variables) => {
+      // Add new booking to cache
+      queryClient.setQueryData(bookingsKeys.detail(booking.id), booking);
+
+      // Invalidate bookings lists
+      queryClient.invalidateQueries({ queryKey: bookingsKeys.lists() });
+
+      // Invalidate and update the session to reflect reduced remaining seats
+      queryClient.invalidateQueries({ queryKey: sessionsKeys.detail(variables.sessionId) });
+
+      // Invalidate sessions lists as remainingSeats changed
+      queryClient.invalidateQueries({ queryKey: sessionsKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to create deferred booking:', error);
     },
   });
 };

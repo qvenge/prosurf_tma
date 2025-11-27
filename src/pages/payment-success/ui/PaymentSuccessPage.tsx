@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router';
 
 export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
-  // season-ticket | training | activity | tour
+  // season-ticket | training | activity | tour | certificate | certificate-activation
   const type = searchParams.get('type');
 
   let title = searchParams.get('title') || 'Оплачено';

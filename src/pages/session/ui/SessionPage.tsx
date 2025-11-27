@@ -6,7 +6,7 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useSession, useBookSession, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
+import { useSession, useBookSession, useCreateDeferredBooking, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
 import { useTelegramPopup } from '@/shared/tma';
 import styles from './SessionPage.module.scss';
 import mapSrc from './map.png';
@@ -43,6 +43,7 @@ export const SessionPage = () => {
   const bookingId = userBookingsData?.items?.[0]?.id;
 
   const createBookingMutation = useBookSession();
+  const createDeferredBookingMutation = useCreateDeferredBooking();
   const createPaymentMutation = useCreatePayment();
   const joinWaitlistMutation = useJoinWaitlist();
   const cancelBookingMutation = useCancelBooking();
@@ -94,11 +95,34 @@ export const SessionPage = () => {
   }, [sessionId, createBookingMutation, createPaymentMutation, navigate]);
 
   const handleGoToPayment = useCallback(() => {
-    if (!sessionId) return;
-    
+    if (!sessionId || !session) return;
+
+    // If event allows deferred payment, create booking directly without payment
+    if (session.event.allowDeferredPayment) {
+      setBookingError(null);
+      createDeferredBookingMutation.mutate(
+        {
+          sessionId: sessionId,
+          data: { quantity: 1 },
+          idempotencyKey: crypto.randomUUID()
+        },
+        {
+          onSuccess: () => {
+            setModalOpen(false);
+            navigate('payment-success?type=training&deferred=true');
+          },
+          onError: (error: any) => {
+            console.error('Deferred booking error:', error);
+            setBookingError(error.message || 'Произошла ошибка при создании записи');
+          }
+        }
+      );
+      return;
+    }
+
     setModalOpen(false);
     navigate(`/events/sessions/${sessionId}/payment`);
-  }, [sessionId, navigate, setModalOpen]);
+  }, [sessionId, session, navigate, setModalOpen, createDeferredBookingMutation]);
 
   const handleBookingClick = useCallback(() => {
     if (hasPrepayment(session) || !session || seasonTicketsLoading) return;
@@ -173,7 +197,7 @@ export const SessionPage = () => {
             size='l'
             mode='primary'
             stretched={true}
-            loading={isLoading || userBookingsLoading || seasonTicketsLoading}
+            loading={isLoading || userBookingsLoading || seasonTicketsLoading || createDeferredBookingMutation.isPending}
             disabled={!session}
             onClick={handleBookingClick}
           >
@@ -189,7 +213,7 @@ export const SessionPage = () => {
         </>
       ))}
     </div>
-  ), [session, seasonTicketsLoading, userBookingsLoading, bookingId, handleBookingClick]);
+  ), [session, seasonTicketsLoading, userBookingsLoading, bookingId, handleBookingClick, createDeferredBookingMutation.isPending]);
 
   useEffect(() => {
     setOverride(bottomBarContent);
@@ -226,7 +250,7 @@ export const SessionPage = () => {
             onUseSubscription={handleUseSubscription}
             onGoToPayment={handleGoToPayment}
             isRedeeming={createBookingMutation.isPending || createPaymentMutation.isPending}
-            isBooking={createBookingMutation.isPending}
+            isBooking={createBookingMutation.isPending || createDeferredBookingMutation.isPending}
           />
         )}
         

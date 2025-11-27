@@ -157,6 +157,7 @@ export const EventSchema = z.object({
   labels: z.array(z.string()).nullable().optional(),
   attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   images: z.array(z.string()).nullable().optional(),
+  allowDeferredPayment: z.boolean().optional().default(false),
 });
 
 export const EventCreateDtoSchema = z.object({
@@ -277,6 +278,7 @@ export const BookingSchema = z.object({
   notes: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
   createdByAdminId: z.string().nullable().optional(),
+  isPaid: z.boolean().default(true),
 });
 
 export const BookingExtendedSchema = BookingSchema.extend({

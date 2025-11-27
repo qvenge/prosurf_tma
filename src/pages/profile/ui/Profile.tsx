@@ -176,7 +176,7 @@ export const Profile = () => {
     {
       icon: ChatCircleTextBold,
       title: 'Поддержка в телеграм',
-      // href: '/profile',
+      href: 'http://t.me/prosurfclub',
     }
   ], [bookingsSubtitle, waitlistSubtitle, seasonTicketsSubtitle]);
 
@@ -235,7 +235,6 @@ export const Profile = () => {
               />
             </Link>
           </div>
-
 
           {/* Status Badge */}
           <div className={styles.statusBadge}>

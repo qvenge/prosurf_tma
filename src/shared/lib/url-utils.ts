@@ -58,3 +58,7 @@ export function joinApiUrls(
     .map(path => joinApiUrl(path, baseUrl))
     .filter((url): url is string => url !== null);
 }
+
+export function isAbsoluteUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}

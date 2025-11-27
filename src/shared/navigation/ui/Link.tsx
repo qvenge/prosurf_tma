@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigator, type Tab } from '../lib/Navigator';
+import { isAbsoluteUrl } from '@/shared/lib';
 
 export interface LinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'> {
   to?: string;
@@ -11,6 +12,10 @@ export interface LinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorEle
 export function Link({to, tab, reset, params, style, ...restProps}: LinkProps) {
   const navigator = useNavigator();
   const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isAbsoluteUrl(to || '')) {
+      return;
+    }
+
     e.preventDefault();
 
     if (to) {

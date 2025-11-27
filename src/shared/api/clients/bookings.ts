@@ -163,4 +163,34 @@ export const bookingsClient = {
     const response = await apiClient.post(`/bookings/${encodeURIComponent(id)}/cancel`);
     return validateResponse(response.data, BookingSchema);
   },
+
+  /**
+   * Create deferred booking (for events with allowDeferredPayment=true)
+   * POST /sessions/{id}/book-deferred
+   *
+   * Creates a booking with CONFIRMED status but isPaid=false.
+   * Used for offline/cash payments where payment happens later.
+   * No hold TTL since booking is immediately confirmed.
+   *
+   * @param sessionId - The ID of the session to book
+   * @param data - Booking request with quantity
+   * @param idempotencyKey - Unique key for request idempotency (8-128 chars)
+   * @returns Promise resolving to confirmed booking (with isPaid=false)
+   */
+  async createDeferredBooking(
+    sessionId: string,
+    data: BookRequest,
+    idempotencyKey: IdempotencyKey
+  ): Promise<Booking> {
+    const validatedData = BookRequestSchema.parse(data);
+    const config = withIdempotency({}, idempotencyKey);
+
+    const response = await apiClient.post(
+      `/sessions/${encodeURIComponent(sessionId)}/book-deferred`,
+      validatedData,
+      config
+    );
+
+    return validateResponse(response.data, BookingSchema);
+  },
 };
