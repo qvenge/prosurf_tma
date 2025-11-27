@@ -49,3 +49,10 @@
   flex-direction: column;
   gap: 12px;
 }
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px 0;
+}

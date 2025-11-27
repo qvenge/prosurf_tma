@@ -8,7 +8,7 @@ import {
   createIdempotencyKey,
   handlePaymentNextAction,
 } from '@/shared/lib/payment';
-import { CERTIFICATE_PAYMENT_ERRORS, SINGLE_TRAINING_PRICE_MINOR } from './constants';
+import { CERTIFICATE_PAYMENT_ERRORS } from '@/shared/lib/constants';
 
 /**
  * Certificate payment processing hook
@@ -23,11 +23,18 @@ export const useCertificatePayment = () => {
 
   /**
    * Process certificate payment
+   * @param productType - 'denomination' or 'passes'
+   * @param amount - Amount in rubles for denomination type (null for passes)
+   * @param setPaymentError - Error setter callback
+   * @param passesPriceMinor - Price in minor units for passes type (from API)
+   * @param minDenominationAmount - Minimum amount for denomination type (from API)
    */
   const processPayment = async (
     productType: CertificateType,
     amount: number | null, // Amount in rubles for denomination type
-    setPaymentError: (error: string) => void
+    setPaymentError: (error: string) => void,
+    passesPriceMinor?: number,
+    minDenominationAmount?: number
   ) => {
     setPaymentError('');
 
@@ -37,7 +44,8 @@ export const useCertificatePayment = () => {
 
     // Validate input based on product type
     if (productType === 'denomination') {
-      if (!amount || amount < 3000) {
+      const minAmount = minDenominationAmount ?? 3000;
+      if (!amount || amount < minAmount) {
         setPaymentError(CERTIFICATE_PAYMENT_ERRORS.AMOUNT_TOO_LOW);
         paymentLogger.logError({
           error: CERTIFICATE_PAYMENT_ERRORS.AMOUNT_TOO_LOW,
@@ -49,7 +57,7 @@ export const useCertificatePayment = () => {
 
     // Calculate amount for logging and payment
     const paymentAmount = productType === 'passes'
-      ? SINGLE_TRAINING_PRICE_MINOR
+      ? (passesPriceMinor ?? 0)
       : (amount! * 100); // Convert rubles to kopecks
 
     // Start payment attempt

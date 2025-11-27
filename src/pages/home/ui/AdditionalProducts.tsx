@@ -1,6 +1,6 @@
 import { Button } from '@/shared/ui';
 import { Link } from '@/shared/navigation';
-import { useSeasonTicketPlans } from '@/shared/api';
+import { useSeasonTicketPlans, useCertificateProducts } from '@/shared/api';
 import { formatPrice } from '@/shared/lib/format-utils';
 import styles from './AdditionalProducts.module.scss';
 
@@ -11,6 +11,9 @@ export function AdditionalProducts() {
     (min, plan) => plan.price.amountMinor < min.price.amountMinor ? plan : min,
     plans[0]
   ) : null;
+  
+  const { data: certificateProducts, isLoading: isLoadingCertificateProducts } = useCertificateProducts();
+  const denominationProduct = certificateProducts?.items.find(item => item.type === 'denomination');
   
   return (
     <div className={styles.wrapper}>
@@ -38,7 +41,10 @@ export function AdditionalProducts() {
           <div className={styles.info}>
             <div className={styles.name}>Сертификаты</div>
           </div>
-          <div className={styles.price}>от 3 000 ₽</div>
+          {!isLoadingCertificateProducts && denominationProduct
+            ? <div className={styles.price}>от {formatPrice(denominationProduct.minAmount)}</div>
+            : 'Загрузка...'
+          }
         </div>
         <Link to="/profile/certificates" tab="profile" className={styles.link}>
           <Button className={styles.button} mode="secondary" size="l" stretched>
