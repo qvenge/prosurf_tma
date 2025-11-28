@@ -18,4 +18,4 @@ export { PriceBreakdown } from './ui/components/PriceBreakdown';
 
 // Re-export hooks and helpers for external use
 export { usePaymentState, useInitialPlanSelection } from './lib/hooks';
-export { calculatePrices, formatPrice, calculateCashback } from './lib/helpers';
+export { calculatePrices, formatPrice } from './lib/helpers';

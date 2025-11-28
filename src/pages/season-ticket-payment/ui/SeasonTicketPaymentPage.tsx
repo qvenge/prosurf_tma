@@ -11,7 +11,7 @@ import {
   type PaymentOptionsConfig,
   type PaymentSummaryConfig,
 } from '@/widgets/payment-page-layout';
-import { useMyCashback, useSeasonTicketPlans, type SeasonTicketPlan } from '@/shared/api';
+import { useMyCashback, useSeasonTicketPlans, useCashbackRules, type SeasonTicketPlan } from '@/shared/api';
 import { useSeasonTicketPayment } from '../lib/hooks';
 import { LoadingState, PlansErrorState, CashbackErrorState } from '@/shared/ui/payment-states';
 
@@ -26,6 +26,7 @@ export function SeasonTicketPaymentPage() {
     error: plansError,
     refetch: refetchPlans,
   } = useSeasonTicketPlans();
+  const { data: cashbackRules } = useCashbackRules();
 
   // Log errors for debugging
   useEffect(() => {
@@ -84,6 +85,13 @@ export function SeasonTicketPaymentPage() {
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
 
   const { finalPrice, cashbackAmount } = calculatePrices(subscriptionPrice, cashbackValue, activeCashback);
+
+  // Get cashback rate for season tickets
+  const cashbackRate = useMemo(() => {
+    if (!cashbackRules?.earnRates) return 0;
+    const rule = cashbackRules.earnRates.find((r) => r.product === 'seasonTicket');
+    return rule?.rate ?? 0;
+  }, [cashbackRules]);
 
   // Handler for payment
   const handlePayment = () => {
@@ -171,6 +179,7 @@ export function SeasonTicketPaymentPage() {
     onPayment: handlePayment,
     isProcessing,
     error: paymentError,
+    cashbackRate,
   };
 
   return (

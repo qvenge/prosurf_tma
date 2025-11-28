@@ -4,7 +4,6 @@ export function NoPlansState() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.content}>
-        <div className={styles.icon}>📋</div>
         <div className={styles.message}>
           Нет доступных планов абонементов для этой тренировки
         </div>

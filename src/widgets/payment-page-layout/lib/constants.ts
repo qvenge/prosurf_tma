@@ -1,5 +1,4 @@
 export const PAYMENT_CONSTANTS = {
-  CASHBACK_RATE: 0.03, // 3%
   CURRENCY: '₽',
   MINOR_CURRENCY_DIVISOR: 100, // Convert kopecks to rubles
 } as const;

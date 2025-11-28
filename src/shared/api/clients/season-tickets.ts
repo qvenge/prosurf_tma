@@ -78,7 +78,7 @@ export const seasonTicketsClient = {
     const config = withIdempotency({}, idempotencyKey);
     const response = await apiClient.post(
       `/season-ticket-plans/${encodeURIComponent(planId)}/purchase`,
-      validatedPaymentMethod,
+      { paymentMethods: validatedPaymentMethod },
       config
     );
     return validateResponse(response.data, PaymentSchema);

@@ -30,7 +30,7 @@ export function PaymentOptions({ options }: PaymentOptionsProps) {
           <div className={styles.settingItem}>
             <div className={styles.settingItemInfo}>
               <div className={styles.settingItemName}>
-                Кэшбек: {formatPrice(cashback.total)} {PAYMENT_CONSTANTS.CURRENCY}
+                Бонусы: {formatPrice(cashback.total)} {PAYMENT_CONSTANTS.CURRENCY}
               </div>
               <div className={styles.settingItemDescription}>
                 Списать {formatPrice(cashback.value)} {PAYMENT_CONSTANTS.CURRENCY} бонусов?
@@ -46,29 +46,6 @@ export function PaymentOptions({ options }: PaymentOptionsProps) {
           <div className={styles.divider} />
         </>
       ) : null}
-
-      {/* Certificate option */}
-      {certificate?.enabled && certificate.value > 0 && (
-        <>
-          <div className={styles.settingItem}>
-            <div className={styles.settingItemInfo}>
-              <div className={styles.settingItemName}>
-                Сертификат: {formatPrice(certificate.value)} {PAYMENT_CONSTANTS.CURRENCY}
-              </div>
-              <div className={styles.settingItemDescription}>
-                Списать {formatPrice(certificate.value)} {PAYMENT_CONSTANTS.CURRENCY}?
-              </div>
-            </div>
-            <div className={styles.settingItemControl}>
-              <Switch
-                checked={certificate.active}
-                onChange={({ currentTarget }) => certificate.onChange(currentTarget.checked)}
-              />
-            </div>
-          </div>
-          <div className={styles.divider} />
-        </>
-      )}
     </div>
   );
 }

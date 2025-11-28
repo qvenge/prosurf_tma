@@ -68,6 +68,8 @@ export interface PaymentSummaryConfig {
   isProcessing: boolean;
   /** Payment error message */
   error?: string | null;
+  /** Cashback rate (0-1). If undefined or 0, cashback info is hidden */
+  cashbackRate?: number;
 }
 
 /**
@@ -113,5 +115,4 @@ export interface PriceCalculation {
   originalPrice: number;
   finalPrice: number;
   cashbackAmount: number;
-  earnedCashback: number;
 }

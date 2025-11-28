@@ -1,5 +1,5 @@
 import { Button } from '@/shared/ui';
-import { formatPrice, calculateCashback } from '../../../lib/helpers';
+import { formatPrice } from '../../../lib/helpers';
 import { PAYMENT_CONSTANTS } from '../../../lib/constants';
 import type { PaymentSummaryConfig } from '../../../model/types';
 import styles from './PaymentSummary.module.scss';
@@ -9,10 +9,11 @@ interface PaymentSummaryProps {
 }
 
 export function PaymentSummary({ summary }: PaymentSummaryProps) {
-  const { originalPrice, finalPrice, onPayment, isProcessing, error } = summary;
+  const { originalPrice, finalPrice, onPayment, isProcessing, error, cashbackRate } = summary;
 
   const hasDiscount = originalPrice !== finalPrice;
-  const earnedCashback = calculateCashback(finalPrice);
+  const showCashback = cashbackRate && cashbackRate > 0;
+  const earnedCashback = showCashback ? Math.round(finalPrice * cashbackRate) : 0;
 
   return (
     <div className={styles.footer}>
@@ -46,9 +47,11 @@ export function PaymentSummary({ summary }: PaymentSummaryProps) {
         {isProcessing ? 'Обработка...' : 'Оплатить'}
       </Button>
 
-      <div className={styles.cashback}>
-        {`Начислим кэшбек: ${formatPrice(earnedCashback)} ${PAYMENT_CONSTANTS.CURRENCY}`}
-      </div>
+      {showCashback && (
+        <div className={styles.cashback}>
+          {`Начислим кэшбек: ${formatPrice(earnedCashback)} ${PAYMENT_CONSTANTS.CURRENCY}`}
+        </div>
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   useCurrentClient,
   useMyCashback,
   useSeasonTicketPlans,
+  useCashbackRules,
   type SeasonTicketPlan,
 } from '@/shared/api';
 import { useSessionPayment } from '../lib/hooks';
@@ -44,6 +45,7 @@ export function SessionPaymentPage() {
     error: plansError,
     refetch: refetchPlans,
   } = useSeasonTicketPlans();
+  const { data: cashbackRules } = useCashbackRules();
 
   // Log errors for debugging
   useEffect(() => {
@@ -103,6 +105,14 @@ export function SessionPaymentPage() {
   const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
 
   const { finalPrice, cashbackAmount } = calculatePrices(originalPrice, cashbackValue, activeCashback);
+
+  // Get cashback rate based on product type
+  const cashbackRate = useMemo(() => {
+    if (!cashbackRules?.earnRates) return 0;
+    const productType = product === 'subscription' ? 'seasonTicket' : 'single';
+    const rule = cashbackRules.earnRates.find((r) => r.product === productType);
+    return rule?.rate ?? 0;
+  }, [cashbackRules, product]);
 
   // Handler for payment
   const handlePayment = () => {
@@ -232,6 +242,7 @@ export function SessionPaymentPage() {
     onPayment: handlePayment,
     isProcessing,
     error: paymentError,
+    cashbackRate,
   };
 
   return (

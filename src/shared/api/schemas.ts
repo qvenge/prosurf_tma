@@ -337,7 +337,7 @@ export const PaymentSchema = z.object({
   provider: z.enum(['telegram', 'stripe', 'yookassa', 'cloudpayments', 'other']).optional(),
   providerPaymentId: z.string().nullable().optional(),
   providerChargeId: z.string().nullable().optional(),
-  nextAction: PaymentNextActionSchema.optional(),
+  nextAction: PaymentNextActionSchema.nullable(),
 });
 
 // Payment method schemas

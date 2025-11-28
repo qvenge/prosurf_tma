@@ -9,7 +9,6 @@ import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useSession, useBookSession, useCreateDeferredBooking, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
 import { useTelegramPopup } from '@/shared/tma';
 import styles from './SessionPage.module.scss';
-import mapSrc from './map.png';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
 import { formatPrice } from '@/shared/lib/format-utils';
