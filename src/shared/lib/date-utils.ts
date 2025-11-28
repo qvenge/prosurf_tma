@@ -44,7 +44,7 @@ export const formatTourDates = (start: string, end: string | null) => {
   
   if (startMonth === endMonth) {
     return {
-      dates: `${startDay} – ${endDay} ${startMonth}`,
+      dates: startDay === endDay ? `${startDay} ${startMonth}` : `${startDay} – ${endDay} ${startMonth}`,
       year: `${year} г`
     };
   } else {

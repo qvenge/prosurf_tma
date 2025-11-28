@@ -65,8 +65,8 @@ export const paymentsClient = {
     
     const config = withIdempotency({}, idempotencyKey);
     const response = await apiClient.post(
-      `/bookings/${encodeURIComponent(bookingId)}/payment`, 
-      validatedData,
+      `/bookings/${encodeURIComponent(bookingId)}/payment`,
+      { paymentMethods: validatedData },
       config
     );
     return validateResponse(response.data, PaymentSchema);

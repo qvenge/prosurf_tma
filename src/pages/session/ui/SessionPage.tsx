@@ -125,7 +125,7 @@ export const SessionPage = () => {
   }, [sessionId, session, navigate, setModalOpen, createDeferredBookingMutation]);
 
   const handleBookingClick = useCallback(() => {
-    if (hasPrepayment(session) || !session || seasonTicketsLoading) return;
+    if (!session || seasonTicketsLoading) return;
 
     if (seasonTickets?.items.length === 0) {
       handleGoToPayment();
