@@ -300,37 +300,39 @@ export const SessionPage = () => {
         </div>
 
         {/* Content Sections */}
-        <div className={clsx(styles.wrapperItem, styles.contentSection)}>
-          {/* Location and Time */}
-          <div className={styles.locationTime}>
-            <div className={styles.locationTimeLeft}>
-              <div className={styles.sectionTitle}>Место и время</div>
-              <div className={styles.locationInfo}>
-                <Icon
-                  className={styles.mapIcon}
-                  width={20}
-                  height={20}
-                  src={MapPinRegular}
-                />
-                <div className={styles.address}>
-                  {session.event.location || 'Местоположение не указано'}
+        {isTheSameDay(session.startsAt, session.endsAt) && session.event.location && (
+          <div className={clsx(styles.wrapperItem, styles.contentSection)}>
+            {/* Location and Time */}
+            <div className={styles.locationTime}>
+              <div className={styles.locationTimeLeft}>
+                <div className={styles.sectionTitle}>Место и время</div>
+                <div className={styles.locationInfo}>
+                  <Icon
+                    className={styles.mapIcon}
+                    width={20}
+                    height={20}
+                    src={MapPinRegular}
+                  />
+                  <div className={styles.address}>
+                    {session.event.location || 'Местоположение не указано'}
+                  </div>
                 </div>
               </div>
+              {<div className={styles.locationTimeRight}>
+                <div className={styles.duration}>{formatDuration(session.startsAt, session.endsAt)}</div>
+                <div className={styles.time}>{formatTime(session.startsAt)}</div>
+              </div>}
             </div>
-            {isTheSameDay(session.startsAt, session.endsAt) && (<div className={styles.locationTimeRight}>
-              <div className={styles.duration}>{formatDuration(session.startsAt, session.endsAt)}</div>
-              <div className={styles.time}>{formatTime(session.startsAt)}</div>
-            </div>)}
-          </div>
 
-          {/* Map */}
-          <div 
-            className={styles.mapImage}
-            style={{
-              backgroundImage: `url('${mapSrc}')`
-            }}
-          />
-        </div>
+            {/* Map */}
+            {/* <div 
+              className={styles.mapImage}
+              style={{
+                backgroundImage: `url('${mapSrc}')`
+              }}
+            /> */}
+          </div>
+        )}
 
         {/* Description Sections */}
         {session.event.description?.map((section, index: number) => (

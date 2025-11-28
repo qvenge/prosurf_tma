@@ -17,6 +17,7 @@ export const seasonTicketsKeys = {
   all: ['season-tickets'] as const,
   plans: () => [...seasonTicketsKeys.all, 'plans'] as const,
   plansList: (filters?: SeasonTicketPlanFilters) => [...seasonTicketsKeys.plans(), 'list', filters] as const,
+  plansListInfinite: (filters?: SeasonTicketPlanFilters) => [...seasonTicketsKeys.plans(), 'list', 'infinite', filters] as const,
   plan: (id: string) => [...seasonTicketsKeys.plans(), 'detail', id] as const,
   applicableEvents: (planId: string, filters?: { cursor?: CursorParam; limit?: LimitParam }) =>
     [...seasonTicketsKeys.plans(), 'detail', planId, 'applicable-events', filters] as const,
@@ -34,7 +35,7 @@ export const useSeasonTicketPlans = (filters?: SeasonTicketPlanFilters) => {
 
 export const useSeasonTicketPlansInfinite = (filters?: Omit<SeasonTicketPlanFilters, 'cursor'>) => {
   return useInfiniteQuery({
-    queryKey: seasonTicketsKeys.plansList(filters),
+    queryKey: seasonTicketsKeys.plansListInfinite(filters),
     queryFn: ({ pageParam }) => seasonTicketsClient.getSeasonTicketPlans({ ...filters, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: PaginatedResponse<SeasonTicketPlan>) => lastPage.next,

@@ -35,7 +35,7 @@ const transformBookingToCardData = (booking: BookingExtended): BookingCardProps[
     const rightBottomInner = formatSessionDurationOrYear(booking.session.startsAt, booking.session.endsAt);
 
     return {
-      labels: booking.session.labels ?? undefined,
+      labels: [...new Set(([] as string[]).concat(booking.session.labels ?? [], booking.session.event.labels ?? []))],
       eventTitle: booking.session.event.title,
       eventLocation: booking.session.event.location || 'Локация не указана',
       rightTopInner: formatTime(booking.session.startsAt),
