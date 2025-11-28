@@ -23,12 +23,19 @@ export function BookingSelectionModal({
   isRedeeming,
   isBooking
 }: BookingSelectionModalProps) {
-  const activeSeasonTicket = seasonTickets.find((ticket) =>
-    ticket.status === 'ACTIVE' &&
-    // TODO: Check if subscription applies to this event type once plan details are available
-    ticket.remainingPasses > 0 &&
-    (ticket.validUntil ? new Date(ticket.validUntil) > new Date() : true)
-  );
+  const activeSeasonTicket = seasonTickets
+    .filter((ticket) =>
+      ticket.status === 'ACTIVE' &&
+      // TODO: Check if subscription applies to this event type once plan details are available
+      ticket.remainingPasses > 0 &&
+      (ticket.validUntil ? new Date(ticket.validUntil) > new Date() : true)
+    )
+    .sort((a, b) => {
+      // Абонементы без даты истечения ставим в конец
+      if (!a.validUntil) return 1;
+      if (!b.validUntil) return -1;
+      return new Date(a.validUntil).getTime() - new Date(b.validUntil).getTime();
+    })[0];
 
   const handleUseSubscription = () => {
     if (activeSeasonTicket) {

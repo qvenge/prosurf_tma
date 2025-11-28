@@ -683,7 +683,7 @@ export const CashbackRulesSchema = z.object({
 export const WaitlistEntrySchema = z.object({
   id: z.string(),
   sessionId: z.string(),
-  userId: z.string(),
+  clientId: z.string(),
   createdAt: z.string().datetime(),
   position: z.number().int().min(1),
 });
