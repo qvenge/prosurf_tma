@@ -84,14 +84,13 @@ export function SeasonTicketPaymentPage() {
   const selectedPlan = availablePlans?.find((plan) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
 
-  const { finalPrice, bonusAmount } = calculatePrices(subscriptionPrice, bonusValue, activeBonus);
+  // Get max redeem rate for season tickets
+  const maxRedeemRate = bonusRules?.maxRedeemRates?.seasonTicket ?? 0;
 
-  // Get bonus rate for season tickets
-  const bonusRate = useMemo(() => {
-    if (!bonusRules?.earnRates) return 0;
-    const rule = bonusRules.earnRates.find((r) => r.product === 'seasonTicket');
-    return rule?.rate ?? 0;
-  }, [bonusRules]);
+  const { finalPrice, bonusAmount } = calculatePrices(subscriptionPrice, bonusValue, activeBonus, maxRedeemRate);
+
+  // Get bonus rate (same rate for all product types)
+  const bonusRate = bonusRules?.earnRate ?? 0;
 
   // Handler for payment
   const handlePayment = () => {

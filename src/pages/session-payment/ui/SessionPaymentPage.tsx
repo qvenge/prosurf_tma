@@ -28,7 +28,6 @@ import {
   ErrorState,
   PlansErrorState,
   BonusErrorState,
-  NoPlansState,
 } from '@/shared/ui/payment-states';
 import { pluralize, getSessionType } from '@/shared/lib';
 
@@ -97,6 +96,16 @@ export function SessionPaymentPage() {
   // Payment processing hook
   const { processPayment, isProcessing } = useSessionPayment(session || null, user || null);
 
+  // Check if subscription tab should be shown
+  const hasSubscriptionTab = plansError || (availablePlans && availablePlans.length > 0);
+
+  // Reset to single_session when subscription tab is hidden
+  useEffect(() => {
+    if (!hasSubscriptionTab && product === 'subscription') {
+      updateProduct('single_session');
+    }
+  }, [hasSubscriptionTab, product, updateProduct]);
+
   // Calculate prices
   const selectedPlan = availablePlans?.find((plan) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
@@ -104,15 +113,15 @@ export function SessionPaymentPage() {
 
   const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
 
-  const { finalPrice, bonusAmount } = calculatePrices(originalPrice, bonusValue, activeBonus);
+  // Get max redeem rate based on product type
+  const maxRedeemRate = product === 'subscription'
+    ? (bonusRules?.maxRedeemRates?.seasonTicket ?? 0)
+    : (bonusRules?.maxRedeemRates?.single ?? 0);
 
-  // Get bonus rate based on product type
-  const bonusRate = useMemo(() => {
-    if (!bonusRules?.earnRates) return 0;
-    const productType = product === 'subscription' ? 'seasonTicket' : 'single';
-    const rule = bonusRules.earnRates.find((r) => r.product === productType);
-    return rule?.rate ?? 0;
-  }, [bonusRules, product]);
+  const { finalPrice, bonusAmount } = calculatePrices(originalPrice, bonusValue, activeBonus, maxRedeemRate);
+
+  // Get bonus rate (same rate for all product types)
+  const bonusRate = bonusRules?.earnRate ?? 0;
 
   // Handler for payment
   const handlePayment = () => {
@@ -145,40 +154,39 @@ export function SessionPaymentPage() {
       ),
     });
 
-    // Subscription tab
-    result.push({
-      id: 'subscription',
-      label: 'Абонемент',
-      content: (
-        <>
-          {plansError ? (
-            // Show error state with retry button
-            <PlansErrorState onRetry={() => refetchPlans()} />
-          ) : availablePlans && availablePlans.length > 0 ? (
-            <>
-              {selectedPlan && (
-                <PriceBreakdown
-                  productName={`Абонемент ${selectedPlan.passes} ${pluralize(selectedPlan.passes, ['занятие', 'занятия', 'занятий'])}`}
-                  description={selectedPlan.description ?? undefined}
-                  price={selectedPlan.price}
+    // Subscription tab - only show if plans are available or there's an error (to allow retry)
+    if (hasSubscriptionTab) {
+      result.push({
+        id: 'subscription',
+        label: 'Абонемент',
+        content: (
+          <>
+            {plansError ? (
+              // Show error state with retry button
+              <PlansErrorState onRetry={() => refetchPlans()} />
+            ) : (
+              <>
+                {selectedPlan && (
+                  <PriceBreakdown
+                    productName={`Абонемент ${selectedPlan.passes} ${pluralize(selectedPlan.passes, ['занятие', 'занятия', 'занятий'])}`}
+                    description={selectedPlan.description ?? undefined}
+                    price={selectedPlan.price}
+                  />
+                )}
+                <SeasonTicketPlans
+                  plans={availablePlans ?? []}
+                  selectedPlanId={selectedPlanId}
+                  onPlanSelect={updateSelectedPlan}
                 />
-              )}
-              <SeasonTicketPlans
-                plans={availablePlans}
-                selectedPlanId={selectedPlanId}
-                onPlanSelect={updateSelectedPlan}
-              />
-            </>
-          ) : (
-            // No plans available (but no error)
-            <NoPlansState />
-          )}
-        </>
-      ),
-    });
+              </>
+            )}
+          </>
+        ),
+      });
+    }
 
     return result;
-  }, [selectedPlan, session, availablePlans, selectedPlanId, updateSelectedPlan, plansError, refetchPlans]);
+  }, [selectedPlan, session, availablePlans, selectedPlanId, updateSelectedPlan, plansError, refetchPlans, hasSubscriptionTab]);
 
   // Error state - session error
   if (sessionError) {

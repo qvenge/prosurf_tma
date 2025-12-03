@@ -8,16 +8,17 @@ import { useNavigate } from '@/shared/navigation';
 
 export function MySeasonTicketsPage() {
   const { data: seasonTickets = [] } = useCurrentUserSeasonTickets();
+  const activeTickets = seasonTickets.filter(ticket => ticket.status === 'ACTIVE');
   const plansQuery = useSeasonTicketPlansInfinite();
   const navigate = useNavigate();
 
-  const hasTickets = seasonTickets.length > 0;
+  const hasTickets = activeTickets.length > 0;
 
   return (
     <PageLayout title="Абонемент">
       <div className={styles.wrapper}>
         {hasTickets && (
-          <div className={styles.tickets}>{seasonTickets.map((ticket) => (
+          <div className={styles.tickets}>{activeTickets.map((ticket) => (
             <div key={ticket.id} className={styles.card}>
               <div className={styles.ticketHeader}>
                 <div className={styles.ticketTitle}>Осталось занятий</div>

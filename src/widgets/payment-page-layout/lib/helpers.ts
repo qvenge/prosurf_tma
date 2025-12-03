@@ -16,19 +16,26 @@ export const getEventTypeLabel = (eventType: EventType): string => {
 export const calculatePrices = (
   originalPrice: number,  // in kopecks (minor units)
   bonusValue: number,     // in bonus units (1 bonus = 1 ruble)
-  activeBonus: boolean
+  activeBonus: boolean,
+  maxRedeemRate: number = 1  // Max redeem rate (0-1), default 100%
 ): PriceCalculation => {
   // Convert bonus value from rubles to kopecks for calculation
   const bonusValueInKopecks = bonusValue * PAYMENT_CONSTANTS.MINOR_CURRENCY_DIVISOR;
 
+  // Calculate max redeemable based on rate limit
+  const maxRedeemableKopecks = Math.floor(originalPrice * maxRedeemRate);
+
+  // Actual bonus amount is min of: user's bonus, max redeemable, original price
+  const applicableBonus = Math.min(bonusValueInKopecks, maxRedeemableKopecks, originalPrice);
+
   const finalPrice = activeBonus
-    ? Math.max(0, originalPrice - bonusValueInKopecks)
+    ? Math.max(0, originalPrice - applicableBonus)
     : originalPrice;
 
   return {
     originalPrice,
     finalPrice,
     // bonusAmount in kopecks (to send to server as amountMinor)
-    bonusAmount: Math.min(bonusValueInKopecks, originalPrice),
+    bonusAmount: applicableBonus,
   };
 };

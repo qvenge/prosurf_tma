@@ -160,7 +160,7 @@ export const EventSchema = z.object({
   attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   images: z.array(z.string()).nullable().optional(),
   allowDeferredPayment: z.boolean().optional().default(false),
-  status: EventStatusSchema,
+  status: EventStatusSchema.optional(),
 });
 
 export const EventCreateDtoSchema = z.object({
@@ -675,11 +675,12 @@ export const BonusWalletSchema = z.object({
 });
 
 export const BonusRulesSchema = z.object({
-  earnRates: z.array(z.object({
-    product: z.enum(['single', 'certificate', 'seasonTicket']),
-    rate: z.number().min(0).max(1),
-  })),
-  maxRedeemRate: z.number().min(0).max(1),
+  earnRate: z.number().min(0).max(1),
+  maxRedeemRates: z.object({
+    single: z.number().min(0).max(1),
+    seasonTicket: z.number().min(0).max(1),
+    certificate: z.number().min(0).max(1),
+  }),
 });
 
 // Waitlist schemas
