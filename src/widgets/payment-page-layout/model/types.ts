@@ -13,20 +13,20 @@ export interface TabConfig<T extends string = string> {
 }
 
 /**
- * Configuration for cashback payment option
+ * Configuration for bonus payment option
  */
-export interface CashbackConfig {
-  /** Whether cashback option is enabled */
+export interface BonusConfig {
+  /** Whether bonus option is enabled */
   enabled: boolean;
 
   total: number;
-  /** Available cashback value in minor units */
+  /** Available bonus value in minor units */
   value: number;
-  /** Whether cashback is currently active/selected */
+  /** Whether bonus is currently active/selected */
   active: boolean;
-  /** Callback when cashback toggle changes */
+  /** Callback when bonus toggle changes */
   onChange: (active: boolean) => void;
-  /** Optional error component to display instead of normal cashback UI */
+  /** Optional error component to display instead of normal bonus UI */
   errorComponent?: ReactNode;
 }
 
@@ -48,8 +48,8 @@ export interface CertificateConfig {
  * Payment options configuration - keeps PaymentOptions in widget but configurable
  */
 export interface PaymentOptionsConfig {
-  /** Cashback configuration */
-  cashback?: CashbackConfig;
+  /** Bonus configuration */
+  bonus?: BonusConfig;
   /** Certificate configuration */
   certificate?: CertificateConfig;
 }
@@ -68,8 +68,8 @@ export interface PaymentSummaryConfig {
   isProcessing: boolean;
   /** Payment error message */
   error?: string | null;
-  /** Cashback rate (0-1). If undefined or 0, cashback info is hidden */
-  cashbackRate?: number;
+  /** Bonus rate (0-1). If undefined or 0, bonus info is hidden */
+  bonusRate?: number;
 }
 
 /**
@@ -107,12 +107,12 @@ export type EventType = 'surfingTraining' | 'surfskateTraining' | 'tour' | 'othe
 export interface PaymentState {
   product: ProductType;
   selectedPlanId: string;
-  activeCashback: boolean;
+  activeBonus: boolean;
   paymentError: string | null;
 }
 
 export interface PriceCalculation {
   originalPrice: number;
   finalPrice: number;
-  cashbackAmount: number;
+  bonusAmount: number;
 }

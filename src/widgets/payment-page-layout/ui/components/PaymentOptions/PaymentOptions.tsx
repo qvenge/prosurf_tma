@@ -1,5 +1,4 @@
 import { Switch } from '@/shared/ui';
-import { formatPrice } from '../../../lib/helpers';
 import { PAYMENT_CONSTANTS } from '../../../lib/constants';
 import type { PaymentOptionsConfig } from '../../../model/types';
 import styles from './PaymentOptions.module.scss';
@@ -9,37 +8,37 @@ interface PaymentOptionsProps {
 }
 
 export function PaymentOptions({ options }: PaymentOptionsProps) {
-  const { cashback, certificate } = options;
+  const { bonus, certificate } = options;
 
   // Don't render if no options are enabled and no error component
-  if (!cashback?.enabled && !certificate?.enabled && !cashback?.errorComponent) {
+  if (!bonus?.enabled && !certificate?.enabled && !bonus?.errorComponent) {
     return null;
   }
 
   return (
     <div className={styles.options}>
-      {/* Cashback option */}
-      {cashback?.errorComponent ? (
+      {/* Bonus option */}
+      {bonus?.errorComponent ? (
         // Show error component if provided
         <>
-          {cashback.errorComponent}
+          {bonus.errorComponent}
           <div className={styles.divider} />
         </>
-      ) : cashback?.enabled && cashback.value > 0 ? (
+      ) : bonus?.enabled && bonus.value > 0 ? (
         <>
           <div className={styles.settingItem}>
             <div className={styles.settingItemInfo}>
               <div className={styles.settingItemName}>
-                Бонусы: {formatPrice(cashback.total)} {PAYMENT_CONSTANTS.CURRENCY}
+                Бонусы: {bonus.total.toLocaleString('ru-RU')}
               </div>
               <div className={styles.settingItemDescription}>
-                Списать {formatPrice(cashback.value)} {PAYMENT_CONSTANTS.CURRENCY} бонусов?
+                Списать {Math.floor(bonus.value / PAYMENT_CONSTANTS.MINOR_CURRENCY_DIVISOR).toLocaleString('ru-RU')} бонусов?
               </div>
             </div>
             <div className={styles.settingItemControl}>
               <Switch
-                checked={cashback.active}
-                onChange={({ currentTarget }) => cashback.onChange(currentTarget.checked)}
+                checked={bonus.active}
+                onChange={({ currentTarget }) => bonus.onChange(currentTarget.checked)}
               />
             </div>
           </div>

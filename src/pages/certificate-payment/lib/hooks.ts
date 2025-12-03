@@ -79,7 +79,7 @@ export const useCertificatePayment = () => {
     });
 
     try {
-      // Build payment request - only card, no cashback or certificate
+      // Build payment request - only card, no bonus or certificate
       // Use array format (new simplified API structure)
       const paymentMethods = [{
         method: 'card' as const,

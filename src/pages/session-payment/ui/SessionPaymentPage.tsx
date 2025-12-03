@@ -16,9 +16,9 @@ import {
 import {
   useSession,
   useCurrentClient,
-  useMyCashback,
+  useMyBonus,
   useSeasonTicketPlans,
-  useCashbackRules,
+  useBonusRules,
   type SeasonTicketPlan,
 } from '@/shared/api';
 import { useSessionPayment } from '../lib/hooks';
@@ -27,7 +27,7 @@ import {
   LoadingState,
   ErrorState,
   PlansErrorState,
-  CashbackErrorState,
+  BonusErrorState,
   NoPlansState,
 } from '@/shared/ui/payment-states';
 import { pluralize, getSessionType } from '@/shared/lib';
@@ -38,39 +38,39 @@ export function SessionPaymentPage() {
   // Data fetching
   const { data: session, isLoading: sessionLoading, error: sessionError } = useSession(sessionId || '');
   const { user, isLoading: userLoading } = useCurrentClient();
-  const { data: cashbackWallet, isLoading: cashbackLoading, error: cashbackError } = useMyCashback();
+  const { data: bonusWallet, isLoading: bonusLoading, error: bonusError } = useMyBonus();
   const {
     data: plansData,
     isLoading: plansLoading,
     error: plansError,
     refetch: refetchPlans,
   } = useSeasonTicketPlans();
-  const { data: cashbackRules } = useCashbackRules();
+  const { data: bonusRules } = useBonusRules();
 
   // Log errors for debugging
   useEffect(() => {
     if (sessionError) {
       console.error('Session payment page - Session loading error:', sessionError);
     }
-    if (cashbackError) {
-      console.error('Session payment page - Cashback loading error:', cashbackError);
+    if (bonusError) {
+      console.error('Session payment page - Bonus loading error:', bonusError);
     }
     if (plansError) {
       console.error('Session payment page - Plans loading error:', plansError);
     }
-  }, [sessionError, cashbackError, plansError]);
+  }, [sessionError, bonusError, plansError]);
 
-  const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
+  const bonusValue = bonusWallet?.balance || 0;
 
   // State management
   const {
     product,
     selectedPlanId,
-    activeCashback,
+    activeBonus,
     paymentError,
     updateProduct,
     updateSelectedPlan,
-    updateActiveCashback,
+    updateActiveBonus,
     setPaymentError,
   } = usePaymentState();
 
@@ -104,30 +104,29 @@ export function SessionPaymentPage() {
 
   const originalPrice = product === 'subscription' ? subscriptionPrice : sessionPrice;
 
-  const { finalPrice, cashbackAmount } = calculatePrices(originalPrice, cashbackValue, activeCashback);
+  const { finalPrice, bonusAmount } = calculatePrices(originalPrice, bonusValue, activeBonus);
 
-  // Get cashback rate based on product type
-  const cashbackRate = useMemo(() => {
-    if (!cashbackRules?.earnRates) return 0;
+  // Get bonus rate based on product type
+  const bonusRate = useMemo(() => {
+    if (!bonusRules?.earnRates) return 0;
     const productType = product === 'subscription' ? 'seasonTicket' : 'single';
-    const rule = cashbackRules.earnRates.find((r) => r.product === productType);
+    const rule = bonusRules.earnRates.find((r) => r.product === productType);
     return rule?.rate ?? 0;
-  }, [cashbackRules, product]);
+  }, [bonusRules, product]);
 
   // Handler for payment
   const handlePayment = () => {
     processPayment(
       selectedPlanId,
       product,
-      activeCashback,
-      activeCashback ? cashbackAmount : 0,
-      cashbackWallet?.balance.currency || 'RUB',
+      activeBonus,
+      activeBonus ? bonusAmount : 0,
       setPaymentError
     );
   };
 
   // Combined loading state
-  const isLoading = sessionLoading || userLoading || cashbackLoading || plansLoading;
+  const isLoading = sessionLoading || userLoading || bonusLoading || plansLoading;
 
   // Configure tabs
   const tabs = useMemo<TabConfig<ProductType>[]>(() => {
@@ -210,22 +209,22 @@ export function SessionPaymentPage() {
 
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {
-    cashback: cashbackError
+    bonus: bonusError
       ? {
-          // Show error state for cashback
+          // Show error state for bonus
           enabled: false,
           total: 0,
           value: 0,
           active: false,
           onChange: () => {},
-          errorComponent: <CashbackErrorState />,
+          errorComponent: <BonusErrorState />,
         }
       : {
-          enabled: cashbackAmount > 0,
-          total: cashbackValue,
-          value: cashbackAmount,
-          active: activeCashback,
-          onChange: updateActiveCashback,
+          enabled: bonusAmount > 0,
+          total: bonusValue,
+          value: bonusAmount,
+          active: activeBonus,
+          onChange: updateActiveBonus,
         },
     certificate: {
       enabled: false,
@@ -242,7 +241,7 @@ export function SessionPaymentPage() {
     onPayment: handlePayment,
     isProcessing,
     error: paymentError,
-    cashbackRate,
+    bonusRate,
   };
 
   return (

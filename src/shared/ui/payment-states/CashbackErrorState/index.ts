@@ -1,1 +1,1 @@
-export { CashbackErrorState } from './CashbackErrorState';
+export { BonusErrorState as CashbackErrorState } from '../BonusErrorState/BonusErrorState';

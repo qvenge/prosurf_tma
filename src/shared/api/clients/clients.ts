@@ -1,14 +1,14 @@
 import { apiClient, validateResponse, joinApiUrl } from '../config';
 import {
   UserUpdateDtoSchema,
-  CashbackWalletSchema,
+  BonusWalletSchema,
   ClientSchema,
   CompleteProfileDtoSchema,
 } from '../schemas';
 import type {
   User,
   UserUpdateDto,
-  CashbackWallet,
+  BonusWallet,
   Client,
   CompleteProfileDto,
 } from '../types';
@@ -126,11 +126,11 @@ export const clientsClient = {
   },
 
   /**
-   * Get current client cashback wallet
-   * GET /clients/me/cashback
+   * Get current client bonus wallet
+   * GET /clients/me/bonus
    */
-  async getMyCashback(): Promise<CashbackWallet> {
-    const response = await apiClient.get('/clients/me/cashback');
-    return validateResponse(response.data, CashbackWalletSchema);
+  async getMyBonus(): Promise<BonusWallet> {
+    const response = await apiClient.get('/clients/me/bonus');
+    return validateResponse(response.data, BonusWalletSchema);
   },
 };

@@ -26,9 +26,8 @@ export const useSeasonTicketPayment = () => {
    */
   const processPayment = async (
     selectedPlanId: string,
-    activeCashback: boolean,
-    cashbackAmount: number,
-    cashbackCurrency: string,
+    activeBonus: boolean,
+    bonusAmount: number,
     setPaymentError: (error: string) => void
   ) => {
     setPaymentError('');
@@ -53,8 +52,8 @@ export const useSeasonTicketPayment = () => {
       provider: 'telegram',
       metadata: {
         planId: selectedPlanId,
-        activeCashback,
-        cashbackAmount,
+        activeBonus,
+        bonusAmount,
       },
     });
 
@@ -66,7 +65,7 @@ export const useSeasonTicketPayment = () => {
 
     try {
       // Build payment method request
-      const paymentMethod = buildPaymentMethodRequest(activeCashback, cashbackAmount, cashbackCurrency);
+      const paymentMethod = buildPaymentMethodRequest(activeBonus, bonusAmount);
 
       // Purchase season ticket with payment
       const payment = await purchaseSeasonTicket.mutateAsync({

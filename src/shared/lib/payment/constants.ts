@@ -14,7 +14,7 @@ export const PLANS_ERRORS = {
   PLANS_LOADING_ERROR: 'Не удалось загрузить планы абонементов',
 } as const;
 
-// Cashback related errors
-export const CASHBACK_ERRORS = {
-  CASHBACK_LOADING_ERROR: 'Не удалось загрузить баланс кэшбека',
+// Bonus related errors
+export const BONUS_ERRORS = {
+  BONUS_LOADING_ERROR: 'Не удалось загрузить баланс бонусов',
 } as const;

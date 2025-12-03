@@ -3,7 +3,7 @@ export type {
   PaymentPageLayoutProps,
   TabConfig,
   PaymentOptionsConfig,
-  CashbackConfig,
+  BonusConfig,
   CertificateConfig,
   PaymentSummaryConfig,
   ProductType,

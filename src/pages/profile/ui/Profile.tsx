@@ -21,14 +21,13 @@ import {
   useBookings,
   useSessions,
   useCurrentClient,
-  useMyCashback,
+  useMyBonus,
   useCurrentUserSeasonTickets,
   type BookingExtended,
   type SeasonTicketFilters
 } from '@/shared/api';
 
 import { PageLayout } from '@/widgets/page-layout';
-import { formatPrice } from '@/shared/lib/format-utils';
 import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import { pluralize } from '@/shared/lib';
 
@@ -39,7 +38,7 @@ const seasonTicketsFilters: SeasonTicketFilters = {
 
 export const Profile = () => {
   const { user, isLoading: isUserLoading, error: userError } = useCurrentClient();
-  const { data: cashbackData, isLoading: isCashbackLoading } = useMyCashback();
+  const { data: bonusData, isLoading: isBonusLoading } = useMyBonus();
   const { data: seasonTicketsData, isLoading: isSeasonTicketsLoading } = useCurrentUserSeasonTickets(seasonTicketsFilters);
   // const { data: certificatesData, isLoading: isCertificatesLoading } = useCurrentUserCertificates();
 
@@ -260,7 +259,7 @@ export const Profile = () => {
             <div className={styles.statItemContent}>
               <div className={styles.statLabel}>Бонусы</div>
               <div className={styles.statValue}>{
-                isCashbackLoading ? '...' : (cashbackData?.balance?.amountMinor ? formatPrice(cashbackData.balance) : '0 ₽')
+                isBonusLoading ? '...' : (bonusData?.balance ? `${bonusData.balance} ₽` : '0 ₽')
               }</div>
             </div>
           </div>

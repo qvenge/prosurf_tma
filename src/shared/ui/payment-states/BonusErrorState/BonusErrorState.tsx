@@ -1,16 +1,13 @@
 import { BONUS_ERRORS } from '@/shared/lib/payment';
-import styles from './CashbackErrorState.module.scss';
+import styles from './BonusErrorState.module.scss';
 
-interface CashbackErrorStateProps {
+interface BonusErrorStateProps {
   message?: string;
 }
 
-/**
- * @deprecated Use BonusErrorState instead. This component is kept for backward compatibility.
- */
-export function CashbackErrorState({
+export function BonusErrorState({
   message = BONUS_ERRORS.BONUS_LOADING_ERROR
-}: CashbackErrorStateProps) {
+}: BonusErrorStateProps) {
   return (
     <div className={styles.wrapper}>
       <span className={styles.icon}>⚠️</span>

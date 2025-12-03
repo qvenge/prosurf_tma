@@ -7,6 +7,7 @@ import { PageLayout } from '@/widgets/page-layout'
 import { Modal, Checkbox } from '@/shared/ui';
 import type { CompleteProfileDto } from '@/shared/api/types';
 import styles from './ProfileComplete.module.scss';
+import { SOGLASIE, TEHNIKA } from './docs';
 
 /**
  * Profile completion page for first-time users
@@ -93,7 +94,7 @@ export const ProfileComplete = () => {
       case 'personalData':
         return {
           title: 'Согласие на обработку персональных данных',
-          content: 'Я даю согласие на обработку моих персональных данных в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ "О персональных данных".\n\nПерсональные данные будут использоваться исключительно для предоставления услуг и улучшения качества сервиса.',
+          content: SOGLASIE,
         };
       case 'privacyPolicy':
         return {
@@ -103,7 +104,7 @@ export const ProfileComplete = () => {
       case 'safetyRules':
         return {
           title: 'Техника безопасности',
-          content: 'Я ознакомлен(а) с правилами техники безопасности при занятиях серфингом и принимаю на себя ответственность за их соблюдение.\n\nНесоблюдение правил техники безопасности может привести к травмам.',
+          content: TEHNIKA,
         };
     }
   };

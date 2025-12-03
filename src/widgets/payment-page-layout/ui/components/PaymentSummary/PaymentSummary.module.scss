@@ -31,7 +31,7 @@
     // Button styles are handled by the Button component
   }
 
-  .cashback {
+  .bonus {
     @include ds.typo('Roboto/Caption 1/Semibold');
     color: ds.color('Text/Secondary');
     text-align: center;

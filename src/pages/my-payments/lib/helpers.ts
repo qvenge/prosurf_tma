@@ -8,7 +8,7 @@ export interface PaymentEntryData {
   icon: string;
   label: string;
   cost: string;
-  cashback?: string;
+  bonus?: string;
   status: PaymentStatus;
 }
 
@@ -57,11 +57,10 @@ export const formatPaymentAmount = (price: { amountMinor: number; currency: stri
   return `− ${formatted}`;
 };
 
-export const formatCashbackAmount = (cashback?: { amountMinor: number; currency: string } | null): string | undefined => {
-  if (!cashback || cashback.amountMinor === 0) return undefined;
-  // Format cashback as simple number with plus sign
-  const amount = Math.round(cashback.amountMinor / 100);
-  return `+${amount}`;
+export const formatBonusAmount = (bonus?: number | null): string | undefined => {
+  if (!bonus || bonus === 0) return undefined;
+  // Format bonus as simple number with plus sign (1 bonus = 1 ruble)
+  return `+${bonus}`;
 };
 
 export const getStatusLabel = (status: PaymentStatus): string => {
@@ -95,7 +94,7 @@ export const groupPaymentsByDate = (payments: PaymentListItem[]): PaymentGroup[]
       purpose: payment.name ?? 'Покупка',
       ...getCategoryInfo(payment.category, payment.labels),
       cost: formatPaymentAmount(payment.price),
-      cashback: formatCashbackAmount(payment.cashback),
+      bonus: formatBonusAmount(payment.bonus),
       status: payment.status,
     })),
   }));

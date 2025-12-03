@@ -77,9 +77,9 @@ export const useActivateCertificate = () => {
         queryClient.invalidateQueries({ queryKey: ['season-tickets'] });
       }
 
-      // Invalidate cashback if cashback was added
-      if (data.result.type === 'cashback') {
-        queryClient.invalidateQueries({ queryKey: ['cashback'] });
+      // Invalidate bonus if bonus was added
+      if (data.result.type === 'bonus') {
+        queryClient.invalidateQueries({ queryKey: ['bonus'] });
       }
     },
   });

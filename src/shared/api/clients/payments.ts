@@ -19,7 +19,7 @@ import type {
  * Payments API client
  * 
  * Handles payment creation, retrieval, and refund operations.
- * Supports single payment methods (card, certificate, pass, cashback) and composite payments.
+ * Supports single payment methods (card, certificate, pass, bonus) and composite payments.
  */
 export const paymentsClient = {
   /**
@@ -48,7 +48,7 @@ export const paymentsClient = {
    *   {
    *     methods: [
    *       { method: 'certificate', certificateId: 'cert-123' },
-   *       { method: 'cashback', amount: { currency: 'KZT', amountMinor: 1500 } },
+   *       { method: 'bonus', amount: 1500 },
    *       { method: 'card', provider: 'telegram' }
    *     ]
    *   },

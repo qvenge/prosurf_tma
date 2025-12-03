@@ -5,7 +5,7 @@ export const usePaymentState = () => {
   const [state, setState] = useState<PaymentState>({
     product: 'subscription',
     selectedPlanId: '',
-    activeCashback: false,
+    activeBonus: false,
     paymentError: null,
   });
 
@@ -17,8 +17,8 @@ export const usePaymentState = () => {
     setState(prev => ({ ...prev, selectedPlanId, paymentError: null }));
   };
 
-  const updateActiveCashback = (activeCashback: boolean) => {
-    setState(prev => ({ ...prev, activeCashback, paymentError: null }));
+  const updateActiveBonus = (activeBonus: boolean) => {
+    setState(prev => ({ ...prev, activeBonus, paymentError: null }));
   };
 
   const setPaymentError = (paymentError: string | null) => {
@@ -29,7 +29,7 @@ export const usePaymentState = () => {
     ...state,
     updateProduct,
     updateSelectedPlan,
-    updateActiveCashback,
+    updateActiveBonus,
     setPaymentError,
   };
 };

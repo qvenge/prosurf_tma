@@ -146,6 +146,8 @@ export const AttributeValueSchema = z.union([
   z.array(z.string()),
 ]);
 
+export const EventStatusSchema = z.enum(['ACTIVE', 'CANCELLED']);
+
 export const EventSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -158,6 +160,7 @@ export const EventSchema = z.object({
   attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   images: z.array(z.string()).nullable().optional(),
   allowDeferredPayment: z.boolean().optional().default(false),
+  status: EventStatusSchema,
 });
 
 export const EventCreateDtoSchema = z.object({
@@ -183,7 +186,7 @@ export const EventUpdateDtoSchema = z.object({
 });
 
 // Session schemas
-export const SessionStatusSchema = z.enum(['SCHEDULED', 'CANCELLED']);
+export const SessionStatusSchema = z.enum(['SCHEDULED', 'CANCELLED', 'COMPLETE']);
 
 export const SessionSchema = z.object({
   id: z.string(),
@@ -285,7 +288,7 @@ export const BookingExtendedSchema = BookingSchema.extend({
   client: UserSchema.optional(),
   session: SessionSchema.optional(),
   paymentInfo: z.object({
-    method: z.enum(['card', 'certificate', 'pass', 'cashback', 'composite']),
+    method: z.enum(['card', 'certificate', 'pass', 'bonus', 'composite']),
     paymentId: z.string().nullable().optional(),
     certificateId: z.string().nullable().optional(),
     seasonTicketId: z.string().nullable().optional(),
@@ -358,16 +361,16 @@ export const SeasonTicketPaymentMethodSchema = z.object({
   passesToSpend: z.number().int().min(1),
 });
 
-export const CashbackPaymentMethodSchema = z.object({
-  method: z.literal('cashback'),
-  amount: PriceSchema,
+export const BonusPaymentMethodSchema = z.object({
+  method: z.literal('bonus'),
+  amount: PriceSchema, // Amount in kopecks (amountMinor) - will be converted to bonus by server (1 bonus = 1 ruble = 100 kopecks)
 });
 
 export const PaymentMethodRequestSchema = z.discriminatedUnion('method', [
   CardPaymentMethodSchema,
   CertificatePaymentMethodSchema,
   SeasonTicketPaymentMethodSchema,
-  CashbackPaymentMethodSchema,
+  BonusPaymentMethodSchema,
 ]);
 
 // Simplified: paymentMethods is always an array (single or multiple methods)
@@ -399,7 +402,7 @@ export const PaymentListItemSchema = z.object({
   labels: z.array(z.string()).nullable().optional(),
   attrs: z.record(z.string(), z.unknown()).nullable().optional(),
   price: PriceSchema,
-  cashback: PriceSchema.nullable().optional(),
+  bonus: z.number().nullable().optional(), // Bonus amount (1 bonus = 1 ruble)
   status: PaymentStatusSchema,
   createdAt: z.string().datetime(),
 });
@@ -562,13 +565,13 @@ export const SeasonTicketSchema = z.object({
   validUntil: z.string().datetime(),
 });
 
-// Cashback schemas
-export const CashbackTransactionTypeSchema = z.enum(['EARN', 'REDEEM', 'ADJUST']);
+// Bonus schemas
+export const BonusTransactionTypeSchema = z.enum(['EARN', 'REDEEM', 'ADJUST']);
 
-export const CashbackTransactionSchema = z.object({
+export const BonusTransactionSchema = z.object({
   id: z.string(),
-  type: CashbackTransactionTypeSchema,
-  amount: PriceSchema,
+  type: BonusTransactionTypeSchema,
+  amount: z.number(), // Bonus amount (1 bonus = 1 ruble)
   createdAt: z.string().datetime(),
   note: z.string().nullable().optional(),
 });
@@ -594,10 +597,10 @@ export const CertificateActivationResultSeasonTicketSchema = z.object({
   seasonTicket: CertificateActivationSeasonTicketDataSchema,
 });
 
-export const CertificateActivationResultCashbackSchema = z.object({
-  type: z.literal('cashback'),
-  cashbackOperation: CashbackTransactionSchema,
-  newBalance: PriceSchema,
+export const CertificateActivationResultBonusSchema = z.object({
+  type: z.literal('bonus'),
+  bonusOperation: BonusTransactionSchema,
+  newBalance: z.number(), // Bonus balance (1 bonus = 1 ruble)
 });
 
 // Certificate activation response
@@ -605,7 +608,7 @@ export const CertificateActivationResponseSchema = z.object({
   certificate: CertificateDtoSchema,
   result: z.discriminatedUnion('type', [
     CertificateActivationResultSeasonTicketSchema,
-    CertificateActivationResultCashbackSchema,
+    CertificateActivationResultBonusSchema,
   ]),
 });
 
@@ -665,13 +668,13 @@ export const SeasonTicketPlanUpdateDtoSchema = z.object({
   eventFilter: EventFilterSchema.optional(),
 });
 
-// Cashback wallet schema
-export const CashbackWalletSchema = z.object({
-  balance: PriceSchema,
-  history: z.array(CashbackTransactionSchema).optional(),
+// Bonus wallet schema
+export const BonusWalletSchema = z.object({
+  balance: z.number(), // Bonus balance (1 bonus = 1 ruble)
+  history: z.array(BonusTransactionSchema).optional(),
 });
 
-export const CashbackRulesSchema = z.object({
+export const BonusRulesSchema = z.object({
   earnRates: z.array(z.object({
     product: z.enum(['single', 'certificate', 'seasonTicket']),
     rate: z.number().min(0).max(1),

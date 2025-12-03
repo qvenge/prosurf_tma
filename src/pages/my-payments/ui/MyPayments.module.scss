@@ -76,7 +76,7 @@
     text-align: right;
   }
 
-  .cashback, .status {
+  .bonus, .status {
     @include ds.typo('Roboto/Caption 1/Semibold');
     color: ds.color('Text/Brand');
   }

@@ -11,38 +11,38 @@ import {
   type PaymentOptionsConfig,
   type PaymentSummaryConfig,
 } from '@/widgets/payment-page-layout';
-import { useMyCashback, useSeasonTicketPlans, useCashbackRules, type SeasonTicketPlan } from '@/shared/api';
+import { useMyBonus, useSeasonTicketPlans, useBonusRules, type SeasonTicketPlan } from '@/shared/api';
 import { useSeasonTicketPayment } from '../lib/hooks';
-import { LoadingState, PlansErrorState, CashbackErrorState } from '@/shared/ui/payment-states';
+import { LoadingState, PlansErrorState, BonusErrorState } from '@/shared/ui/payment-states';
 
 export function SeasonTicketPaymentPage() {
   const { planId } = useParams<{ planId?: string }>();
 
   // Data fetching
-  const { data: cashbackWallet, isLoading: cashbackLoading, error: cashbackError } = useMyCashback();
+  const { data: bonusWallet, isLoading: bonusLoading, error: bonusError } = useMyBonus();
   const {
     data: plansData,
     isLoading: plansLoading,
     error: plansError,
     refetch: refetchPlans,
   } = useSeasonTicketPlans();
-  const { data: cashbackRules } = useCashbackRules();
+  const { data: bonusRules } = useBonusRules();
 
   // Log errors for debugging
   useEffect(() => {
-    if (cashbackError) {
-      console.error('Season ticket payment page - Cashback loading error:', cashbackError);
+    if (bonusError) {
+      console.error('Season ticket payment page - Bonus loading error:', bonusError);
     }
     if (plansError) {
       console.error('Season ticket payment page - Plans loading error:', plansError);
     }
-  }, [cashbackError, plansError]);
+  }, [bonusError, plansError]);
 
-  const cashbackValue = cashbackWallet?.balance.amountMinor || 0;
+  const bonusValue = bonusWallet?.balance || 0;
 
   // State management
   const [selectedPlanId, setSelectedPlanId] = useState('');
-  const [activeCashback, setActiveCashback] = useState(false);
+  const [activeBonus, setActiveBonus] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
   // Auto-select plan from route param or first available
@@ -84,28 +84,27 @@ export function SeasonTicketPaymentPage() {
   const selectedPlan = availablePlans?.find((plan) => plan.id === selectedPlanId);
   const subscriptionPrice = selectedPlan?.price.amountMinor || 0;
 
-  const { finalPrice, cashbackAmount } = calculatePrices(subscriptionPrice, cashbackValue, activeCashback);
+  const { finalPrice, bonusAmount } = calculatePrices(subscriptionPrice, bonusValue, activeBonus);
 
-  // Get cashback rate for season tickets
-  const cashbackRate = useMemo(() => {
-    if (!cashbackRules?.earnRates) return 0;
-    const rule = cashbackRules.earnRates.find((r) => r.product === 'seasonTicket');
+  // Get bonus rate for season tickets
+  const bonusRate = useMemo(() => {
+    if (!bonusRules?.earnRates) return 0;
+    const rule = bonusRules.earnRates.find((r) => r.product === 'seasonTicket');
     return rule?.rate ?? 0;
-  }, [cashbackRules]);
+  }, [bonusRules]);
 
   // Handler for payment
   const handlePayment = () => {
     processPayment(
       selectedPlanId,
-      activeCashback,
-      activeCashback ? cashbackAmount : 0,
-      cashbackWallet?.balance.currency || 'RUB',
+      activeBonus,
+      activeBonus ? bonusAmount : 0,
       setPaymentError
     );
   };
 
   // Combined loading state
-  const isLoading = cashbackLoading || plansLoading;
+  const isLoading = bonusLoading || plansLoading;
 
   // Configure tabs - single tab for subscription
   const tabs = useMemo<TabConfig<ProductType>[]>(() => {
@@ -147,22 +146,22 @@ export function SeasonTicketPaymentPage() {
 
   // Payment options configuration
   const paymentOptions: PaymentOptionsConfig = {
-    cashback: cashbackError
+    bonus: bonusError
       ? {
-          // Show error state for cashback
+          // Show error state for bonus
           enabled: false,
           total: 0,
           value: 0,
           active: false,
           onChange: () => {},
-          errorComponent: <CashbackErrorState />,
+          errorComponent: <BonusErrorState />,
         }
       : {
-          enabled: cashbackAmount > 0,
-          total: cashbackValue,
-          value: cashbackAmount,
-          active: activeCashback,
-          onChange: setActiveCashback,
+          enabled: bonusAmount > 0,
+          total: bonusValue,
+          value: bonusAmount,
+          active: activeBonus,
+          onChange: setActiveBonus,
         },
     certificate: {
       enabled: false,
@@ -179,7 +178,7 @@ export function SeasonTicketPaymentPage() {
     onPayment: handlePayment,
     isProcessing,
     error: paymentError,
-    cashbackRate,
+    bonusRate,
   };
 
   return (

@@ -33,19 +33,16 @@ export const getSuccessTypeFromEventLabels = (
  * Returns array of payment methods (simplified structure)
  */
 export const buildPaymentMethodRequest = (
-  activeCashback: boolean,
-  cashbackAmount: number,
-  cashbackCurrency: string
+  activeBonus: boolean,
+  bonusAmountMinor: number,
+  currency: string = 'RUB'
 ): PaymentRequest => {
-  if (activeCashback && cashbackAmount > 0) {
-    // Composite payment: cashback + card
+  if (activeBonus && bonusAmountMinor > 0) {
+    // Composite payment: bonus + card
     return [
       {
-        method: 'cashback',
-        amount: {
-          currency: cashbackCurrency,
-          amountMinor: cashbackAmount,
-        },
+        method: 'bonus',
+        amount: { currency, amountMinor: bonusAmountMinor },
       },
       {
         method: 'card',

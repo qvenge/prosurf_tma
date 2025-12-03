@@ -6,7 +6,7 @@ import { getStatusLabel, type PaymentEntryData } from '../lib/helpers';
 import styles from './MyPayments.module.scss';
 
 export function PaymentEntry({data}: {data: PaymentEntryData}) {
-  const showCashback = data.status === 'SUCCEEDED' && data.cashback;
+  const showBonus = data.status === 'SUCCEEDED' && data.bonus;
   const showStatus = data.status !== 'SUCCEEDED';
 
   return (
@@ -20,8 +20,8 @@ export function PaymentEntry({data}: {data: PaymentEntryData}) {
       </div>
       <div className={styles.costStatus}>
         <div className={styles.cost}>{data.cost}</div>
-        {showCashback ? (
-          <div className={styles.cashback}>{data.cashback}</div>
+        {showBonus ? (
+          <div className={styles.bonus}>{data.bonus}</div>
         ) : showStatus ? (
           <div className={clsx(styles.status, styles[data.status.toLowerCase()])}>
             {getStatusLabel(data.status)}

@@ -40,9 +40,8 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
   const processPayment = async (
     selectedPlanId: string,
     product: ProductType,
-    activeCashback: boolean,
-    cashbackAmount: number,
-    cashbackCurrency: string,
+    activeBonus: boolean,
+    bonusAmount: number,
     setPaymentError: (error: string) => void
   ) => {
     setPaymentError('');
@@ -85,8 +84,8 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
       metadata: {
         product,
         selectedPlanId,
-        activeCashback,
-        cashbackAmount,
+        activeBonus,
+        bonusAmount,
       },
     });
 
@@ -101,16 +100,14 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
       if (product === 'subscription') {
         await handleSubscriptionPayment(
           selectedPlanId,
-          activeCashback,
-          cashbackAmount,
-          cashbackCurrency,
+          activeBonus,
+          bonusAmount,
           setPaymentError
         );
       } else {
         await handleSingleSessionPayment(
-          activeCashback,
-          cashbackAmount,
-          cashbackCurrency,
+          activeBonus,
+          bonusAmount,
           setPaymentError
         );
       }
@@ -140,9 +137,8 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
    */
   const handleSubscriptionPayment = async (
     selectedPlanId: string,
-    activeCashback: boolean,
-    cashbackAmount: number,
-    cashbackCurrency: string,
+    activeBonus: boolean,
+    bonusAmount: number,
     setPaymentError: (error: string) => void
   ) => {
     if (!selectedPlanId) {
@@ -151,7 +147,7 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
     }
 
     // Build payment method request
-    const paymentMethod = buildPaymentMethodRequest(activeCashback, cashbackAmount, cashbackCurrency);
+    const paymentMethod = buildPaymentMethodRequest(activeBonus, bonusAmount);
 
     // Purchase season ticket with payment
     const payment = await purchaseSeasonTicket.mutateAsync({
@@ -168,9 +164,8 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
    * Handle single session payment
    */
   const handleSingleSessionPayment = async (
-    activeCashback: boolean,
-    cashbackAmount: number,
-    cashbackCurrency: string,
+    activeBonus: boolean,
+    bonusAmount: number,
     setPaymentError: (error: string) => void
   ) => {
     if (!session) {
@@ -205,7 +200,7 @@ export const useSessionPayment = (session: Session | null, user: User | Client |
     }
 
     // Build payment method request
-    const paymentMethod = buildPaymentMethodRequest(activeCashback, cashbackAmount, cashbackCurrency);
+    const paymentMethod = buildPaymentMethodRequest(activeBonus, bonusAmount);
 
     // Create payment for booking
     const payment = await createPayment.mutateAsync({

@@ -347,7 +347,7 @@ export const usePaymentActions = () => {
         }
 
       case 'none':
-        // Payment completed immediately (e.g., full cashback or certificate)
+        // Payment completed immediately (e.g., full bonus or certificate)
         paymentLogger.logPaymentCompleted({
           paymentId: payment.id,
           bookingId: payment.bookingId ?? undefined,

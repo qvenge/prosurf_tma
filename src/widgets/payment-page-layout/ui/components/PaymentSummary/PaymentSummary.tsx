@@ -9,11 +9,14 @@ interface PaymentSummaryProps {
 }
 
 export function PaymentSummary({ summary }: PaymentSummaryProps) {
-  const { originalPrice, finalPrice, onPayment, isProcessing, error, cashbackRate } = summary;
+  const { originalPrice, finalPrice, onPayment, isProcessing, error, bonusRate } = summary;
 
   const hasDiscount = originalPrice !== finalPrice;
-  const showCashback = cashbackRate && cashbackRate > 0;
-  const earnedCashback = showCashback ? Math.round(finalPrice * cashbackRate) : 0;
+  const showBonus = bonusRate && bonusRate > 0;
+  // Convert finalPrice from kopecks to rubles before applying bonus rate (1 bonus = 1 ruble)
+  const earnedBonus = showBonus
+    ? Math.round((finalPrice / PAYMENT_CONSTANTS.MINOR_CURRENCY_DIVISOR) * bonusRate)
+    : 0;
 
   return (
     <div className={styles.footer}>
@@ -47,9 +50,9 @@ export function PaymentSummary({ summary }: PaymentSummaryProps) {
         {isProcessing ? 'Обработка...' : 'Оплатить'}
       </Button>
 
-      {showCashback && (
-        <div className={styles.cashback}>
-          {`Начислим кэшбек: ${formatPrice(earnedCashback)} ${PAYMENT_CONSTANTS.CURRENCY}`}
+      {showBonus && (
+        <div className={styles.bonus}>
+          {`Начислим бонусы: ${earnedBonus}`}
         </div>
       )}
     </div>

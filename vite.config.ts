@@ -18,6 +18,7 @@ export default defineConfig({
   ],
   server: {
     allowedHosts: [
+      'qvenge.github.io',
       'rarely-fervent-amphibian.cloudpub.ru'
     ],
   },

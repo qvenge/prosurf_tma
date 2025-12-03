@@ -1,0 +1,20 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background-color: ds.color('Background/Secondary');
+}
+
+.icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.message {
+  @include ds.typo('Roboto/Caption 1/Regular');
+  color: ds.color('Text/Secondary');
+  flex: 1;
+}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PageLayout } from '@/widgets/page-layout';
 import { useActivateCertificate } from '@/shared/api';
 import { Button, TextInput } from '@/shared/ui';
-import { pluralize, formatPrice } from '@/shared/lib';
+import { pluralize } from '@/shared/lib';
 import { useNavigator } from '@/shared/navigation';
 import styles from './CertificateActivationPage.module.scss';
 
@@ -35,8 +35,8 @@ export function CertificateActivationPage() {
 
         let desc = '';
 
-        if (res.result.type === 'cashback') {
-          desc = `Зачислили на бонусный счёт ${formatPrice(res.result.cashbackOperation.amount)}`;
+        if (res.result.type === 'bonus') {
+          desc = `Зачислили на бонусный счёт ${res.result.bonusOperation.amount} ₽`;
 
         } else if (res.result.type === 'season_ticket') {
           desc = `Добавили абонемент на ${res.result.seasonTicket.remainingPasses} ${pluralize(

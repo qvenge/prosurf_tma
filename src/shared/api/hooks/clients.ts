@@ -9,7 +9,7 @@ import type { UserUpdateDto, CompleteProfileDto } from '../types';
 export const clientsKeys = {
   all: ['clients'] as const,
   me: () => [...clientsKeys.all, 'me'] as const,
-  meCashback: () => [...clientsKeys.me(), 'cashback'] as const,
+  meBonus: () => [...clientsKeys.me(), 'bonus'] as const,
 } as const;
 
 /**
@@ -51,13 +51,13 @@ export const useUpdateMe = () => {
 };
 
 /**
- * Get current client cashback wallet
- * GET /clients/me/cashback
+ * Get current client bonus wallet
+ * GET /clients/me/bonus
  */
-export const useMyCashback = () => {
+export const useMyBonus = () => {
   return useQuery({
-    queryKey: clientsKeys.meCashback(),
-    queryFn: () => clientsClient.getMyCashback(),
+    queryKey: clientsKeys.meBonus(),
+    queryFn: () => clientsClient.getMyBonus(),
     staleTime: 1 * 60 * 1000, // 1 minute (financial data should be fresh)
   });
 };

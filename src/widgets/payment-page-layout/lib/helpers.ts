@@ -14,15 +14,21 @@ export const getEventTypeLabel = (eventType: EventType): string => {
 };
 
 export const calculatePrices = (
-  originalPrice: number,
-  cashbackValue: number,
-  activeCashback: boolean
+  originalPrice: number,  // in kopecks (minor units)
+  bonusValue: number,     // in bonus units (1 bonus = 1 ruble)
+  activeBonus: boolean
 ): PriceCalculation => {
-  const finalPrice = activeCashback ? Math.max(0, originalPrice - cashbackValue) : originalPrice;
+  // Convert bonus value from rubles to kopecks for calculation
+  const bonusValueInKopecks = bonusValue * PAYMENT_CONSTANTS.MINOR_CURRENCY_DIVISOR;
+
+  const finalPrice = activeBonus
+    ? Math.max(0, originalPrice - bonusValueInKopecks)
+    : originalPrice;
 
   return {
     originalPrice,
     finalPrice,
-    cashbackAmount: Math.min(cashbackValue, originalPrice),
+    // bonusAmount in kopecks (to send to server as amountMinor)
+    bonusAmount: Math.min(bonusValueInKopecks, originalPrice),
   };
 };

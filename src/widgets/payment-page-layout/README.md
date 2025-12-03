@@ -54,7 +54,7 @@ function MyPaymentPage() {
 | `activeTab` | `T` | Yes | Currently active tab ID |
 | `onTabChange` | `(tabId: T) => void` | Yes | Callback when tab changes |
 | `topContent` | `ReactNode` | No | Content to render above tabs |
-| `optionsContent` | `ReactNode` | No | Payment options section (e.g., cashback) |
+| `optionsContent` | `ReactNode` | No | Payment options section (e.g., bonus) |
 | `summaryContent` | `ReactNode` | No | Payment summary footer |
 | `isLoading` | `boolean` | No | Show loading state |
 | `error` | `string \| null` | No | Error message to display |
@@ -113,7 +113,7 @@ function MyPaymentPage() {
   topContent={<Header />}
   optionsContent={
     <>
-      <CashbackToggle />
+      <BonusToggle />
       <CertificateToggle />
     </>
   }

@@ -2,7 +2,7 @@ import { InfiniteScrollList } from '@/shared/ui';
 import { useInfinitePayments, type PaymentListItem } from '@/shared/api';
 import { PageLayout } from '@/widgets/page-layout';
 
-import { formatPaymentDate, getCategoryInfo, formatPaymentAmount, formatCashbackAmount } from '../lib/helpers';
+import { formatPaymentDate, getCategoryInfo, formatPaymentAmount, formatBonusAmount } from '../lib/helpers';
 import { PaymentEntry } from './PaymentEntry.tsx';
 
 import styles from './MyPayments.module.scss';
@@ -25,7 +25,7 @@ export function MyPayments() {
               purpose: payment.name ?? 'Покупка',
               ...getCategoryInfo(payment.category, payment.labels),
               cost: formatPaymentAmount(payment.price),
-              cashback: formatCashbackAmount(payment.cashback),
+              bonus: formatBonusAmount(payment.bonus),
               status: payment.status,
             };
             return <PaymentEntry key={payment.id} data={paymentData} />;
