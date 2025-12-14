@@ -28,7 +28,7 @@ export const ArticlePage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title="Загрузка...">
+      <PageLayout>
         <div className={styles.loading}>
           <Spinner size="l" />
         </div>

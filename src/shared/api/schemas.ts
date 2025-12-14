@@ -56,10 +56,8 @@ export const UserSchema = z.object({
   createdAt: z.string().datetime(),
   authMethod: z.enum(['telegram', 'email', 'username']),
   isActive: z.boolean().optional(),
-  // Consent fields (optional for User, required for Client)
-  personalDataConsent: z.boolean().optional(),
-  privacyPolicyConsent: z.boolean().optional(),
-  safetyRulesConsent: z.boolean().optional(),
+  // Consent fields - dynamic JSON object with content keys
+  consents: z.record(z.string(), z.boolean()).optional(),
   consentsAcceptedAt: z.string().datetime().nullable().optional(),
   isProfileComplete: z.boolean().optional(),
 });
@@ -77,10 +75,8 @@ export const ClientSchema = z.object({
   photoUrl: z.string().nullable(),
   dateOfBirth: z.string().datetime().nullish(),
   isActive: z.boolean().optional(),
-  // Consent fields (optional to match User type for compatibility)
-  personalDataConsent: z.boolean().optional(),
-  privacyPolicyConsent: z.boolean().optional(),
-  safetyRulesConsent: z.boolean().optional(),
+  // Consent fields - dynamic JSON object with content keys
+  consents: z.record(z.string(), z.boolean()).optional(),
   consentsAcceptedAt: z.string().datetime().nullable().optional(),
   isProfileComplete: z.boolean().optional(),
   createdAt: z.string().datetime(),
@@ -101,9 +97,7 @@ export const CompleteProfileDtoSchema = z.object({
   firstName: z.string().min(1, 'Введите имя').max(128),
   lastName: z.string().min(1, 'Введите фамилию').max(128),
   phone: z.string().min(1, 'Введите номер телефона'),
-  personalDataConsent: z.boolean().refine(val => val === true, { message: 'Необходимо принять согласие' }),
-  privacyPolicyConsent: z.boolean().refine(val => val === true, { message: 'Необходимо принять согласие' }),
-  safetyRulesConsent: z.boolean().refine(val => val === true, { message: 'Необходимо принять согласие' }),
+  consents: z.record(z.string(), z.boolean()),
 });
 
 // Event schemas
