@@ -164,6 +164,10 @@ export type ImageUploader = z.infer<typeof schemas.ImageUploaderSchema>;
 export type Image = z.infer<typeof schemas.ImageSchema>;
 export type ImageFilters = z.infer<typeof schemas.ImageFiltersSchema>;
 
+// Content types
+export type Content = z.infer<typeof schemas.ContentSchema>;
+export type ContentFilters = z.infer<typeof schemas.ContentFiltersSchema>;
+
 // Common parameter types
 export type CursorParam = z.infer<typeof schemas.CursorParamSchema>;
 export type LimitParam = z.infer<typeof schemas.LimitParamSchema>;

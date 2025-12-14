@@ -1,20 +1,19 @@
-
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PageLayout } from '@/widgets/page-layout';
-import { SegmentedControl, ImageSlider, Button } from '@/shared/ui';
-import { useImages } from '@/shared/api';
+import { SegmentedControl, ImageSlider, Button, MarkdownRenderer } from '@/shared/ui';
+import { useImages, useContentsByKeys } from '@/shared/api';
 import { useNavigate } from '@/shared/navigation';
 import styles from './TrainingCategoriesPage.module.scss';
 
-const descriptions = {
-  surfing: `Наши тренировки по серфингу предназначены для всех уровней подготовки — от новичков до опытных серферов. 
-  Под руководством наших квалифицированных инструкторов вы научитесь основам серфинга, технике гребли`,
-  surfskate: `Тренировки по серфскейту помогут вам развить баланс, координацию и технику катания, которые
-  пригодятся вам на воде. Наши опытные тренеры проведут вас через все этапы обучения, от базовых движений до сложных трюков.`
-};
-
 export function TrainingCategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState<'surfing' | 'surfskate'>('surfing');
+
+  // Fetch training descriptions from CMS
+  const { data: trainingContents } = useContentsByKeys(['training.surfing', 'training.surfskate']);
+  const contentMap = useMemo(() => {
+    if (!trainingContents) return {};
+    return Object.fromEntries(trainingContents.map(c => [c.key, c]));
+  }, [trainingContents]);
 
   return (
     <PageLayout title='Тренировки'>
@@ -33,35 +32,44 @@ export function TrainingCategoriesPage() {
             Серфскейт
           </SegmentedControl.Item>
         </SegmentedControl>
-        <CategoryContent type={selectedCategory} />
+        <CategoryContent type={selectedCategory} contentMap={contentMap} />
       </div>
     </PageLayout>
   );
 };
 
 function CategoryContent({
-  type
-}: {type: 'surfing' | 'surfskate'}) {
+  type,
+  contentMap
+}: {
+  type: 'surfing' | 'surfskate';
+  contentMap: Record<string, { key: string; title: string; content: string }>;
+}) {
   const navigate = useNavigate();
 
   const { data } = useImages({"tags.any": [`training:${type}`]});
   const images = data?.items.map(item => item.url) ?? [];
 
+  const contentKey = `training.${type}`;
+  const content = contentMap[contentKey];
+
   return (
     <div className={styles.categoryContent}>
-      <ImageSlider 
+      <ImageSlider
         images={images}
         className={styles.images}
       />
-      <div className={styles.description}>
-        <h2 className={styles.descriptionHeading}>Описание</h2>
-        <p className={styles.descriptionText}>{descriptions[type]}</p>
-      </div>
+      {content && (
+        <div className={styles.description}>
+          <h2 className={styles.descriptionHeading}>Описание</h2>
+          <MarkdownRenderer content={content.content} className={styles.descriptionText} />
+        </div>
+      )}
       <Button
         className={styles.button}
         size='l'
         stretched
-        onClick={() => navigate(`/trainings/categories/${type}`)} 
+        onClick={() => navigate(`/trainings/categories/${type}`)}
       >
         Смотреть расписание
       </Button>

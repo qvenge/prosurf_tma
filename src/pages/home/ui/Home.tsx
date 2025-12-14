@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { PageLayout } from '@/widgets/page-layout'
-import { useImages, useBookings, type BookingFilters } from '@/shared/api';
-import { ImageSlider } from '@/shared/ui';
+import { useImages, useBookings, useContentsByKeys, type BookingFilters } from '@/shared/api';
+import { ImageSlider, MarkdownRenderer } from '@/shared/ui';
 import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import styles from './Home.module.scss';
 import { TrainingCategories } from '@/features/trainings';
@@ -16,6 +16,12 @@ export const HomePage = () => {
 
   const { data: _aboutImages } = useImages({"tags.any": ['about']});
   const aboutImages = _aboutImages?.items.map(item => item.url) ?? [];
+
+  const { data: homeContents } = useContentsByKeys(['home.about', 'home.whatWeDo']);
+  const contentMap = useMemo(() => {
+    if (!homeContents) return {};
+    return Object.fromEntries(homeContents.map(c => [c.key, c]));
+  }, [homeContents]);
 
   const bookingFilters: BookingFilters = useMemo(() => ({
     status: ['CONFIRMED'],
@@ -58,25 +64,19 @@ export const HomePage = () => {
           <ImageSlider images={aboutImages} style={{borderRadius: 16}}/>
         </div>
 
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>О нас</h2>
-          <p className={styles.aboutText}>
-            Мы серф-комьюнити классных людей,
-            которые вместе тренируются, веселятся, тусуются, путешествуют и просто любят сильно жизнь!
-          </p>
-        </div>
+        {contentMap['home.about'] && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>{contentMap['home.about'].title}</h2>
+            <MarkdownRenderer content={contentMap['home.about'].content} className={styles.aboutText} />
+          </div>
+        )}
 
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Что мы делаем?</h2>
-          <p className={styles.aboutText}>
-            🤙Крутейшие тренировки по сёрфингу на искусственной волне.<br />
-            🤙Тренировки на серф-скейтах! Супер классная тема для тех кто хочет прокачать серф стиль<br />
-            🤙Мы создаём события для вас! Это неотъемлемая часть нашей жизни!<br />
-            🤙Конечно же мы делаем туры. Катаемся везде где можно серфить!<br />
-            <br />
-            В основе нашего комьюнити люди! Мы любим каждого и будем рады всем! Оставайся с нами!
-          </p>
-        </div>
+        {contentMap['home.whatWeDo'] && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>{contentMap['home.whatWeDo'].title}</h2>
+            <MarkdownRenderer content={contentMap['home.whatWeDo'].content} className={styles.aboutText} />
+          </div>
+        )}
       </div>
     </PageLayout>
   );

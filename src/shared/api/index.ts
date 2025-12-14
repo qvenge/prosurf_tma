@@ -28,6 +28,7 @@ export { bonusClient } from './clients/bonus';
 export { waitlistClient } from './clients/waitlist';
 export { webhooksClient } from './clients/webhooks';
 export { imagesClient } from './clients/images';
+export { contentClient } from './clients/content';
 
 // Hooks - Auth
 export * from './hooks/auth';
@@ -62,6 +63,9 @@ export * from './hooks/waitlist';
 // Hooks - Images
 export * from './hooks/images';
 
+// Hooks - Content
+export * from './hooks/content';
+
 // Providers
 export { ApiProvider } from './providers/ApiProvider';
 
@@ -77,6 +81,7 @@ export { seasonTicketsKeys } from './hooks/season-tickets';
 export { bonusKeys } from './hooks/bonus';
 export { waitlistKeys } from './hooks/waitlist';
 export { imagesKeys } from './hooks/images';
+export { contentKeys } from './hooks/content';
 
 // Common utilities and helpers
 export {

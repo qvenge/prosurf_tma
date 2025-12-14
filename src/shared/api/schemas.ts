@@ -944,3 +944,20 @@ export const ImageFiltersSchema = z.object({
   cursor: CursorParamSchema,
   limit: LimitParamSchema,
 });
+
+// Content schemas (universal key-value content storage)
+export const ContentSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  title: z.string(),
+  content: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export const ContentFiltersSchema = z.object({
+  cursor: CursorParamSchema,
+  limit: LimitParamSchema,
+  keyPrefix: z.string().optional(),
+  q: z.string().optional(),
+});

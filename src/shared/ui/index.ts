@@ -16,3 +16,4 @@ export * from './tour-card';
 export * from './activity-card';
 export * from './infinite-scroll-list';
 export * from './error-boundary';
+export * from './markdown-renderer';

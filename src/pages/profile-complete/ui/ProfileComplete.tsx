@@ -1,13 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { useCompleteProfile } from '@/shared/api';
+import { useCompleteProfile, useContentsByKeys } from '@/shared/api';
 import { TextInput } from '@/shared/ui/text-input';
-import { Button, ButtonContainer } from '@/shared/ui';
+import { Button, ButtonContainer, MarkdownRenderer } from '@/shared/ui';
 import { PageLayout } from '@/widgets/page-layout'
 import { Modal, Checkbox } from '@/shared/ui';
 import type { CompleteProfileDto } from '@/shared/api/types';
 import styles from './ProfileComplete.module.scss';
-import { SOGLASIE, TEHNIKA } from './docs';
 
 /**
  * Profile completion page for first-time users
@@ -20,6 +19,17 @@ import { SOGLASIE, TEHNIKA } from './docs';
 export const ProfileComplete = () => {
   const navigate = useNavigate();
   const { mutate: completeProfile, isPending, error: apiError } = useCompleteProfile();
+
+  // Fetch consent texts from CMS
+  const { data: consentContents } = useContentsByKeys([
+    'consent.personalData',
+    'consent.privacyPolicy',
+    'consent.safetyRules'
+  ]);
+  const contentMap = useMemo(() => {
+    if (!consentContents) return {};
+    return Object.fromEntries(consentContents.map(c => [c.key, c]));
+  }, [consentContents]);
 
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -89,24 +99,13 @@ export const ProfileComplete = () => {
     });
   }, [firstName, lastName, phone, consents, validateForm, completeProfile, navigate]);
 
-  const getConsentText = (type: 'personalData' | 'privacyPolicy' | 'safetyRules'): { title: string; content: string } => {
-    switch (type) {
-      case 'personalData':
-        return {
-          title: 'Согласие на обработку персональных данных',
-          content: SOGLASIE,
-        };
-      case 'privacyPolicy':
-        return {
-          title: 'Политика конфиденциальности',
-          content: 'Я ознакомлен(а) с политикой конфиденциальности и принимаю её условия.\n\nПолитика конфиденциальности определяет порядок сбора, хранения и использования персональных данных пользователей.',
-        };
-      case 'safetyRules':
-        return {
-          title: 'Техника безопасности',
-          content: TEHNIKA,
-        };
-    }
+  const getConsentContent = (type: 'personalData' | 'privacyPolicy' | 'safetyRules') => {
+    const keyMap = {
+      personalData: 'consent.personalData',
+      privacyPolicy: 'consent.privacyPolicy',
+      safetyRules: 'consent.safetyRules',
+    };
+    return contentMap[keyMap[type]];
   };
 
   return (
@@ -149,7 +148,7 @@ export const ProfileComplete = () => {
               disabled={isPending}
             />
           </div>
-          
+
           <h2 className={styles.sectionTitle}>Я даю согласие</h2>
 
           <div className={styles.section}>
@@ -163,7 +162,7 @@ export const ProfileComplete = () => {
               />
               <ButtonContainer
                 className={styles.consentLink}
-                onClick={() => setActiveModal('personalData')}
+                onClick={() => setActiveModal('privacyPolicy')}
               >
                 Политика конфиденциальности
               </ButtonContainer>
@@ -182,7 +181,7 @@ export const ProfileComplete = () => {
               />
               <ButtonContainer
                 className={styles.consentLink}
-                onClick={() => setActiveModal('privacyPolicy')}
+                onClick={() => setActiveModal('personalData')}
               >
                 Согласие на обработку персональных данных
               </ButtonContainer>
@@ -231,17 +230,18 @@ export const ProfileComplete = () => {
         </Button>
       </div>
 
-      {activeModal && (
+      {activeModal && getConsentContent(activeModal) && (
         <Modal
           open={true}
           onOpenChange={(open) => !open && setActiveModal(null)}
           header={<Modal.Header />}
         >
           <div className={styles.modalContent}>
-            <h2 className={styles.consentTextTitle}>{getConsentText(activeModal).title}</h2>
-            <p className={styles.consentTextContent}>
-              {getConsentText(activeModal).content}
-            </p>
+            <h2 className={styles.consentTextTitle}>{getConsentContent(activeModal)?.title}</h2>
+            <MarkdownRenderer
+              content={getConsentContent(activeModal)?.content || ''}
+              className={styles.consentTextContent}
+            />
           </div>
         </Modal>
       )}

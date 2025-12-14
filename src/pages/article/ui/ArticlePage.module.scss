@@ -1,4 +1,11 @@
 
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 16px;
+}
+
 .content {
   @include ds.typo('Roboto/Subheadline 2/Regular');
   padding: 32px var(--outer-horizontal-padding, 16px) 16px;
