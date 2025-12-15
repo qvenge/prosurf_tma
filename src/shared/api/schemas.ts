@@ -147,6 +147,7 @@ export const EventSchema = z.object({
   title: z.string(),
   description: z.array(EventDescriptionSchema).nullable().optional(),
   location: z.string().nullable().optional(),
+  mapUrl: z.string().nullable().optional(),
   capacity: z.number().int().min(0).nullable().optional(),
   tickets: z.array(EventTicketSchema),
   createdAt: z.string().datetime(),

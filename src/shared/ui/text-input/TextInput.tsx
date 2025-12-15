@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { camelize } from '@/shared/lib/string';
 import { Icon } from '@/shared/ui/icon';
 import { EyeRegular, EyeSlashRegular } from '@/shared/ds/icons';
@@ -35,8 +35,34 @@ export function TextInput({
 }: TextInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const maskRef = useRef<InputMask | null>(null);
+
+  const setInputRef = useCallback((input: HTMLInputElement | null) => {
+    // Cleanup previous mask
+    if (maskRef.current) {
+      maskRef.current.destroy();
+      maskRef.current = null;
+    }
+
+    if (!input) return;
+
+    // Initialize mask based on type
+    if (initialType === 'tel') {
+      maskRef.current = IMask(input, {
+        mask: '+{7} (000) 000-00-00',
+        definitions: { '#': /[1-9]/ }
+      });
+    } else if (initialType === 'date') {
+      maskRef.current = IMask(input, {
+        mask: 'DD.MM.YYYY',
+        blocks: {
+          DD: { mask: IMask.MaskedRange, from: 1, to: 31 },
+          MM: { mask: IMask.MaskedRange, from: 1, to: 12 },
+          YYYY: { mask: IMask.MaskedRange, from: 1900, to: 2099 }
+        }
+      });
+    }
+  }, [initialType]);
 
   const inputId = initialInputId ?? `${id ?? inputProps.name}-input`;
 
@@ -45,47 +71,6 @@ export function TextInput({
   if (initialType === 'password') {
     type = showPassword ? 'text' : 'password';
   }
-
-  useEffect(() => {
-    if (!inputRef.current) return;
-
-    if (initialType === 'tel') {
-      maskRef.current = IMask(inputRef.current, {
-        mask: '+{7} (000) 000-00-00',
-        definitions: {
-          '#': /[1-9]/
-        }
-      });
-    } else if (initialType === 'date') {
-      maskRef.current = IMask(inputRef.current, {
-        mask: 'DD.MM.YYYY',
-        blocks: {
-          DD: {
-            mask: IMask.MaskedRange,
-            from: 1,
-            to: 31
-          },
-          MM: {
-            mask: IMask.MaskedRange,
-            from: 1,
-            to: 12
-          },
-          YYYY: {
-            mask: IMask.MaskedRange,
-            from: 1900,
-            to: 2099
-          }
-        }
-      });
-    }
-
-    return () => {
-      if (maskRef.current) {
-        maskRef.current.destroy();
-      }
-    };
-  }, [initialType]);
-
 
   const controls = [
     children,
@@ -125,7 +110,7 @@ export function TextInput({
       </label>}
       <div className={styles.inputWrapper}>
         <input
-          ref={inputRef}
+          ref={setInputRef}
           className={styles.input}
           id={inputId}
           type={type === 'date' ? 'text' : type}

@@ -7,12 +7,13 @@ import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
 import { useSession, useBookSession, useCreateDeferredBooking, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
-import { useTelegramPopup } from '@/shared/tma';
+import { useTelegramPopup, useTelegramMiniApp } from '@/shared/tma';
 import styles from './SessionPage.module.scss';
 
 import { BookingSelectionModal } from './components/BookingSelectionModal'; 
 import { formatPrice } from '@/shared/lib/format-utils';
 import { formatDuration, isTheSameDay, formatRangeWithYear, formatSessionDate, formatTime } from '@/shared/lib/date-utils';
+import { MarkdownRenderer } from '@/shared/ui/markdown-renderer';
 
 const hasPrepayment = (session?: Session): session is Session & { event: { tickets: (EventTicket & { prepayment: { price: { amountMinor: number } } })[] } } => {
   const amount = session?.event.tickets[0].prepayment?.price.amountMinor;
@@ -47,6 +48,7 @@ export const SessionPage = () => {
   const joinWaitlistMutation = useJoinWaitlist();
   const cancelBookingMutation = useCancelBooking();
   const { showConfirm } = useTelegramPopup();
+  const { openLink } = useTelegramMiniApp();
 
   const handleUseSubscription = useCallback((seasonTicketId: string) => {
     if (!sessionId) return;
@@ -153,6 +155,12 @@ export const SessionPage = () => {
       }
     );
   }, [sessionId, joinWaitlistMutation, navigate]);
+
+  const handleViewOnMap = useCallback(() => {
+    if (session?.event.mapUrl) {
+      openLink(session.event.mapUrl);
+    }
+  }, [session, openLink]);
 
   const handleCancelBooking = useCallback(async () => {
     if (!bookingId) return;
@@ -323,13 +331,16 @@ export const SessionPage = () => {
               </div>}
             </div>
 
-            {/* Map */}
-            {/* <div 
-              className={styles.mapImage}
-              style={{
-                backgroundImage: `url('${mapSrc}')`
-              }}
-            /> */}
+            {session.event.mapUrl && (
+              <Button
+                size='m'
+                mode='secondary'
+                stretched={true}
+                onClick={handleViewOnMap}
+              >
+                Смотреть на карте
+              </Button>
+            )}
           </div>
         )}
 
@@ -337,9 +348,7 @@ export const SessionPage = () => {
         {session.event.description?.map((section, index: number) => (
           <div key={index} className={clsx(styles.wrapperItem, styles.descriptionSection)}>
             <div className={styles.sectionTitle}>{section.heading}</div>
-            <div className={styles.descriptionText}>
-              {section.body}
-            </div>
+            <MarkdownRenderer content={section.body} className={styles.descriptionText} />
           </div>
         ))}
 

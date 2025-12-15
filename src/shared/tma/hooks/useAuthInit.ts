@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '@/shared/api';
 import { telegramUtils } from '../telegram-sdk';
 import type { initializeTelegramApp } from '../index';
@@ -17,10 +16,7 @@ export function useAuthInit(telegramApp: Awaited<ReturnType<typeof initializeTel
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
-  const [profileCheckDone, setProfileCheckDone] = useState(false);
   const auth = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -37,20 +33,8 @@ export function useAuthInit(telegramApp: Awaited<ReturnType<typeof initializeTel
           return;
         }
 
-        // If already authenticated, check profile completion
-        if (auth.isAuthenticated && !auth.isLoading && auth.user) {
-          // Check if profile is complete
-          const client = auth.user as any; // Type assertion needed since user can be User or Client
-
-          if (!profileCheckDone && client.isProfileComplete !== undefined) {
-            setProfileCheckDone(true);
-
-            // Redirect to profile completion if needed (and not already there)
-            if (!client.isProfileComplete && location.pathname !== '/profile/complete') {
-              navigate('/profile/complete', { replace: true });
-            }
-          }
-
+        // If already authenticated, we're done initializing
+        if (auth.isAuthenticated && !auth.isLoading) {
           setIsInitializing(false);
           return;
         }
@@ -64,7 +48,6 @@ export function useAuthInit(telegramApp: Awaited<ReturnType<typeof initializeTel
           if (initData) {
             try {
               await auth.loginWithTelegram({ initData });
-              // Profile check will happen in the next effect run after auth.user is set
               setIsInitializing(false);
             } catch (error) {
               console.error('Telegram login error:', error);
@@ -86,7 +69,7 @@ export function useAuthInit(telegramApp: Awaited<ReturnType<typeof initializeTel
     };
 
     initializeAuth();
-  }, [telegramApp.isReady, telegramApp.isInTelegram, auth.isAuthenticated, auth.isLoading, auth.user, auth, autoLoginAttempted, profileCheckDone, navigate, location.pathname]);
+  }, [telegramApp.isReady, telegramApp.isInTelegram, auth.isAuthenticated, auth.isLoading, auth, autoLoginAttempted]);
 
   return {
     isInitializing,

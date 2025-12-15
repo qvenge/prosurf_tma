@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate, useLocation } from 'react-router';
 import { BottomBar, Spinner } from '@/shared/ui';
 import { useAuth } from '@/shared/api';
 import { useTelegramAppInit } from '@/shared/tma';
@@ -10,6 +10,8 @@ import styles from './App.module.scss';
 
 export function App() {
   const [navbarHeight, setNavbarHeight] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Get authentication state
   const auth = useAuth();
@@ -45,6 +47,19 @@ export function App() {
       webApp.setHeaderColor('#0F0F0F');
     }
   }, [telegramApp.isReady, telegramApp.isInTelegram, telegramApp.webApp]);
+
+  // Redirect to profile completion if profile is incomplete
+  useEffect(() => {
+    if (
+      auth.isAuthenticated &&
+      !auth.isLoading &&
+      auth.user &&
+      !(auth.user as any).isProfileComplete &&
+      location.pathname !== '/profile/complete'
+    ) {
+      navigate('/profile/complete', { replace: true });
+    }
+  }, [auth.isAuthenticated, auth.isLoading, auth.user, location.pathname, navigate]);
 
   const handleNavbarHeightChange = (val: number) => {
     setNavbarHeight(val);

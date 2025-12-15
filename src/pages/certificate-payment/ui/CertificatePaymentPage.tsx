@@ -18,7 +18,7 @@ type ProductType = CertificateType; // 'denomination' | 'passes'
 
 export function CertificatePaymentPage() {
   // State management
-  const [activeTab, setActiveTab] = useState<ProductType>('denomination');
+  const [activeTab, setActiveTab] = useState<ProductType>('passes');
   const [denominationAmount, setDenominationAmount] = useState<number | null>(null);
   const [paymentError, setPaymentError] = useState('');
 
@@ -69,24 +69,6 @@ export function CertificatePaymentPage() {
   const tabs = useMemo<TabConfig<ProductType>[]>(() => {
     return [
       {
-        id: 'denomination',
-        label: 'Номинал',
-        content: (
-          <div className={styles.tabContent}>
-            <PriceBreakdown
-              productName="Сертификат"
-              description="Номинал"
-              price={{ amountMinor: denominationAmount ? denominationAmount * 100 : 0, currency: 'RUB' }}
-            />
-            <DenominationOptions
-              selectedAmount={denominationAmount}
-              onAmountChange={setDenominationAmount}
-              minAmount={minDenominationAmount}
-            />
-          </div>
-        ),
-      },
-      {
         id: 'passes',
         label: 'Разовая тренировка',
         content: (
@@ -105,6 +87,24 @@ export function CertificatePaymentPage() {
           </div>
         ),
       },
+      {
+        id: 'denomination',
+        label: 'Номинал',
+        content: (
+          <div className={styles.tabContent}>
+            <PriceBreakdown
+              productName="Сертификат"
+              description="Номинал"
+              price={{ amountMinor: denominationAmount ? denominationAmount * 100 : 0, currency: 'RUB' }}
+            />
+            <DenominationOptions
+              selectedAmount={denominationAmount}
+              onAmountChange={setDenominationAmount}
+              minAmount={minDenominationAmount}
+            />
+          </div>
+        ),
+      }
     ];
   }, [denominationAmount, passesPriceMinor, minDenominationAmount, isLoadingProducts, passesProduct?.description, denominationProduct?.description]);
 
