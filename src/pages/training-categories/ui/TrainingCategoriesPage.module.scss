@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 32px;
   flex-grow: 1;
-  padding: 32px var(--outer-horizontal-padding, 16px);
+  padding: 32px var(--outer-horizontal-padding, 16px) 80px;
 }
 
 .images {
@@ -32,5 +32,8 @@
 }
 
 .button {
-  margin-top: 2px;
+  position: fixed;
+  left: var(--outer-horizontal-padding, 16px);
+  width: calc(100% - 2 * var(--outer-horizontal-padding, 16px));
+  bottom: calc(var(--navbar-height) + 16px);
 }

@@ -154,6 +154,7 @@ export const EventSchema = z.object({
   labels: z.array(z.string()).nullable().optional(),
   attributes: z.record(z.string(), AttributeValueSchema).nullish(),
   images: z.array(z.string()).nullable().optional(),
+  previewImage: z.string().nullable().optional(),
   allowDeferredPayment: z.boolean().optional().default(false),
   status: EventStatusSchema.optional(),
 });

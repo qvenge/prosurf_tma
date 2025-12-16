@@ -1,4 +1,4 @@
-import { apiClient, validateResponse, createQueryString, joinApiUrls } from '../config';
+import { apiClient, validateResponse, createQueryString, joinApiUrls, joinApiUrl } from '../config';
 import {
   SessionSchema,
   SessionCompactSchema,
@@ -20,6 +20,7 @@ const transformSessionEventImages = (session: Session): Session => ({
   event: {
     ...session.event,
     images: session.event.images ? joinApiUrls(session.event.images) : session.event.images,
+    previewImage: joinApiUrl(session.event.previewImage),
   },
 });
 

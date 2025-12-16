@@ -6,7 +6,20 @@ import { useNavigate } from '@/shared/navigation';
 import { PageLayout } from '@/widgets/page-layout'
 import { Icon, Button, useBottomBar } from '@/shared/ui';
 import { CalendarBlankBold, MapPinRegular } from '@/shared/ds/icons';
-import { useSession, useBookSession, useCreateDeferredBooking, useSeasonTicketsBySessionId, useCreatePayment, useJoinWaitlist, useBookings, useCancelBooking, type EventTicket, type Session } from '@/shared/api';
+
+import {
+  useSession,
+  useBookSession,
+  useCreateDeferredBooking,
+  useSeasonTicketsBySessionId,
+  useCreatePayment,
+  useJoinWaitlist,
+  useBookings,
+  useCancelBooking,
+  type EventTicket,
+  type Session
+} from '@/shared/api';
+
 import { useTelegramPopup, useTelegramMiniApp } from '@/shared/tma';
 import styles from './SessionPage.module.scss';
 
@@ -245,6 +258,8 @@ export const SessionPage = () => {
     return <div className={styles.wrapper}>Сеанс не найден</div>;
   }
 
+  const sameDay = isTheSameDay(session.startsAt, session.endsAt);
+
   return (
     <PageLayout title={session.event.title} heroImages={session?.event.images ?? []}>
       <div className={styles.wrapper}>
@@ -298,7 +313,7 @@ export const SessionPage = () => {
               height={16}
             />
             <div className={styles.dateText}>
-              {isTheSameDay(session.startsAt, session.endsAt)
+              {sameDay
                 ? formatSessionDate(session.startsAt)
                 : formatRangeWithYear(session.startsAt, session.endsAt)
               }
@@ -307,12 +322,12 @@ export const SessionPage = () => {
         </div>
 
         {/* Content Sections */}
-        {isTheSameDay(session.startsAt, session.endsAt) && session.event.location && (
+        {(sameDay || session.event.location) && (
           <div className={clsx(styles.wrapperItem, styles.contentSection)}>
             {/* Location and Time */}
             <div className={styles.locationTime}>
               <div className={styles.locationTimeLeft}>
-                <div className={styles.sectionTitle}>Место и время</div>
+                <div className={styles.sectionTitle}>{sameDay ? 'Место и время' : 'Место'}</div>
                 <div className={styles.locationInfo}>
                   <Icon
                     className={styles.mapIcon}
@@ -325,10 +340,10 @@ export const SessionPage = () => {
                   </div>
                 </div>
               </div>
-              {<div className={styles.locationTimeRight}>
+              {sameDay && (<div className={styles.locationTimeRight}>
                 <div className={styles.duration}>{formatDuration(session.startsAt, session.endsAt)}</div>
                 <div className={styles.time}>{formatTime(session.startsAt)}</div>
-              </div>}
+              </div>)}
             </div>
 
             {session.event.mapUrl && (

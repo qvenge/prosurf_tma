@@ -107,7 +107,7 @@ export function App() {
   // Render main app content only when authenticated
   return (
     <>
-      <div className={styles.wrapper} style={{paddingBottom: `${navbarHeight}px`}}>
+      <div className={styles.wrapper} style={{ paddingBottom: `${navbarHeight}px`, ['--navbar-height' as any]: `${navbarHeight}px` }}>
         <div className={styles.content}>
           <Outlet />
         </div>

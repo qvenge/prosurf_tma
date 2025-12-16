@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from '@/shared/navigation';
 import { Icon } from '@/shared/ui/icon';
 import { CaretRightBold } from '@/shared/ds/icons';
-import { useSessions, type EventType } from '@/shared/api';
+import { useSessions, useImages, type EventType } from '@/shared/api';
 import { SESSION_START_DATE } from '@/shared/lib/date-utils';
 import styles from './TrainingCategoryItem.module.scss';
 
@@ -24,16 +24,17 @@ const formatUpcomingDate = (dateString: string): string => {
 
 interface TrainingCategoryItemProps {
   title: string;
-  imageUrl: string;
   eventType: EventType;
 }
 
 export const TrainingCategoryItem = ({
   title,
-  imageUrl,
   eventType
 }: TrainingCategoryItemProps) => {
   const navigate = useNavigate();
+
+  const { data: imagesData } = useImages({"tags.any": [eventType], limit: 1});
+  const imageUrl = imagesData?.items.map(item => item.url)?.[0];
 
   const filters = useMemo(() => ({
     'labels.any': [eventType],
@@ -59,9 +60,9 @@ export const TrainingCategoryItem = ({
       onClick={handleClick}
       style={{ cursor: nextSession && !isLoading && !error ? 'pointer' : 'default' }}
     >
-      <div 
+      <img
+        src={imageUrl}
         className={styles.categoryImage}
-        style={{ backgroundImage: `url(${imageUrl})` }}
       />
       <div className={styles.categoryContent}>
         <h2 className={styles.categoryTitle}>{title}</h2>

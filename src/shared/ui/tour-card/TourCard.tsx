@@ -23,7 +23,7 @@ export const TourCard = ({
   const formatedPrice = formatPrice(price);
   const availability = formatAvailability(data.remainingSeats);
 
-  const imageUrl = data.event.images?.[0];
+  const imageUrl = data.event.previewImage ?? data.event.images?.[0];
 
 
   return (

@@ -33,6 +33,7 @@ const transformBookingExtended = (booking: BookingExtended): BookingExtended => 
         images: result.session.event.images
           ? joinApiUrls(result.session.event.images)
           : result.session.event.images,
+        previewImage: joinApiUrl(result.session.event.previewImage),
       },
     };
   }

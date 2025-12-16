@@ -1,4 +1,4 @@
-import { apiClient, validateResponse, createQueryString, joinApiUrls } from '../config';
+import { apiClient, validateResponse, createQueryString, joinApiUrls, joinApiUrl } from '../config';
 import {
   EventSchema,
   PaginatedResponseSchema,
@@ -16,6 +16,7 @@ import type {
 const transformEventImages = (event: Event): Event => ({
   ...event,
   images: event.images ? joinApiUrls(event.images) : event.images,
+  previewImage: joinApiUrl(event.previewImage),
 });
 
 /**
